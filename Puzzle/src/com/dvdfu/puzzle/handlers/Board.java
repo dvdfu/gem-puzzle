@@ -30,7 +30,7 @@ public class Board {
 				b[j] = (value & 1 << j) != 0;
 			}
 			if (b[7]) {
-				grid[(i / 2) % width][(i / 2) / width] = new Block(b[0], b[1], b[2], b[3], b[4], b[5], b[6]);
+				grid[(i / 2) % width][height - 1 - (i / 2) / width] = new Block(b[0], b[1], b[2], b[3], b[4], b[5], b[6]);
 			}
 		}
 		this.width = width;
@@ -111,7 +111,7 @@ public class Board {
 						death[i][j] = true;
 						death[i - 1][j] = true;
 					}
-					if (!currentBlock.hasD() && !currentBlock.hasL() && !currentBlock.hasR() && !currentBlock.hasU()) {
+					if (currentBlock.hasC()) {
 						if (gridHas(i, j + 1) && grid[i][j + 1].hasD() && gridHas(i, j - 1) && grid[i][j - 1].hasU() && gridHas(i + 1, j) && grid[i + 1][j].hasL() && gridHas(i - 1, j) && grid[i - 1][j].hasR()) {
 							death[i][j] = true;
 							death[i][j + 1] = true;
@@ -219,14 +219,20 @@ public class Board {
 		}
 	}
 
-	public void select() {
+	public boolean select() {
 		if (!gridEmpty(cursorX, cursorY) && selectedBlock == null && grid[cursorX][cursorY].moves()) {
 			selectedBlock = grid[cursorX][cursorY];
+			return true;
 		}
+		return false;
 	}
 
-	public void unselect() {
-		selectedBlock = null;
+	public boolean unselect() {
+		if (isSelected()) {
+			selectedBlock = null;
+			return true;
+		}
+		return false;
 	}
 
 	public void setCursor(int x, int y) {
