@@ -73,6 +73,6 @@ public class InputController extends InputAdapter {
 	
 	private void updateMouse(int x, int y) {
 		Input.mouse.x = x;
-		Input.mouse.y = Gdx.graphics.getHeight() - y;
+		Input.mouse.y = y;
 	}
 }

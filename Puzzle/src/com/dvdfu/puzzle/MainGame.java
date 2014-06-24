@@ -20,12 +20,12 @@ public class MainGame implements ApplicationListener {
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
 	private ShapeRenderer shapes;
+	private int scale;
+	private int blockSize;
 	private int boardOffsetX;
 	private int boardOffsetY;
-	private int scale = 1;
-	private int blockSize = (int) (32 * scale);
-	private int timer = 0;
-	private int timerMax = 4;
+	private int timer;
+	private int timerMax;
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
@@ -44,10 +44,13 @@ public class MainGame implements ApplicationListener {
 		assets.finishLoading();
 		sprites = new SpriteBatch();
 		shapes = new ShapeRenderer();
+		scale = 1;
 		Gdx.gl20.glLineWidth(scale);
+		blockSize = 32 * scale;
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * blockSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * blockSize) / 2;
 		timer = 0;
+		timerMax = 4;
 	}
 
 	public void dispose() {
@@ -63,7 +66,9 @@ public class MainGame implements ApplicationListener {
 				board.useBuffer();
 			}
 		} else {
-			board.setCursor((int) (Input.mouse.x - boardOffsetX) / blockSize, (int) (Input.mouse.y - boardOffsetY) / blockSize);
+			int cursorX = (int) (Input.mouse.x - boardOffsetX) / blockSize;
+			int cursorY = (int) (Input.mouse.y - boardOffsetY) / blockSize;
+			board.setCursor(cursorX, cursorY);
 			if (Input.MousePressed()) {
 				if (board.select()) {
 					assets.get("aud/select.wav", Sound.class).play();
@@ -112,11 +117,15 @@ public class MainGame implements ApplicationListener {
 					case MOVE_LEFT:
 						bufferX = -blockSize * (timerMax - timer) / timerMax;
 						break;
+					case GEM:
+					case BIG_GEM:
+						destroy = true;
+						break;
 					default:
 						break;
 					}
 					int drawX = boardOffsetX + i * blockSize + bufferX;
-					int drawY = boardOffsetY + j * blockSize + bufferY;
+					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - bufferY;
 
 					if (block.move) {
 						drawBlock("block", drawX, drawY, blockSize);
@@ -156,7 +165,9 @@ public class MainGame implements ApplicationListener {
 			} else {
 				shapes.setColor(Color.BLUE);
 			}
-			shapes.rect(boardOffsetX + board.getCursorX() * blockSize, boardOffsetY + board.getCursorY() * blockSize, blockSize, blockSize);
+			int cursorX = boardOffsetX + board.getCursorX() * blockSize;
+			int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * blockSize;
+			shapes.rect(cursorX, cursorY, blockSize, blockSize);
 		}
 		shapes.end();
 		Input.update();

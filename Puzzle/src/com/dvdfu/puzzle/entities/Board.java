@@ -90,13 +90,13 @@ public class Board {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
 				if (block != null && block.isGem()) {
-					if (block.gemU && gridHas(i, j + 1) && grid[i][j + 1].gemD) {
-						block.command = Block.Command.GEM;
-						grid[i][j + 1].command = Block.Command.GEM;
-					}
-					if (block.gemD && gridHas(i, j - 1) && grid[i][j - 1].gemU) {
+					if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
 						block.command = Block.Command.GEM;
 						grid[i][j - 1].command = Block.Command.GEM;
+					}
+					if (block.gemD && gridHas(i, j + 1) && grid[i][j + 1].gemU) {
+						block.command = Block.Command.GEM;
+						grid[i][j + 1].command = Block.Command.GEM;
 					}
 					if (block.gemR && gridHas(i + 1, j) && grid[i + 1][j].gemL) {
 						block.command = Block.Command.GEM;
@@ -120,19 +120,34 @@ public class Board {
 		}
 	}
 
+	/*
+	 * returns if a cell has a block. An unoccupied cell or a cell out of bounds
+	 * does not have a block
+	 */
+	
 	private boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
+
+	/*
+	 * returns if a cell is empty. An occupied cell or cell out of bounds is not
+	 * empty
+	 */
 
 	private boolean gridEmpty(int x, int y) {
 		return gridValid(x, y) && grid[x][y] == null;
 	}
 
+	/*
+	 * returns if coordinates are in bounds. Used to avoid out of bounds
+	 * exceptions
+	 */
+
 	private boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 
-	/**
+	/*
 	 * PUBLIC FINAL VIEW FUNCTIONS The following functions have public access
 	 * and are intended for use by the viewer which retrieves grid information
 	 * to draw
