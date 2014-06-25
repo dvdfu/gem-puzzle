@@ -1,10 +1,12 @@
 package com.dvdfu.puzzle.entities;
 
+
 public class Board {
 	private Block grid[][];
+	private Block cursorBlock;
+	private Special specials[][];
 	private int width;
 	private int height;
-	private Block cursorBlock;
 	private int cursorX;
 	private int cursorY;
 
@@ -12,15 +14,17 @@ public class Board {
 		cursorX = 0;
 		cursorY = 0;
 		grid = new Block[width][height];
+		specials = new Special[width][height];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				grid[i][j] = null;
+				specials[i][j] = null;
 			}
 		}
 		grid[0][0] = new Block().setGem(true, false, false, false, false, false);
 		grid[1][0] = new Block().setGem(true, false, false, false, false, false);
 		grid[2][0] = new Block().setGem(true, false, false, false, false, false);
-		grid[3][0] = new Block().setGem(true, false, true, false, false, false);
+		grid[3][0] = new Block().setGem(true, true, true, false, false, false);
 		grid[4][0] = new Block().setGem(true, false, false, true, false, false);
 		grid[0][1] = new Block().setGem(true, false, false, false, true, false);
 		grid[1][1] = new Block().setGem(true, false, true, false, true, false);
@@ -31,6 +35,16 @@ public class Board {
 		this.width = width;
 		this.height = height;
 		cursorBlock = null;
+		addPath(0, 0, 3, 4);
+	}
+	
+	public void addPath(int x1, int y1, int x2, int y2) {
+		if (gridValid(x1, y1) && gridValid(x2, y2)) {
+			grid[x1][y1] = null;
+			grid[x2][y2] = null;
+			specials[x1][y1] = new Special().setPath(x2, y2);
+			specials[x2][y2] = new Special().setPath(x1, y1);
+		}
 	}
 
 	/**
@@ -44,13 +58,13 @@ public class Board {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
 				if (block != null && block.active) {
-					if (block.fall && gridEmpty(i, j - 1)) {
+					if (block.fall && gridEmpty(i, j + 1)) {
 						block.command = Block.Command.MOVE_DOWN;
-					} else if (block.move && block == cursorBlock) {
-						moveBlockToCursor(i, j);
+					} else if (block.move) {
+						if (block == cursorBlock) {
+							moveBlockToCursor(i, j);
+						}
 					}
-				} else {
-					// buffer.add(new Action(Action.Command.HOLD, i, j));
 				}
 			}
 		}
@@ -66,16 +80,13 @@ public class Board {
 			return;
 		}
 		if (cursorX < x && gridEmpty(x - 1, y)) {
-
 			grid[x][y].command = Block.Command.MOVE_LEFT;
 		} else if (cursorX > x && gridEmpty(x + 1, y)) {
-
 			grid[x][y].command = Block.Command.MOVE_RIGHT;
-			;
 		} else if (cursorBlock.active) {
-			if (cursorY > y && gridEmpty(x, y + 1) && !cursorBlock.fall) {
+			if (cursorY < y && gridEmpty(x, y - 1) && !cursorBlock.fall) {
 				grid[x][y].command = Block.Command.MOVE_UP;
-			} else if (cursorY < y && gridEmpty(x, y - 1) && !cursorBlock.fall) {
+			} else if (cursorY > y && gridEmpty(x, y + 1) && !cursorBlock.fall) {
 				grid[x][y].command = Block.Command.MOVE_DOWN;
 			}
 		}
@@ -107,7 +118,7 @@ public class Board {
 						grid[i - 1][j].command = Block.Command.GEM;
 					}
 					if (block.gemC) {
-						if (gridHas(i, j + 1) && grid[i][j + 1].gemD && gridHas(i, j - 1) && grid[i][j - 1].gemU && gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
+						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD && gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
 							block.command = Block.Command.GEM;
 							grid[i][j + 1].command = Block.Command.GEM;
 							grid[i][j - 1].command = Block.Command.GEM;
@@ -124,7 +135,7 @@ public class Board {
 	 * returns if a cell has a block. An unoccupied cell or a cell out of bounds
 	 * does not have a block
 	 */
-	
+
 	private boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
@@ -155,6 +166,10 @@ public class Board {
 
 	public final Block[][] getGrid() {
 		return grid;
+	}
+	
+	public final Special[][] getSpecial() {
+		return specials;
 	}
 
 	public final int getWidth() {
@@ -191,6 +206,7 @@ public class Board {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
 				if (block != null) {
+					boolean hold = true;
 					switch (block.command) {
 					case GEM:
 						if (block == cursorBlock) {
@@ -206,24 +222,52 @@ public class Board {
 						break;
 					case MOVE_UP:
 						grid[i][j] = null;
-						grid[i][j + 1] = block;
+						grid[i][j - 1] = block;
+						Special pathUp = specials[i][j - 1];
+						if (pathUp != null && pathUp.path && gridEmpty(pathUp.destX, pathUp.destY)) {
+							grid[i][j - 1].command = Block.Command.PATH_ENTER;
+							hold = false;
+						}
 						break;
 					case MOVE_DOWN:
 						grid[i][j] = null;
-						grid[i][j - 1] = block;
+						grid[i][j + 1] = block;
+						Special pathDown = specials[i][j + 1];
+						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
+							grid[i][j + 1].command = Block.Command.PATH_ENTER;
+							hold = false;
+						}
 						break;
 					case MOVE_RIGHT:
 						grid[i][j] = null;
 						grid[i + 1][j] = block;
+						Special pathRight = specials[i + 1][j];
+						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
+							grid[i + 1][j].command = Block.Command.PATH_ENTER;
+							hold = false;
+						}
 						break;
 					case MOVE_LEFT:
 						grid[i][j] = null;
 						grid[i - 1][j] = block;
+						Special pathLeft = specials[i - 1][j];
+						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
+							grid[i - 1][j].command = Block.Command.PATH_ENTER;
+							hold = false;
+						}
+						break;
+					case PATH_ENTER:
+						grid[i][j] = null;
+						grid[specials[i][j].destX][specials[i][j].destY] = block;
+						grid[specials[i][j].destX][specials[i][j].destY].command = Block.Command.PATH_EXIT;
+						hold = false;
 						break;
 					case HOLD:
 						break;
 					}
-					block.command = Block.Command.HOLD;
+					if (hold) {
+						block.command = Block.Command.HOLD;
+					}
 				}
 			}
 		}

@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.dvdfu.puzzle.entities.Block;
 import com.dvdfu.puzzle.entities.Board;
+import com.dvdfu.puzzle.entities.Special;
 import com.dvdfu.puzzle.handlers.Input;
 import com.dvdfu.puzzle.handlers.InputController;
 
@@ -38,6 +39,7 @@ public class MainGame implements ApplicationListener {
 		assets.load("img/gemsR.png", Texture.class);
 		assets.load("img/gemsU.png", Texture.class);
 		assets.load("img/fall.png", Texture.class);
+		assets.load("img/path.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -67,7 +69,7 @@ public class MainGame implements ApplicationListener {
 			}
 		} else {
 			int cursorX = (int) (Input.mouse.x - boardOffsetX) / blockSize;
-			int cursorY = (int) (Input.mouse.y - boardOffsetY) / blockSize;
+			int cursorY = board.getHeight() - 1 - (int) (Input.mouse.y - boardOffsetY) / blockSize;
 			board.setCursor(cursorX, cursorY);
 			if (Input.MousePressed()) {
 				if (board.select()) {
@@ -96,8 +98,20 @@ public class MainGame implements ApplicationListener {
 		}
 		shapes.end();
 		sprites.begin();
+		Color c = sprites.getColor();
 		boolean destroy = false;
 		Block[][] blocks = board.getGrid();
+		Special[][] specials = board.getSpecial();
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				Special special = specials[i][j];
+				if (special != null && special.path) {
+					int x = boardOffsetX + i * blockSize - 8;
+					int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - 8;
+					sprites.draw(assets.get("img/path.png", Texture.class), x, y, 48, 48);
+				}
+			}
+		}
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Block block = blocks[i][j];
@@ -125,8 +139,15 @@ public class MainGame implements ApplicationListener {
 						break;
 					}
 					int drawX = boardOffsetX + i * blockSize + bufferX;
-					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - bufferY;
+					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize + bufferY;
 
+					if (timer > 0) {
+						if (block.command == Block.Command.PATH_ENTER) {
+							setAlpha((float) timer / timerMax);
+						} else if (block.command == Block.Command.PATH_EXIT) {
+							setAlpha((float) (timerMax - timer) / timerMax);
+						}
+					}
 					if (block.move) {
 						drawBlock("block", drawX, drawY, blockSize);
 					} else {
@@ -151,6 +172,7 @@ public class MainGame implements ApplicationListener {
 					if (block.fall) {
 						drawBlock("fall", drawX, drawY, blockSize);
 					}
+					setAlpha(1);
 				}
 			}
 		}
@@ -168,9 +190,15 @@ public class MainGame implements ApplicationListener {
 			int cursorX = boardOffsetX + board.getCursorX() * blockSize;
 			int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * blockSize;
 			shapes.rect(cursorX, cursorY, blockSize, blockSize);
+			shapes.circle(Input.mouse.x, Input.mouse.y, blockSize, blockSize);
 		}
 		shapes.end();
 		Input.update();
+	}
+
+	private void setAlpha(float alpha) {
+		Color c = sprites.getColor();
+		sprites.setColor(c.r, c.g, c.b, alpha);
 	}
 
 	private void drawBlock(String filename, int x, int y, int size) {
