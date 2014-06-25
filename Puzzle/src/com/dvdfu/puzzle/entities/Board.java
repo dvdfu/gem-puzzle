@@ -32,34 +32,35 @@ public class Board {
 		grid[3][2] = new Block().setGem(true, false, false, false, false, true);
 		grid[4][1] = new Block().setGem(true, false, false, false, false, true);
 		grid[0][2] = new Block().setGem(true, false, true, true, false, true);
+		grid[1][2] = new Block().setActive(true, false);
 		this.width = width;
 		this.height = height;
 		cursorBlock = null;
-		addPath(0, 0, 3, 4);
+		addPath(3, 11, 0, 0);
+		addPath(2, 1, 3, 2);
 	}
 	
 	public void addPath(int x1, int y1, int x2, int y2) {
-		if (gridValid(x1, y1) && gridValid(x2, y2)) {
+		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
 			grid[x1][y1] = null;
 			grid[x2][y2] = null;
 			specials[x1][y1] = new Special().setPath(x2, y2);
 			specials[x2][y2] = new Special().setPath(x1, y1);
 		}
 	}
+	
+	public void update() {
+		moveBlocks();
+		clearBlocks();
+	}
 
-	/**
-	 * Called whenever the cursor moves. Checks every block to see if there are
-	 * blocks that need to be updated by moving down. Also checks if there are
-	 * blocks waiting to be moved by cursor. All empty or static blocks are set
-	 * to unbuffered
-	 */
-	private void updateBlocks() {
+	private void moveBlocks() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
 				if (block != null && block.active) {
 					if (block.fall && gridEmpty(i, j + 1)) {
-						block.command = Block.Command.MOVE_DOWN;
+						block.command = Block.Command.FALL;
 					} else if (block.move) {
 						if (block == cursorBlock) {
 							moveBlockToCursor(i, j);
@@ -70,11 +71,6 @@ public class Board {
 		}
 	}
 
-	/**
-	 * Called whenever a block is waiting to be moved by the cursor. Moves such
-	 * a block one tile in the direction of the cursor. Prioritizes horizontal
-	 * movement over vertical. Will NOT act when buffered
-	 */
 	private void moveBlockToCursor(int x, int y) {
 		if (isBuffered() || !cursorBlock.active) {
 			return;
@@ -91,11 +87,7 @@ public class Board {
 			}
 		}
 	}
-
-	/**
-	 * Called whenever cursor moves. Creates an array of all blocks and returns
-	 * true where a block needs to be removed.
-	 */
+	
 	private void clearBlocks() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -184,6 +176,12 @@ public class Board {
 		return cursorBlock != null;
 	}
 
+	/*
+	 * PUBLIC CONTROLLER FUNCTIONS The following functions have public access
+	 * and are intended for use by the controller which allows the board to be
+	 * manipulated
+	 */
+
 	public final boolean isBuffered() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -194,12 +192,6 @@ public class Board {
 		}
 		return false;
 	}
-
-	/**
-	 * PUBLIC CONTROLLER FUNCTIONS The following functions have public access
-	 * and are intended for use by the controller which allows the board to be
-	 * manipulated
-	 */
 
 	public void useBuffer() {
 		for (int i = 0; i < width; i++) {
@@ -223,46 +215,34 @@ public class Board {
 					case MOVE_UP:
 						grid[i][j] = null;
 						grid[i][j - 1] = block;
-						Special pathUp = specials[i][j - 1];
-						if (pathUp != null && pathUp.path && gridEmpty(pathUp.destX, pathUp.destY)) {
-							grid[i][j - 1].command = Block.Command.PATH_ENTER;
-							hold = false;
-						}
 						break;
 					case MOVE_DOWN:
 						grid[i][j] = null;
 						grid[i][j + 1] = block;
-						Special pathDown = specials[i][j + 1];
-						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
-							grid[i][j + 1].command = Block.Command.PATH_ENTER;
-							hold = false;
-						}
 						break;
 					case MOVE_RIGHT:
 						grid[i][j] = null;
 						grid[i + 1][j] = block;
-						Special pathRight = specials[i + 1][j];
-						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
-							grid[i + 1][j].command = Block.Command.PATH_ENTER;
-							hold = false;
-						}
 						break;
 					case MOVE_LEFT:
 						grid[i][j] = null;
 						grid[i - 1][j] = block;
-						Special pathLeft = specials[i - 1][j];
-						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
-							grid[i - 1][j].command = Block.Command.PATH_ENTER;
-							hold = false;
-						}
 						break;
 					case PATH_ENTER:
 						grid[i][j] = null;
 						grid[specials[i][j].destX][specials[i][j].destY] = block;
 						grid[specials[i][j].destX][specials[i][j].destY].command = Block.Command.PATH_EXIT;
 						hold = false;
+						System.out.println("Ent");
 						break;
-					case HOLD:
+					case PATH_EXIT:
+						System.out.println("Ex");
+						break;
+					case FALL:
+						grid[i][j] = null;
+						grid[i][j + 1] = block;
+						break;
+					default:
 						break;
 					}
 					if (hold) {
@@ -283,6 +263,15 @@ public class Board {
 
 	public boolean unselect() {
 		if (isSelected()) {
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < height; j++) {
+					Block block = grid[i][j];
+					Special special = specials[i][j];
+					if (grid[i][j] == cursorBlock && special != null && special.path && gridEmpty(special.destX, special.destY)) {
+						block.command = Block.Command.PATH_ENTER;
+					}
+				}
+			}
 			cursorBlock = null;
 			return true;
 		}
@@ -304,8 +293,6 @@ public class Board {
 		} else {
 			cursorY = y;
 		}
-		updateBlocks();
-		clearBlocks();
 	}
 
 	public int getCursorX() {

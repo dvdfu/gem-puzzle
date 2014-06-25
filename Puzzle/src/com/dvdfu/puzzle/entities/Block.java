@@ -2,7 +2,7 @@ package com.dvdfu.puzzle.entities;
 
 public class Block {
 	public enum Command {
-		HOLD, GEM, BIG_GEM, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH_ENTER, PATH_EXIT
+		HOLD, GEM, BIG_GEM, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH_ENTER, PATH_EXIT, FALL
 	};
 	public Command command;
 	public boolean active;
