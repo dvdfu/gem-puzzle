@@ -43,8 +43,8 @@ public class Board {
 
 	public void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
-			//grid[x1][y1] = null;
-			//grid[x2][y2] = null;
+			// grid[x1][y1] = null;
+			// grid[x2][y2] = null;
 			specials[x1][y1] = new Special().setPath(x2, y2);
 			specials[x2][y2] = new Special().setPath(x1, y1);
 		}
@@ -65,7 +65,7 @@ public class Board {
 					}
 					// marks gems for deletion
 					// takes priority over moving blocks
-					if (block.isGem()) {
+					if (block.isGem() && block.command == Block.Command.HOLD) {
 						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
 							block.command = Block.Command.GEM;
 							grid[i][j - 1].command = Block.Command.GEM;
@@ -83,10 +83,7 @@ public class Board {
 							grid[i - 1][j].command = Block.Command.GEM;
 						}
 						if (block.gemC) {
-							if (gridHas(i, j + 1) && grid[i][j + 1].gemU && 
-									gridHas(i, j - 1) && grid[i][j - 1].gemD && 
-									gridHas(i + 1, j) && grid[i + 1][j].gemL && 
-									gridHas(i - 1, j) && grid[i - 1][j].gemR) {
+							if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD && gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
 								block.command = Block.Command.BIG_GEM;
 								grid[i][j + 1].command = Block.Command.GEM;
 								grid[i][j - 1].command = Block.Command.GEM;
@@ -150,7 +147,7 @@ public class Board {
 	public final int getHeight() {
 		return height;
 	}
-	
+
 	public final boolean isSelected() {
 		return cursorBlock != null;
 	}
@@ -173,7 +170,7 @@ public class Board {
 	}
 
 	public void useBuffer() {
-		System.out.println("-------------");
+		// System.out.println("-------------");
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				if (grid[i][j] != null) {
@@ -193,7 +190,6 @@ public class Board {
 							unselect();
 						}
 						grid[i][j] = null;
-						System.out.println("Gem connect");
 						break;
 					case BIG_GEM:
 						if (block == cursorBlock) {
@@ -205,11 +201,9 @@ public class Board {
 						grid[i][j] = null;
 						grid[i][j - 1] = block;
 						Special pathU = specials[i][j - 1];
-						System.out.println("Move up");
 						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
 							grid[i][j - 1].command = Block.Command.PATH_ENTER;
 							hold = false;
-							System.out.println("Enter path");
 						}
 						break;
 					case FALL:
@@ -217,10 +211,8 @@ public class Board {
 						grid[i][j] = null;
 						grid[i][j + 1] = block;
 						Special pathDown = specials[i][j + 1];
-						System.out.println("Move down");
 						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
 							grid[i][j + 1].command = Block.Command.PATH_ENTER;
-							System.out.println("Enter path");
 							hold = false;
 						}
 						break;
@@ -228,10 +220,8 @@ public class Board {
 						grid[i][j] = null;
 						grid[i + 1][j] = block;
 						Special pathRight = specials[i + 1][j];
-						System.out.println("Move right");
 						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
 							grid[i + 1][j].command = Block.Command.PATH_ENTER;
-							System.out.println("Enter path");
 							hold = false;
 						}
 						break;
@@ -239,10 +229,8 @@ public class Board {
 						grid[i][j] = null;
 						grid[i - 1][j] = block;
 						Special pathLeft = specials[i - 1][j];
-						System.out.println("Move left");
 						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
 							grid[i - 1][j].command = Block.Command.PATH_ENTER;
-							System.out.println("Enter path");
 							hold = false;
 						}
 						break;
@@ -251,15 +239,14 @@ public class Board {
 						grid[specials[i][j].destX][specials[i][j].destY] = block;
 						grid[specials[i][j].destX][specials[i][j].destY].command = Block.Command.PATH_EXIT;
 						hold = false;
-						System.out.println("Entered path");
 						break;
 					case PATH_EXIT:
 						unselect();
-						System.out.println("Exited path");
 						break;
 					default:
 						break;
 					}
+					// System.out.println(block.command);
 					if (hold) {
 						block.command = Block.Command.HOLD;
 					}

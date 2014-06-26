@@ -42,13 +42,14 @@ public class MainGame implements ApplicationListener {
 		assets.load("img/gemsU.png", Texture.class);
 		assets.load("img/fall.png", Texture.class);
 		assets.load("img/path.png", Texture.class);
+		assets.load("img/grid.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
 		assets.finishLoading();
 		sprites = new SpriteBatch();
 		shapes = new ShapeRenderer();
-		scale = 4;
+		scale = 1;
 		Gdx.gl20.glLineWidth(scale);
 		blockSize = 32 * scale;
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * blockSize) / 2;
@@ -57,7 +58,7 @@ public class MainGame implements ApplicationListener {
 		timerReset();
 		timeMove = 4;
 		timePath = 12;
-		timeGem = 20;
+		timeGem = 16;
 	}
 
 	public void dispose() {
@@ -69,18 +70,15 @@ public class MainGame implements ApplicationListener {
 	public void render() {
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		board.update();
-		updateCursor();
-		shapes.begin(ShapeType.Line);
-		shapes.setColor(Color.LIGHT_GRAY);
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				shapes.rect(boardOffsetX + i * blockSize, boardOffsetY + j * blockSize, blockSize, blockSize);
-			}
-		}
-		shapes.end();
 		sprites.begin();
 		Special[][] specials = board.getSpecial();
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				int x = boardOffsetX + i * blockSize;
+				int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize;
+				drawBlock("grid", x, y, blockSize * scale);
+			}
+		}
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Special special = specials[i][j];
@@ -91,14 +89,16 @@ public class MainGame implements ApplicationListener {
 				}
 			}
 		}
+		board.update();
+		updateCursor();
 		Block[][] blocks = board.getGrid();
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				Block block = blocks[i][j];
-				if (block != null) {
-					if (timer[i][j] > 0) {
-						timer[i][j]--;
-					} else if (timerReady()) {
+		if (timerReady()) {
+			// timers must be set in a separate loop because timerReady()
+			// evaluates to false as soon as one timer is set
+			for (int i = 0; i < board.getWidth(); i++) {
+				for (int j = 0; j < board.getHeight(); j++) {
+					Block block = blocks[i][j];
+					if (block != null) {
 						switch (block.command) {
 						case MOVE_UP:
 						case MOVE_DOWN:
@@ -126,6 +126,9 @@ public class MainGame implements ApplicationListener {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Block block = blocks[i][j];
 				if (block != null) {
+					if (timer[i][j] > 0) {
+						timer[i][j]--;
+					}
 					int drawX = boardOffsetX + i * blockSize;
 					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize;
 					int bufferX = 0;
