@@ -13,9 +13,11 @@ public class Block {
 	public boolean gemD;
 	public boolean gemR;
 	public boolean gemL;
+	public boolean visited;
 	
 	public Block() {
 		command = Command.HOLD;
+		visited = false;
 		setStatic();
 	}
 	

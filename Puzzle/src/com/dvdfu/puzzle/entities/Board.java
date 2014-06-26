@@ -1,6 +1,5 @@
 package com.dvdfu.puzzle.entities;
 
-
 public class Board {
 	private Block grid[][];
 	private Block cursorBlock;
@@ -21,6 +20,7 @@ public class Board {
 				specials[i][j] = null;
 			}
 		}
+
 		grid[0][0] = new Block().setGem(true, false, false, false, false, false);
 		grid[1][0] = new Block().setGem(true, false, false, false, false, false);
 		grid[2][0] = new Block().setGem(true, false, false, false, false, false);
@@ -33,37 +33,66 @@ public class Board {
 		grid[4][1] = new Block().setGem(true, false, false, false, false, true);
 		grid[0][2] = new Block().setGem(true, false, true, true, false, true);
 		grid[1][2] = new Block().setActive(true, false);
+
 		this.width = width;
 		this.height = height;
 		cursorBlock = null;
 		addPath(3, 11, 0, 0);
-		addPath(2, 1, 3, 2);
+		addPath(2, 1, 3, 6);
 	}
-	
+
 	public void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
-			grid[x1][y1] = null;
-			grid[x2][y2] = null;
+			//grid[x1][y1] = null;
+			//grid[x2][y2] = null;
 			specials[x1][y1] = new Special().setPath(x2, y2);
 			specials[x2][y2] = new Special().setPath(x1, y1);
 		}
 	}
-	
-	public void update() {
-		moveBlocks();
-		clearBlocks();
-	}
 
-	private void moveBlocks() {
+	public void update() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
-				if (block != null && block.active) {
-					if (block.fall && gridEmpty(i, j + 1)) {
-						block.command = Block.Command.FALL;
-					} else if (block.move) {
-						if (block == cursorBlock) {
+				if (block != null) {
+					// moves blocks that can fall or are selected
+					if (block.active && block.command == Block.Command.HOLD) {
+						if (block.fall && gridEmpty(i, j + 1)) {
+							block.command = Block.Command.FALL;
+						} else if (block.move && block == cursorBlock) {
 							moveBlockToCursor(i, j);
+						}
+					}
+					// marks gems for deletion
+					// takes priority over moving blocks
+					if (block.isGem()) {
+						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
+							block.command = Block.Command.GEM;
+							grid[i][j - 1].command = Block.Command.GEM;
+						}
+						if (block.gemD && gridHas(i, j + 1) && grid[i][j + 1].gemU) {
+							block.command = Block.Command.GEM;
+							grid[i][j + 1].command = Block.Command.GEM;
+						}
+						if (block.gemR && gridHas(i + 1, j) && grid[i + 1][j].gemL) {
+							block.command = Block.Command.GEM;
+							grid[i + 1][j].command = Block.Command.GEM;
+						}
+						if (block.gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
+							block.command = Block.Command.GEM;
+							grid[i - 1][j].command = Block.Command.GEM;
+						}
+						if (block.gemC) {
+							if (gridHas(i, j + 1) && grid[i][j + 1].gemU && 
+									gridHas(i, j - 1) && grid[i][j - 1].gemD && 
+									gridHas(i + 1, j) && grid[i + 1][j].gemL && 
+									gridHas(i - 1, j) && grid[i - 1][j].gemR) {
+								block.command = Block.Command.BIG_GEM;
+								grid[i][j + 1].command = Block.Command.GEM;
+								grid[i][j - 1].command = Block.Command.GEM;
+								grid[i + 1][j].command = Block.Command.GEM;
+								grid[i - 1][j].command = Block.Command.GEM;
+							}
 						}
 					}
 				}
@@ -87,64 +116,14 @@ public class Board {
 			}
 		}
 	}
-	
-	private void clearBlocks() {
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				Block block = grid[i][j];
-				if (block != null && block.isGem()) {
-					if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
-						block.command = Block.Command.GEM;
-						grid[i][j - 1].command = Block.Command.GEM;
-					}
-					if (block.gemD && gridHas(i, j + 1) && grid[i][j + 1].gemU) {
-						block.command = Block.Command.GEM;
-						grid[i][j + 1].command = Block.Command.GEM;
-					}
-					if (block.gemR && gridHas(i + 1, j) && grid[i + 1][j].gemL) {
-						block.command = Block.Command.GEM;
-						grid[i + 1][j].command = Block.Command.GEM;
-					}
-					if (block.gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
-						block.command = Block.Command.GEM;
-						grid[i - 1][j].command = Block.Command.GEM;
-					}
-					if (block.gemC) {
-						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD && gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
-							block.command = Block.Command.GEM;
-							grid[i][j + 1].command = Block.Command.GEM;
-							grid[i][j - 1].command = Block.Command.GEM;
-							grid[i + 1][j].command = Block.Command.GEM;
-							grid[i - 1][j].command = Block.Command.GEM;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/*
-	 * returns if a cell has a block. An unoccupied cell or a cell out of bounds
-	 * does not have a block
-	 */
 
 	private boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
 
-	/*
-	 * returns if a cell is empty. An occupied cell or cell out of bounds is not
-	 * empty
-	 */
-
 	private boolean gridEmpty(int x, int y) {
 		return gridValid(x, y) && grid[x][y] == null;
 	}
-
-	/*
-	 * returns if coordinates are in bounds. Used to avoid out of bounds
-	 * exceptions
-	 */
 
 	private boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
@@ -159,7 +138,7 @@ public class Board {
 	public final Block[][] getGrid() {
 		return grid;
 	}
-	
+
 	public final Special[][] getSpecial() {
 		return specials;
 	}
@@ -171,7 +150,7 @@ public class Board {
 	public final int getHeight() {
 		return height;
 	}
-
+	
 	public final boolean isSelected() {
 		return cursorBlock != null;
 	}
@@ -194,10 +173,19 @@ public class Board {
 	}
 
 	public void useBuffer() {
+		System.out.println("-------------");
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				if (grid[i][j] != null) {
+					grid[i][j].visited = false;
+				}
+			}
+		}
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
-				if (block != null) {
+				if (block != null && !block.visited) {
+					block.visited = true;
 					boolean hold = true;
 					switch (block.command) {
 					case GEM:
@@ -205,6 +193,7 @@ public class Board {
 							unselect();
 						}
 						grid[i][j] = null;
+						System.out.println("Gem connect");
 						break;
 					case BIG_GEM:
 						if (block == cursorBlock) {
@@ -215,32 +204,58 @@ public class Board {
 					case MOVE_UP:
 						grid[i][j] = null;
 						grid[i][j - 1] = block;
+						Special pathU = specials[i][j - 1];
+						System.out.println("Move up");
+						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
+							grid[i][j - 1].command = Block.Command.PATH_ENTER;
+							hold = false;
+							System.out.println("Enter path");
+						}
 						break;
+					case FALL:
 					case MOVE_DOWN:
 						grid[i][j] = null;
 						grid[i][j + 1] = block;
+						Special pathDown = specials[i][j + 1];
+						System.out.println("Move down");
+						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
+							grid[i][j + 1].command = Block.Command.PATH_ENTER;
+							System.out.println("Enter path");
+							hold = false;
+						}
 						break;
 					case MOVE_RIGHT:
 						grid[i][j] = null;
 						grid[i + 1][j] = block;
+						Special pathRight = specials[i + 1][j];
+						System.out.println("Move right");
+						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
+							grid[i + 1][j].command = Block.Command.PATH_ENTER;
+							System.out.println("Enter path");
+							hold = false;
+						}
 						break;
 					case MOVE_LEFT:
 						grid[i][j] = null;
 						grid[i - 1][j] = block;
+						Special pathLeft = specials[i - 1][j];
+						System.out.println("Move left");
+						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
+							grid[i - 1][j].command = Block.Command.PATH_ENTER;
+							System.out.println("Enter path");
+							hold = false;
+						}
 						break;
 					case PATH_ENTER:
 						grid[i][j] = null;
 						grid[specials[i][j].destX][specials[i][j].destY] = block;
 						grid[specials[i][j].destX][specials[i][j].destY].command = Block.Command.PATH_EXIT;
 						hold = false;
-						System.out.println("Ent");
+						System.out.println("Entered path");
 						break;
 					case PATH_EXIT:
-						System.out.println("Ex");
-						break;
-					case FALL:
-						grid[i][j] = null;
-						grid[i][j + 1] = block;
+						unselect();
+						System.out.println("Exited path");
 						break;
 					default:
 						break;
@@ -263,15 +278,6 @@ public class Board {
 
 	public boolean unselect() {
 		if (isSelected()) {
-			for (int i = 0; i < width; i++) {
-				for (int j = 0; j < height; j++) {
-					Block block = grid[i][j];
-					Special special = specials[i][j];
-					if (grid[i][j] == cursorBlock && special != null && special.path && gridEmpty(special.destX, special.destY)) {
-						block.command = Block.Command.PATH_ENTER;
-					}
-				}
-			}
 			cursorBlock = null;
 			return true;
 		}

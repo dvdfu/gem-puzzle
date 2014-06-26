@@ -48,7 +48,7 @@ public class MainGame implements ApplicationListener {
 		assets.finishLoading();
 		sprites = new SpriteBatch();
 		shapes = new ShapeRenderer();
-		scale = 1;
+		scale = 4;
 		Gdx.gl20.glLineWidth(scale);
 		blockSize = 32 * scale;
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * blockSize) / 2;
@@ -57,7 +57,7 @@ public class MainGame implements ApplicationListener {
 		timerReset();
 		timeMove = 4;
 		timePath = 12;
-		timeGem = 12;
+		timeGem = 20;
 	}
 
 	public void dispose() {
@@ -69,13 +69,13 @@ public class MainGame implements ApplicationListener {
 	public void render() {
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		board.update();
+		updateCursor();
 		shapes.begin(ShapeType.Line);
-		{
-			shapes.setColor(Color.LIGHT_GRAY);
-			for (int i = 0; i < board.getWidth(); i++) {
-				for (int j = 0; j < board.getHeight(); j++) {
-					shapes.rect(boardOffsetX + i * blockSize, boardOffsetY + j * blockSize, blockSize, blockSize);
-				}
+		shapes.setColor(Color.LIGHT_GRAY);
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				shapes.rect(boardOffsetX + i * blockSize, boardOffsetY + j * blockSize, blockSize, blockSize);
 			}
 		}
 		shapes.end();
@@ -85,9 +85,9 @@ public class MainGame implements ApplicationListener {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Special special = specials[i][j];
 				if (special != null && special.path) {
-					int x = boardOffsetX + i * blockSize - 8;
-					int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - 8;
-					sprites.draw(assets.get("img/path.png", Texture.class), x, y, 48, 48);
+					int x = boardOffsetX + i * blockSize - 8 * scale;
+					int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - 8 * scale;
+					sprites.draw(assets.get("img/path.png", Texture.class), x, y, 48 * scale, 48 * scale);
 				}
 			}
 		}
@@ -95,16 +95,10 @@ public class MainGame implements ApplicationListener {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Block block = blocks[i][j];
-
 				if (block != null) {
-					int drawX = boardOffsetX + i * blockSize;
-					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize;
-					int bufferX = 0;
-					int bufferY = 0;
 					if (timer[i][j] > 0) {
-						System.out.println(timer[i][j]);
 						timer[i][j]--;
-					} else if (timerReady()){
+					} else if (timerReady()) {
 						switch (block.command) {
 						case MOVE_UP:
 						case MOVE_DOWN:
@@ -125,6 +119,18 @@ public class MainGame implements ApplicationListener {
 							break;
 						}
 					}
+				}
+			}
+		}
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				Block block = blocks[i][j];
+				if (block != null) {
+					int drawX = boardOffsetX + i * blockSize;
+					int drawY = boardOffsetY + (board.getHeight() - 1 - j) * blockSize;
+					int bufferX = 0;
+					int bufferY = 0;
+
 					switch (block.command) {
 					case MOVE_UP:
 						bufferY = (timeMove - timer[i][j]) * blockSize / timeMove;
@@ -185,28 +191,24 @@ public class MainGame implements ApplicationListener {
 		}
 		sprites.end();
 		shapes.begin(ShapeType.Line);
-		{
-			if (board.isSelected()) {
-				shapes.setColor(Color.RED);
-			} else {
-				shapes.setColor(Color.BLUE);
-			}
-			int cursorX = boardOffsetX + board.getCursorX() * blockSize;
-			int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * blockSize;
-			shapes.rect(cursorX, cursorY, blockSize, blockSize);
-			shapes.circle(Input.mouse.x, Input.mouse.y, blockSize, blockSize);
+		if (board.isSelected()) {
+			shapes.setColor(Color.RED);
+		} else {
+			shapes.setColor(Color.BLUE);
 		}
+		int cursorX = boardOffsetX + board.getCursorX() * blockSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * blockSize;
+		shapes.rect(cursorX, cursorY, blockSize, blockSize);
+		shapes.circle(Input.mouse.x, Input.mouse.y, blockSize, blockSize);
 		shapes.end();
 		if (timerReady()) {
 			if (board.isBuffered()) {
 				board.useBuffer();
 			}
-			board.update();
-			updateCursor();
 		}
 		Input.update();
 	}
-	
+
 	private void timerReset() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
@@ -235,7 +237,7 @@ public class MainGame implements ApplicationListener {
 				assets.get("aud/select.wav", Sound.class).play();
 			}
 		}
-		if (Input.MouseReleased()) {
+		if (!Input.MouseDown()) {
 			if (board.unselect()) {
 				assets.get("aud/deselect.wav", Sound.class).play();
 			}
