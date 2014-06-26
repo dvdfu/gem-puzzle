@@ -10,11 +10,17 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
+import com.badlogic.gdx.utils.SnapshotArray;
 import com.dvdfu.puzzle.entities.Block;
 import com.dvdfu.puzzle.entities.Board;
+import com.dvdfu.puzzle.entities.Particle;
 import com.dvdfu.puzzle.entities.Special;
 import com.dvdfu.puzzle.handlers.Input;
 import com.dvdfu.puzzle.handlers.InputController;
+import com.dvdfu.puzzle.handlers.Sprite;
 
 public class MainGame implements ApplicationListener {
 	private Board board;
@@ -29,6 +35,14 @@ public class MainGame implements ApplicationListener {
 	private int timeMove;
 	private int timePath;
 	private int timeGem;
+	private boolean gemSound;
+	private Sprite star;
+	private Array<Particle> particles;
+	private final Pool<Particle> particlePool = new Pool<Particle>() {
+		protected Particle newObject() {
+			return new Particle();
+		}
+	};
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
@@ -43,6 +57,7 @@ public class MainGame implements ApplicationListener {
 		assets.load("img/fall.png", Texture.class);
 		assets.load("img/path.png", Texture.class);
 		assets.load("img/grid.png", Texture.class);
+		assets.load("img/star1.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -59,6 +74,9 @@ public class MainGame implements ApplicationListener {
 		timeMove = 4;
 		timePath = 12;
 		timeGem = 16;
+		gemSound = false;
+		particles = new Array<Particle>();
+		star = new Sprite(assets.get("img/star1.png", Texture.class), 16, 16);
 	}
 
 	public void dispose() {
@@ -76,22 +94,23 @@ public class MainGame implements ApplicationListener {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int x = boardOffsetX + i * blockSize;
 				int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize;
-				drawBlock("grid", x, y, blockSize * scale);
+				drawBlock("grid", x, y, blockSize);
 			}
 		}
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Special special = specials[i][j];
 				if (special != null && special.path) {
-					int x = boardOffsetX + i * blockSize - 8 * scale;
-					int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - 8 * scale;
-					sprites.draw(assets.get("img/path.png", Texture.class), x, y, 48 * scale, 48 * scale);
+					int x = boardOffsetX + i * blockSize - blockSize / 4;
+					int y = boardOffsetY + (board.getHeight() - 1 - j) * blockSize - blockSize / 4;
+					sprites.draw(assets.get("img/path.png", Texture.class), x, y, blockSize * 3 / 2, blockSize * 3 / 2);
 				}
 			}
 		}
 		board.update();
 		updateCursor();
 		Block[][] blocks = board.getGrid();
+		gemSound = false;
 		if (timerReady()) {
 			// timers must be set in a separate loop because timerReady()
 			// evaluates to false as soon as one timer is set
@@ -150,6 +169,15 @@ public class MainGame implements ApplicationListener {
 						break;
 					case GEM:
 					case BIG_GEM:
+						gemSound = true;
+						Particle newParticle = particlePool.obtain();
+						newParticle.x = drawX + 8;
+						newParticle.y = drawY + 8;
+						newParticle.dx = MathUtils.random(-2f, 2f);
+						newParticle.dy = MathUtils.random(-2f, 2f);
+						newParticle.ay = -0.1f;
+						newParticle.ticks = MathUtils.random(4);
+						particles.add(newParticle);
 						break;
 					case PATH_ENTER:
 						setAlpha(timer[i][j] * 1f / timePath);
@@ -192,6 +220,16 @@ public class MainGame implements ApplicationListener {
 				}
 			}
 		}
+		SnapshotArray<Particle> snapshotParticles = new SnapshotArray<Particle>(particles);
+		for (Particle particle : snapshotParticles) {
+			particle.update();
+			if (particle.frame() > 5) {
+				particles.removeValue(particle, false);
+				particlePool.free(particle);
+			} else {
+				sprites.draw(star.getFrameAt(particle.frame()), particle.x, particle.y);
+			}
+		}
 		sprites.end();
 		shapes.begin(ShapeType.Line);
 		if (board.isSelected()) {
@@ -205,6 +243,10 @@ public class MainGame implements ApplicationListener {
 		shapes.circle(Input.mouse.x, Input.mouse.y, blockSize, blockSize);
 		shapes.end();
 		if (timerReady()) {
+			if (gemSound) {
+				assets.get("aud/remove.wav", Sound.class).play(0.1f);
+				gemSound = false;
+			}
 			if (board.isBuffered()) {
 				board.useBuffer();
 			}
