@@ -1,7 +1,6 @@
 package com.dvdfu.puzzle.handlers;
 
 import com.badlogic.gdx.Input.Keys;
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 
 public class InputController extends InputAdapter {

@@ -32,7 +32,7 @@ public class MainGame implements ApplicationListener {
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
 	private ShapeRenderer shapes;
-	private Viewport view;
+	private Viewport viewport;
 	private OrthographicCamera camera;
 	private Vector3 mouse;
 	private int[][] timer;
@@ -69,8 +69,8 @@ public class MainGame implements ApplicationListener {
 		assets.finishLoading();
 		sprites = new SpriteBatch();
 		shapes = new ShapeRenderer();
-		view = new ScreenViewport();
-		camera = (OrthographicCamera) view.getCamera();
+		viewport = new ScreenViewport();
+		camera = (OrthographicCamera) viewport.getCamera();
 		camera.zoom = 1;
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		mouse = new Vector3();
@@ -94,19 +94,16 @@ public class MainGame implements ApplicationListener {
 		setView();
 		sprites.begin();
 		Special[][] specials = board.getSpecial();
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-			}
-		}
 		board.update();
 		updateCursor();
 		Block[][] blocks = board.getGrid();
 		gemSound = false;
 		if (timerReady()) {
-			// timers must be set in a separate loop because timerReady()
-			// evaluates to false as soon as one timer is set
 			for (int i = 0; i < board.getWidth(); i++) {
 				for (int j = 0; j < board.getHeight(); j++) {
+					// timers must be set in a separate loop because
+					// timerReady() evaluates to false as soon as one timer is
+					// set
 					Block block = blocks[i][j];
 					if (block != null) {
 						switch (block.command) {
@@ -134,13 +131,14 @@ public class MainGame implements ApplicationListener {
 		}
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
+				// drawing grid is also in a separate loop since grid
+				// overlaps with blocks if blocks are moved into cells
+				// further ahead in the loop
 				int drawX = boardOffsetX + i * Vars.blockSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				drawBlock("grid", drawX, drawY);
 				Special special = specials[i][j];
-				if (special != null && special.path) {
-					drawBlock("path", drawX, drawY);
-				}
+				if (special != null && special.path) drawBlock("path", drawX, drawY);
 			}
 		}
 		for (int i = 0; i < board.getWidth(); i++) {
@@ -149,9 +147,7 @@ public class MainGame implements ApplicationListener {
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				Block block = blocks[i][j];
 				if (block != null) {
-					if (timer[i][j] > 0) {
-						timer[i][j]--;
-					}
+					if (timer[i][j] > 0) timer[i][j]--;
 					int bufferX = 0;
 					int bufferY = 0;
 
@@ -188,30 +184,17 @@ public class MainGame implements ApplicationListener {
 					drawY += bufferY;
 					drawX += bufferX;
 
-					if (block.move) {
-						drawBlock("block", drawX, drawY);
-					} else {
-						drawBlock("fixed", drawX, drawY);
+					if (block.move) drawBlock("block", drawX, drawY);
+					else drawBlock("fixed", drawX, drawY);
+
+					if (block.gemC) drawBlock("gemsC", drawX, drawY);
+					else {
+						if (block.gemD) drawBlock("gemsD", drawX, drawY);
+						if (block.gemU) drawBlock("gemsU", drawX, drawY);
+						if (block.gemL) drawBlock("gemsL", drawX, drawY);
+						if (block.gemR) drawBlock("gemsR", drawX, drawY);
 					}
-					if (block.gemC) {
-						drawBlock("gemsC", drawX, drawY);
-					} else {
-						if (block.gemD) {
-							drawBlock("gemsD", drawX, drawY);
-						}
-						if (block.gemU) {
-							drawBlock("gemsU", drawX, drawY);
-						}
-						if (block.gemL) {
-							drawBlock("gemsL", drawX, drawY);
-						}
-						if (block.gemR) {
-							drawBlock("gemsR", drawX, drawY);
-						}
-					}
-					if (block.fall) {
-						drawBlock("fall", drawX, drawY);
-					}
+					if (block.fall) drawBlock("fall", drawX, drawY);
 					setAlpha(1);
 				}
 			}
@@ -224,9 +207,7 @@ public class MainGame implements ApplicationListener {
 				assets.get("aud/remove.wav", Sound.class).play(0.1f);
 				gemSound = false;
 			}
-			if (board.isBuffered()) {
-				board.useBuffer();
-			}
+			if (board.isBuffered()) board.useBuffer();
 		}
 		Input.update();
 	}
@@ -273,16 +254,14 @@ public class MainGame implements ApplicationListener {
 	private boolean timerReady() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				if (timer[i][j] > 0) {
-					return false;
-				}
+				if (timer[i][j] > 0) return false;
 			}
 		}
 		return true;
 	}
 
 	private void setView() {
-		Gdx.gl.glClearColor(1, 1, 1, 1);
+		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		mouse.set(Input.mouse.x, Input.mouse.y, 0);
 		sprites.setProjectionMatrix(camera.combined);
@@ -294,16 +273,8 @@ public class MainGame implements ApplicationListener {
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
 		board.setCursor(cursorX, cursorY);
-		if (Input.MousePressed()) {
-			if (board.select()) {
-				assets.get("aud/select.wav", Sound.class).play();
-			}
-		}
-		if (!Input.MouseDown()) {
-			if (board.unselect()) {
-				assets.get("aud/deselect.wav", Sound.class).play();
-			}
-		}
+		if (Input.MousePressed() && board.select()) assets.get("aud/select.wav", Sound.class).play();
+		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
 	}
 
 	private void setAlpha(float alpha) {
@@ -317,11 +288,8 @@ public class MainGame implements ApplicationListener {
 
 	private void drawCursor() {
 		shapes.begin(ShapeType.Line);
-		if (board.isSelected()) {
-			shapes.setColor(Color.RED);
-		} else {
-			shapes.setColor(Color.BLUE);
-		}
+		if (board.isSelected()) shapes.setColor(Color.RED);
+		else shapes.setColor(Color.BLUE);
 		int cursorX = boardOffsetX + board.getCursorX() * Vars.blockSize;
 		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.blockSize;
 		shapes.rect(cursorX, cursorY, Vars.blockSize, Vars.blockSize);
@@ -349,12 +317,10 @@ public class MainGame implements ApplicationListener {
 	}
 
 	public void resize(int width, int height) {
-		view.update(width, height);
+		viewport.update(width, height);
 	}
 
-	public void pause() {
-	}
+	public void pause() {}
 
-	public void resume() {
-	}
+	public void resume() {}
 }
