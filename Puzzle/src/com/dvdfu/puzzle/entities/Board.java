@@ -46,8 +46,6 @@ public class Board {
 
 	public void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
-			// grid[x1][y1] = null;
-			// grid[x2][y2] = null;
 			specials[x1][y1] = new Special().setPath(x2, y2);
 			specials[x2][y2] = new Special().setPath(x1, y1);
 		}
@@ -57,15 +55,15 @@ public class Board {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
-				if (block != null) {
+				if (block != null && block.command == Block.Command.HOLD) {
 					// moves blocks that can fall or are selected
-					if (block.active && block.command == Block.Command.HOLD) {
+					if (block.active) {
 						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
 						else if (block.move && block == cursorBlock) moveBlockToCursor(i, j);
 					}
 					// marks gems for deletion
 					// takes priority over moving blocks
-					if (block.isGem() && block.command == Block.Command.HOLD) {
+					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
 							block.command = Block.Command.GEM;
 							grid[i][j - 1].command = Block.Command.GEM;

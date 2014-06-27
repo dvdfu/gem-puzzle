@@ -5,7 +5,7 @@ import com.dvdfu.puzzle.handlers.Vars;
 
 public class Particle implements Poolable {
 	public enum Type {
-		SPARKLE, DIRT
+		SPARKLE, DIRT, DUST_L, DUST_R
 	}
 	public Type type;
 	public String filename;
@@ -40,5 +40,9 @@ public class Particle implements Poolable {
 
 	public void reset() {
 		ticks = 0;
+		dx = 0;
+		dy = 0;
+		ax = 0;
+		ay = 0;
 	}
 }
