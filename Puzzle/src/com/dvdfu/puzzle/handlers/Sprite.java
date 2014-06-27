@@ -16,4 +16,12 @@ public class Sprite {
 	public TextureRegion getFrameAt(int frame) {
 		return frames[frame % frames.length];
 	}
+	
+	public int getWidth() {
+		return frames[0].getRegionWidth();
+	}
+	
+	public int getHeight() {
+		return frames[0].getRegionHeight();
+	}
 }

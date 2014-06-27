@@ -10,7 +10,7 @@ public class Main {
 		cfg.title = "Puzzle";
 		cfg.width = 360;
 		cfg.height = 640;
-		cfg.resizable = false;
+		// cfg.resizable = false;
 		new LwjglApplication(new MainGame(), cfg);
 	}
 }

@@ -4,7 +4,12 @@ import com.badlogic.gdx.utils.Pool.Poolable;
 import com.dvdfu.puzzle.handlers.Vars;
 
 public class Particle implements Poolable {
+	public enum Type {
+		SPARKLE_1
+	}
+	public Type type;
 	public String filename;
+	public boolean polar;
 	public float x;
 	public float y;
 	public float dx;

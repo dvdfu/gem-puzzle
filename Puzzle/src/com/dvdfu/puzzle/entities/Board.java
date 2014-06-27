@@ -30,15 +30,18 @@ public class Board {
 		grid[1][1] = new Block().setGem(true, false, true, false, true, false);
 		grid[2][1] = new Block().setGem(true, false, false, true, true, false);
 		grid[3][2] = new Block().setGem(true, false, false, false, false, true);
-		grid[4][1] = new Block().setGem(true, false, false, false, false, true);
-		grid[0][2] = new Block().setGem(true, false, true, true, false, true);
+		grid[4][1] = new Block().setGem(true, true, false, false, false, true);
+		grid[0][2] = new Block().setGem(true, false, true, true, true, true);
 		grid[1][2] = new Block().setActive(true, false);
+		grid[2][3] = new Block().setGem(true, false, true, true, false, true);
+		grid[3][4] = new Block().setGem(true, true, false, false, false, false);
+		grid[4][5] = new Block().setGem(true, false, false, false, false, true);
 
 		this.width = width;
 		this.height = height;
 		cursorBlock = null;
-		addPath(3, 11, 0, 0);
-		addPath(2, 1, 3, 6);
+		addPath(3, 7, 0, 0);
+		addPath(2, 1, 3, 1);
 	}
 
 	public void addPath(int x1, int y1, int x2, int y2) {
@@ -186,15 +189,11 @@ public class Board {
 					boolean hold = true;
 					switch (block.command) {
 					case GEM:
-						if (block == cursorBlock) {
-							unselect();
-						}
+						unselect();
 						grid[i][j] = null;
 						break;
 					case BIG_GEM:
-						if (block == cursorBlock) {
-							unselect();
-						}
+						unselect();
 						grid[i][j] = null;
 						break;
 					case MOVE_UP:
