@@ -40,6 +40,7 @@ public class MainGame implements ApplicationListener {
 	private int boardOffsetY;
 	private boolean gemSound;
 	private Sprite sparkle1;
+	private Sprite dirt1;
 	private Array<Particle> particles;
 	private final Pool<Particle> particlePool = new Pool<Particle>() {
 		protected Particle newObject() {
@@ -61,6 +62,7 @@ public class MainGame implements ApplicationListener {
 		assets.load("img/path.png", Texture.class);
 		assets.load("img/grid.png", Texture.class);
 		assets.load("img/sparkle1.png", Texture.class);
+		assets.load("img/dirt1.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -69,7 +71,7 @@ public class MainGame implements ApplicationListener {
 		shapes = new ShapeRenderer();
 		view = new ScreenViewport();
 		camera = (OrthographicCamera) view.getCamera();
-		camera.zoom = 1 / 2f;
+		camera.zoom = 1;
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		mouse = new Vector3();
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.blockSize) / 2;
@@ -79,6 +81,7 @@ public class MainGame implements ApplicationListener {
 		gemSound = false;
 		particles = new Array<Particle>();
 		sparkle1 = new Sprite(assets.get("img/sparkle1.png", Texture.class), 16, 16);
+		dirt1 = new Sprite(assets.get("img/dirt1.png", Texture.class), 8, 8);
 	}
 
 	public void dispose() {
@@ -169,7 +172,8 @@ public class MainGame implements ApplicationListener {
 					case GEM:
 					case BIG_GEM:
 						gemSound = true;
-						createParticle(Particle.Type.SPARKLE_1, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+						createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+						createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						break;
 					case PATH_ENTER:
 						setAlpha(timer[i][j] * 1f / Vars.timePath);
@@ -226,23 +230,32 @@ public class MainGame implements ApplicationListener {
 		}
 		Input.update();
 	}
-	
 
-	
 	private void createParticle(Particle.Type type, int x, int y) {
 		createParticle(type, x, y, 1);
 	}
-	
+
 	private void createParticle(Particle.Type type, int x, int y, int num) {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
+			newParticle.type = type;
 			switch (type) {
-			case SPARKLE_1:
+			case SPARKLE:
 				newParticle.x = x - sparkle1.getWidth() / 2;
 				newParticle.y = y - sparkle1.getHeight() / 2;
 				newParticle.dx = MathUtils.random(-2f, 2f);
 				newParticle.dy = MathUtils.random(-2f, 2f);
 				newParticle.ticks = MathUtils.random(20);
+				newParticle.frameLimit = 11;
+				break;
+			case DIRT:
+				newParticle.x = x - dirt1.getWidth() / 2;
+				newParticle.y = y - Vars.blockSize / 2;
+				newParticle.dx = MathUtils.random(-1.5f, 1.5f);
+				newParticle.dy = MathUtils.random(1f, 3f);
+				newParticle.ay = -0.1f;
+				newParticle.ticks = MathUtils.random(20);
+				newParticle.frameLimit = 11;
 				break;
 			}
 			particles.add(newParticle);
@@ -267,7 +280,7 @@ public class MainGame implements ApplicationListener {
 		}
 		return true;
 	}
-	
+
 	private void setView() {
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -301,7 +314,7 @@ public class MainGame implements ApplicationListener {
 	private void drawBlock(String filename, int x, int y) {
 		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.blockSize, Vars.blockSize);
 	}
-	
+
 	private void drawCursor() {
 		shapes.begin(ShapeType.Line);
 		if (board.isSelected()) {
@@ -319,11 +332,18 @@ public class MainGame implements ApplicationListener {
 		SnapshotArray<Particle> snapshotParticles = new SnapshotArray<Particle>(particles);
 		for (Particle particle : snapshotParticles) {
 			particle.update();
-			if (particle.frame() > 11) {
+			if (particle.dead()) {
 				particles.removeValue(particle, false);
 				particlePool.free(particle);
 			} else {
-				sprites.draw(sparkle1.getFrameAt(particle.frame()), particle.x, particle.y, sparkle1.getWidth(), sparkle1.getHeight());
+				switch (particle.type) {
+				case SPARKLE:
+					sprites.draw(sparkle1.getFrameAt(particle.frame()), particle.x, particle.y, sparkle1.getWidth(), sparkle1.getHeight());
+					break;
+				case DIRT:
+					sprites.draw(dirt1.getFrameAt(particle.frame()), particle.x, particle.y, dirt1.getWidth(), dirt1.getHeight());
+					break;
+				}
 			}
 		}
 	}

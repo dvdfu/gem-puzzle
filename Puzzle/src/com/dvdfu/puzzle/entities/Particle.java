@@ -5,7 +5,7 @@ import com.dvdfu.puzzle.handlers.Vars;
 
 public class Particle implements Poolable {
 	public enum Type {
-		SPARKLE_1
+		SPARKLE, DIRT
 	}
 	public Type type;
 	public String filename;
@@ -17,6 +17,7 @@ public class Particle implements Poolable {
 	public float ax;
 	public float ay;
 	public int ticks;
+	public int frameLimit;
 
 	public Particle() {
 	}
@@ -31,6 +32,10 @@ public class Particle implements Poolable {
 	
 	public int frame() {
 		return ticks / Vars.ticksPerFrame;
+	}
+	
+	public boolean dead() {
+		return ticks > frameLimit * Vars.ticksPerFrame;
 	}
 
 	public void reset() {
