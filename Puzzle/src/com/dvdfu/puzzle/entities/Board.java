@@ -60,11 +60,8 @@ public class Board {
 				if (block != null) {
 					// moves blocks that can fall or are selected
 					if (block.active && block.command == Block.Command.HOLD) {
-						if (block.fall && gridEmpty(i, j + 1)) {
-							block.command = Block.Command.FALL;
-						} else if (block.move && block == cursorBlock) {
-							moveBlockToCursor(i, j);
-						}
+						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
+						else if (block.move && block == cursorBlock) moveBlockToCursor(i, j);
 					}
 					// marks gems for deletion
 					// takes priority over moving blocks
@@ -101,19 +98,12 @@ public class Board {
 	}
 
 	private void moveBlockToCursor(int x, int y) {
-		if (isBuffered() || !cursorBlock.active) {
-			return;
-		}
-		if (cursorX < x && gridEmpty(x - 1, y)) {
-			grid[x][y].command = Block.Command.MOVE_LEFT;
-		} else if (cursorX > x && gridEmpty(x + 1, y)) {
-			grid[x][y].command = Block.Command.MOVE_RIGHT;
-		} else if (cursorBlock.active) {
-			if (cursorY < y && gridEmpty(x, y - 1) && !cursorBlock.fall) {
-				grid[x][y].command = Block.Command.MOVE_UP;
-			} else if (cursorY > y && gridEmpty(x, y + 1) && !cursorBlock.fall) {
-				grid[x][y].command = Block.Command.MOVE_DOWN;
-			}
+		if (isBuffered() || !cursorBlock.active) return;
+		if (cursorX < x && gridEmpty(x - 1, y)) grid[x][y].command = Block.Command.MOVE_LEFT;
+		else if (cursorX > x && gridEmpty(x + 1, y)) grid[x][y].command = Block.Command.MOVE_RIGHT;
+		else if (cursorBlock.active && !cursorBlock.fall) {
+			if (cursorY < y && gridEmpty(x, y - 1)) grid[x][y].command = Block.Command.MOVE_UP;
+			else if (cursorY > y && gridEmpty(x, y + 1) && !cursorBlock.fall) grid[x][y].command = Block.Command.MOVE_DOWN;
 		}
 	}
 
@@ -129,11 +119,9 @@ public class Board {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 
-	/*
-	 * PUBLIC FINAL VIEW FUNCTIONS The following functions have public access
+	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access
 	 * and are intended for use by the viewer which retrieves grid information
-	 * to draw
-	 */
+	 * to draw */
 
 	public final Block[][] getGrid() {
 		return grid;
@@ -155,30 +143,31 @@ public class Board {
 		return cursorBlock != null;
 	}
 
-	/*
-	 * PUBLIC CONTROLLER FUNCTIONS The following functions have public access
+	public final int getCursorX() {
+		return cursorX;
+	}
+
+	public final int getCursorY() {
+		return cursorY;
+	}
+
+	/* PUBLIC CONTROLLER FUNCTIONS The following functions have public access
 	 * and are intended for use by the controller which allows the board to be
-	 * manipulated
-	 */
+	 * manipulated */
 
 	public final boolean isBuffered() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				if (grid[i][j] != null && grid[i][j].command != Block.Command.HOLD) {
-					return true;
-				}
+				if (grid[i][j] != null && grid[i][j].command != Block.Command.HOLD) { return true; }
 			}
 		}
 		return false;
 	}
 
 	public void useBuffer() {
-		// System.out.println("-------------");
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				if (grid[i][j] != null) {
-					grid[i][j].visited = false;
-				}
+				if (grid[i][j] != null) grid[i][j].visited = false;
 			}
 		}
 		for (int i = 0; i < width; i++) {
@@ -245,10 +234,7 @@ public class Board {
 					default:
 						break;
 					}
-					// System.out.println(block.command);
-					if (hold) {
-						block.command = Block.Command.HOLD;
-					}
+					if (hold) block.command = Block.Command.HOLD;
 				}
 			}
 		}
@@ -271,27 +257,12 @@ public class Board {
 	}
 
 	public void setCursor(int x, int y) {
-		if (x < 0) {
-			cursorX = 0;
-		} else if (x >= width) {
-			cursorX = width - 1;
-		} else {
-			cursorX = x;
-		}
-		if (y < 0) {
-			cursorY = 0;
-		} else if (y >= height) {
-			cursorY = height - 1;
-		} else {
-			cursorY = y;
-		}
-	}
+		if (x < 0) cursorX = 0;
+		else if (x >= width) cursorX = width - 1;
+		else cursorX = x;
 
-	public int getCursorX() {
-		return cursorX;
-	}
-
-	public int getCursorY() {
-		return cursorY;
+		if (y < 0) cursorY = 0;
+		else if (y >= height) cursorY = height - 1;
+		else cursorY = y;
 	}
 }

@@ -22,8 +22,6 @@ import com.dvdfu.puzzle.entities.Block;
 import com.dvdfu.puzzle.entities.Board;
 import com.dvdfu.puzzle.entities.Particle;
 import com.dvdfu.puzzle.entities.Special;
-import com.dvdfu.puzzle.handlers.Input;
-import com.dvdfu.puzzle.handlers.InputController;
 import com.dvdfu.puzzle.handlers.Sprite;
 import com.dvdfu.puzzle.handlers.Vars;
 
@@ -49,7 +47,6 @@ public class MainGame implements ApplicationListener {
 	};
 
 	public void create() {
-		Gdx.input.setInputProcessor(new InputController());
 		board = new Board("", 6, 8);
 		assets.load("img/block.png", Texture.class);
 		assets.load("img/fixed.png", Texture.class);
@@ -77,7 +74,11 @@ public class MainGame implements ApplicationListener {
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.blockSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.blockSize) / 2;
 		timer = new int[board.getWidth()][board.getHeight()];
-		timerReset();
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				timer[i][j] = 0;
+			}
+		}
 		gemSound = false;
 		particles = new Array<Particle>();
 		sparkle1 = new Sprite(assets.get("img/sparkle1.png", Texture.class), 16, 16);
@@ -92,60 +93,43 @@ public class MainGame implements ApplicationListener {
 
 	public void render() {
 		setView();
-		sprites.begin();
-		Special[][] specials = board.getSpecial();
-		board.update();
 		updateCursor();
-		Block[][] blocks = board.getGrid();
+		board.update();
+		setTimer();
 		gemSound = false;
+		sprites.begin();
+		drawGrid();
+		drawBlocks();
+		drawParticles();
+		sprites.end();
+		drawCursor();
 		if (timerReady()) {
-			for (int i = 0; i < board.getWidth(); i++) {
-				for (int j = 0; j < board.getHeight(); j++) {
-					// timers must be set in a separate loop because
-					// timerReady() evaluates to false as soon as one timer is
-					// set
-					Block block = blocks[i][j];
-					if (block != null) {
-						switch (block.command) {
-						case MOVE_UP:
-						case MOVE_DOWN:
-						case MOVE_RIGHT:
-						case MOVE_LEFT:
-						case FALL:
-							timer[i][j] = Vars.timeMove;
-							break;
-						case GEM:
-						case BIG_GEM:
-							timer[i][j] = Vars.timeGem;
-							break;
-						case PATH_ENTER:
-						case PATH_EXIT:
-							timer[i][j] = Vars.timePath;
-							break;
-						default:
-							break;
-						}
-					}
-				}
+			if (gemSound) {
+				assets.get("aud/remove.wav", Sound.class).play(0.1f);
+				gemSound = false;
 			}
+			if (board.isBuffered()) board.useBuffer();
 		}
+	}
+
+	private void drawGrid() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				// drawing grid is also in a separate loop since grid
-				// overlaps with blocks if blocks are moved into cells
-				// further ahead in the loop
 				int drawX = boardOffsetX + i * Vars.blockSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				drawBlock("grid", drawX, drawY);
-				Special special = specials[i][j];
+				Special special = board.getSpecial()[i][j];
 				if (special != null && special.path) drawBlock("path", drawX, drawY);
 			}
 		}
+	}
+
+	private void drawBlocks() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
-				Block block = blocks[i][j];
+				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					if (timer[i][j] > 0) timer[i][j]--;
 					int bufferX = 0;
@@ -199,17 +183,6 @@ public class MainGame implements ApplicationListener {
 				}
 			}
 		}
-		drawParticles();
-		sprites.end();
-		drawCursor();
-		if (timerReady()) {
-			if (gemSound) {
-				assets.get("aud/remove.wav", Sound.class).play(0.1f);
-				gemSound = false;
-			}
-			if (board.isBuffered()) board.useBuffer();
-		}
-		Input.update();
 	}
 
 	private void createParticle(Particle.Type type, int x, int y) {
@@ -243,10 +216,33 @@ public class MainGame implements ApplicationListener {
 		}
 	}
 
-	private void timerReset() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				timer[i][j] = 0;
+	private void setTimer() {
+		if (timerReady()) {
+			for (int i = 0; i < board.getWidth(); i++) {
+				for (int j = 0; j < board.getHeight(); j++) {
+					Block block = board.getGrid()[i][j];
+					if (block != null) {
+						switch (block.command) {
+						case MOVE_UP:
+						case MOVE_DOWN:
+						case MOVE_RIGHT:
+						case MOVE_LEFT:
+						case FALL:
+							timer[i][j] = Vars.timeMove;
+							break;
+						case GEM:
+						case BIG_GEM:
+							timer[i][j] = Vars.timeGem;
+							break;
+						case PATH_ENTER:
+						case PATH_EXIT:
+							timer[i][j] = Vars.timePath;
+							break;
+						default:
+							break;
+						}
+					}
+				}
 			}
 		}
 	}
@@ -263,7 +259,7 @@ public class MainGame implements ApplicationListener {
 	private void setView() {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		mouse.set(Input.mouse.x, Input.mouse.y, 0);
+		mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 		sprites.setProjectionMatrix(camera.combined);
 		shapes.setProjectionMatrix(camera.combined);
 		camera.unproject(mouse);
@@ -273,8 +269,8 @@ public class MainGame implements ApplicationListener {
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
 		board.setCursor(cursorX, cursorY);
-		if (Input.MousePressed() && board.select()) assets.get("aud/select.wav", Sound.class).play();
-		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
+		if (Gdx.input.justTouched() && board.select()) assets.get("aud/select.wav", Sound.class).play();
+		if (!Gdx.input.isTouched() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
 	}
 
 	private void setAlpha(float alpha) {
@@ -317,6 +313,9 @@ public class MainGame implements ApplicationListener {
 	}
 
 	public void resize(int width, int height) {
+		float zoomW = 1f / (int) (height / Vars.blockSize / board.getHeight());
+		float zoomH = 1f / (int) (width / Vars.blockSize / board.getWidth());
+		camera.zoom = Math.max(zoomW, zoomH);
 		viewport.update(width, height);
 	}
 
