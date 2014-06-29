@@ -89,7 +89,7 @@ public class MainGame implements ApplicationListener {
 		dirt1 = new Sprite(assets.get("img/dirt1.png", Texture.class), 8, 8);
 		dust1 = new Sprite(assets.get("img/dust1.png", Texture.class), 8, 8);
 		drop = new Sprite(assets.get("img/drops.png", Texture.class), 8, 8);
-		gem = new Sprite(assets.get("img/gem.png", Texture.class), 24, 24);
+		gem = new Sprite(assets.get("img/gem.png", Texture.class), 16, 16);
 	}
 
 	public void dispose() {
@@ -151,7 +151,6 @@ public class MainGame implements ApplicationListener {
 							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
-						assets.get("aud/remove.wav", Sound.class).play(0.1f);
 						break;
 					case DROWN:
 						if (block.isGem()) {
@@ -159,7 +158,7 @@ public class MainGame implements ApplicationListener {
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
 						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY, 16);
+							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
 							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
 						}
 						break;
@@ -239,69 +238,44 @@ public class MainGame implements ApplicationListener {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
-			float angle;
-			float speed;
 			switch (type) {
 			case SPARKLE:
-				newParticle.x = x - sparkle1.getWidth() / 2;
-				newParticle.y = y - sparkle1.getHeight() / 2;
-				angle = MathUtils.random(2 * MathUtils.PI);
-				speed = MathUtils.random(2f);
-				newParticle.dx = speed * MathUtils.cos(angle);
-				newParticle.dy = speed * MathUtils.sin(angle);
-				newParticle.ticks = MathUtils.random(20);
-				newParticle.frameLimit = 11;
+				newParticle.setPosition(x - sparkle1.getWidth() / 2, y - sparkle1.getHeight() / 2);
+				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setDuration(MathUtils.random(20), 11);
 				break;
 			case DIRT:
-				newParticle.x = x - dirt1.getWidth() / 2;
-				newParticle.y = y - Vars.blockSize / 2;
-				newParticle.dx = MathUtils.random(-1.5f, 1.5f);
-				newParticle.dy = MathUtils.random(1f, 3f);
-				newParticle.ay = -0.1f;
-				newParticle.ticks = MathUtils.random(20);
-				newParticle.frameLimit = 11;
+				newParticle.setPosition(x - dirt1.getWidth() / 2, y - Vars.blockSize / 2);
+				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
+				newParticle.setAcceleration(0, -0.1f);
+				newParticle.setDuration(MathUtils.random(20), 11);
 				break;
 			case DUST:
-				newParticle.x = x - dust1.getWidth() / 2;
-				newParticle.y = y - dust1.getHeight() / 2;
-				angle = MathUtils.random(2 * MathUtils.PI);
-				speed = MathUtils.random(2f);
-				newParticle.dx = speed * MathUtils.cos(angle);
-				newParticle.dy = speed * MathUtils.sin(angle);
-				newParticle.ticks = MathUtils.random(4);
-				newParticle.frameLimit = 5;
+				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setDuration(MathUtils.random(4), 5);
 				break;
 			case DUST_L:
-				newParticle.x = x - dust1.getWidth() / 2;
-				newParticle.y = y - dust1.getHeight() / 2;
-				newParticle.dx = MathUtils.random(-2f, 0);
-				newParticle.dy = MathUtils.random(0.2f, 0.5f);
-				newParticle.ticks = MathUtils.random(4);
-				newParticle.frameLimit = 5;
+				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
+				newParticle.setDuration(MathUtils.random(4), 5);
 				break;
 			case DUST_R:
-				newParticle.x = x - dust1.getWidth() / 2;
-				newParticle.y = y - dust1.getHeight() / 2;
-				newParticle.dx = MathUtils.random(0, 2f);
-				newParticle.dy = MathUtils.random(0.2f, 0.5f);
-				newParticle.ticks = MathUtils.random(4);
-				newParticle.frameLimit = 5;
+				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
+				newParticle.setDuration(MathUtils.random(4), 5);
 				break;
 			case DROP:
-				newParticle.x = x - drop.getWidth() / 2;
-				newParticle.y = y - drop.getHeight() / 2;
-				newParticle.dx = MathUtils.random(-1.5f, 1.5f);
-				newParticle.dy = MathUtils.random(1f, 4f);
-				newParticle.ay = -0.1f;
-				newParticle.ticks = MathUtils.random(4);
-				newParticle.frameLimit = 11;
+				newParticle.setPosition(x - drop.getWidth() / 2, y - drop.getHeight() / 2);
+				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
+				newParticle.setAcceleration(0, -0.1f);
+				newParticle.setDuration(MathUtils.random(4), 11);
 				break;
 			case GEM:
-				newParticle.x = x - gem.getWidth() / 2;
-				newParticle.y = y - gem.getHeight() / 2;
-				newParticle.dy = 2;
-				newParticle.ay = -0.05f;
-				newParticle.frameLimit = 11;
+				newParticle.setPosition(x - gem.getWidth() / 2, y - gem.getHeight() / 2);
+				newParticle.setVelocity(0, 2);
+				newParticle.setAcceleration(0, -0.05f);
+				newParticle.setDuration(0, 11);
 				break;
 			}
 			particles.add(newParticle);
@@ -453,9 +427,9 @@ public class MainGame implements ApplicationListener {
 	}
 
 	public void resize(int width, int height) {
-		float zoomW = 1f / (int) (height / Vars.blockSize / board.getHeight());
-		float zoomH = 1f / (int) (width / Vars.blockSize / board.getWidth());
-		camera.zoom = Math.max(zoomW, zoomH);
+		int zoomW = height / Vars.blockSize / board.getHeight();
+		int zoomH = width / Vars.blockSize / board.getWidth();
+		camera.zoom = 1f / Math.min(zoomW, zoomH);
 		Gdx.gl20.glLineWidth(1 / camera.zoom);
 		viewport.update(width, height);
 		board.reset();

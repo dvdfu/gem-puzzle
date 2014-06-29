@@ -76,7 +76,7 @@ public class Board {
 					// moves blocks that can fall or are selected
 					if (block.active) {
 						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
-						else if (block.move && block == cursorBlock) moveBlockToCursor(i, j);
+						else if (block.move && block == cursorBlock && !isBuffered()) moveBlockToCursor(i, j);
 						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD
 							&& gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
 							if (block.isGem()) block.command = Block.Command.BREAK;
