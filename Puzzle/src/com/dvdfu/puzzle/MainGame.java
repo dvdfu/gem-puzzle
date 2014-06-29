@@ -39,6 +39,8 @@ public class MainGame implements ApplicationListener {
 	private Sprite sparkle1;
 	private Sprite dirt1;
 	private Sprite dust1;
+	private Sprite drop;
+	private Sprite gem;
 	private Array<Particle> particles;
 	private final Pool<Particle> particlePool = new Pool<Particle>() {
 		protected Particle newObject() {
@@ -47,9 +49,10 @@ public class MainGame implements ApplicationListener {
 	};
 
 	public void create() {
-		board = new Board("", 6, 8);
+		board = new Board("", Vars.boardWidth, Vars.boardHeight);
 		assets.load("img/block.png", Texture.class);
 		assets.load("img/fixed.png", Texture.class);
+		assets.load("img/gem.png", Texture.class);
 		assets.load("img/gemsC.png", Texture.class);
 		assets.load("img/gemsD.png", Texture.class);
 		assets.load("img/gemsL.png", Texture.class);
@@ -57,13 +60,18 @@ public class MainGame implements ApplicationListener {
 		assets.load("img/gemsU.png", Texture.class);
 		assets.load("img/fall.png", Texture.class);
 		assets.load("img/path.png", Texture.class);
+		assets.load("img/drops.png", Texture.class);
+		assets.load("img/water.png", Texture.class);
+		assets.load("img/waterF.png", Texture.class);
 		assets.load("img/grid.png", Texture.class);
 		assets.load("img/sparkle1.png", Texture.class);
 		assets.load("img/dirt1.png", Texture.class);
 		assets.load("img/dust1.png", Texture.class);
+		assets.load("img/bomb.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
+		assets.load("aud/splash.mp3", Sound.class);
 		assets.finishLoading();
 		sprites = new SpriteBatch();
 		shapes = new ShapeRenderer();
@@ -75,15 +83,13 @@ public class MainGame implements ApplicationListener {
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.blockSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.blockSize) / 2;
 		timer = new int[board.getWidth()][board.getHeight()];
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				timer[i][j] = 0;
-			}
-		}
+		resetTimer();
 		particles = new Array<Particle>();
 		sparkle1 = new Sprite(assets.get("img/sparkle1.png", Texture.class), 16, 16);
 		dirt1 = new Sprite(assets.get("img/dirt1.png", Texture.class), 8, 8);
 		dust1 = new Sprite(assets.get("img/dust1.png", Texture.class), 8, 8);
+		drop = new Sprite(assets.get("img/drops.png", Texture.class), 8, 8);
+		gem = new Sprite(assets.get("img/gem.png", Texture.class), 24, 24);
 	}
 
 	public void dispose() {
@@ -96,20 +102,20 @@ public class MainGame implements ApplicationListener {
 		updateView();
 		updateCursor();
 		if (timerReady() && board.isBuffered()) updateBuffer();
-		board.update();
+		if (!board.isBuffered()) board.update();
 		if (timerReady()) updateTimer();
-		
+
 		sprites.begin();
 		drawGrid();
 		drawBlocks();
+		drawWater();
 		drawParticles();
 		sprites.end();
 		drawCursor();
 	}
 
 	private void updateView() {
-		/* resets screen and projects sprite batch, shape renderer, mouse and
-		 * camera based on the screen */
+		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
 		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
@@ -119,9 +125,7 @@ public class MainGame implements ApplicationListener {
 	}
 
 	private void updateBuffer() {
-		/* if the board is buffered and the view is processing the events, this
-		 * method is used to finalize animations and sounds and then update the
-		 * board using the buffer */
+		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
@@ -129,16 +133,35 @@ public class MainGame implements ApplicationListener {
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
-					case MOVE_UP:
 					case FALL:
+						if (board.gridValid(i, j + 2)) {
+							if (!board.gridEmpty(i, j + 2)) {
+								createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+								createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+								assets.get("aud/remove.wav", Sound.class).play(0.1f);
+							}
+						}
+					case MOVE_UP:
 					case MOVE_DOWN:
 					case MOVE_RIGHT:
 					case MOVE_LEFT:
 						break;
-					case GEM:
-					case BIG_GEM:
-						createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 4);
+					case BREAK:
+						if (block.isGem()) {
+							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
+							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+						}
 						assets.get("aud/remove.wav", Sound.class).play(0.1f);
+						break;
+					case DROWN:
+						if (block.isGem()) {
+							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
+							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+						}
+						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
+							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY, 16);
+							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
+						}
 						break;
 					case PATH_ENTER:
 					case PATH_EXIT:
@@ -153,8 +176,7 @@ public class MainGame implements ApplicationListener {
 	}
 
 	private void updateCursor() {
-		/* sends mouse information to the board and plays appropriate sound
-		 * effects */
+		/* sends mouse information to the board and plays appropriate sound effects */
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
 		board.setCursor(cursorX, cursorY);
@@ -163,22 +185,21 @@ public class MainGame implements ApplicationListener {
 	}
 
 	private void updateTimer() {
-		/* when the timer is ready, checks board to see if any of the timers
-		 * need to be set */
+		/* when the timer is ready, checks board to see if any of the timers need to be set */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
+					case DROWN:
+					case FALL:
 					case MOVE_UP:
 					case MOVE_DOWN:
 					case MOVE_RIGHT:
 					case MOVE_LEFT:
-					case FALL:
 						timer[i][j] = Vars.timeMove;
 						break;
-					case GEM:
-					case BIG_GEM:
+					case BREAK:
 						timer[i][j] = Vars.timeGem;
 						break;
 					case PATH_ENTER:
@@ -202,6 +223,14 @@ public class MainGame implements ApplicationListener {
 		return true;
 	}
 
+	private void resetTimer() {
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				timer[i][j] = 0;
+			}
+		}
+	}
+
 	private void createParticle(Particle.Type type, int x, int y) {
 		createParticle(type, x, y, 1);
 	}
@@ -210,12 +239,16 @@ public class MainGame implements ApplicationListener {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
+			float angle;
+			float speed;
 			switch (type) {
 			case SPARKLE:
 				newParticle.x = x - sparkle1.getWidth() / 2;
 				newParticle.y = y - sparkle1.getHeight() / 2;
-				newParticle.dx = MathUtils.random(-2f, 2f);
-				newParticle.dy = MathUtils.random(-2f, 2f);
+				angle = MathUtils.random(2 * MathUtils.PI);
+				speed = MathUtils.random(2f);
+				newParticle.dx = speed * MathUtils.cos(angle);
+				newParticle.dy = speed * MathUtils.sin(angle);
 				newParticle.ticks = MathUtils.random(20);
 				newParticle.frameLimit = 11;
 				break;
@@ -228,20 +261,46 @@ public class MainGame implements ApplicationListener {
 				newParticle.ticks = MathUtils.random(20);
 				newParticle.frameLimit = 11;
 				break;
+			case DUST:
+				newParticle.x = x - dust1.getWidth() / 2;
+				newParticle.y = y - dust1.getHeight() / 2;
+				angle = MathUtils.random(2 * MathUtils.PI);
+				speed = MathUtils.random(2f);
+				newParticle.dx = speed * MathUtils.cos(angle);
+				newParticle.dy = speed * MathUtils.sin(angle);
+				newParticle.ticks = MathUtils.random(4);
+				newParticle.frameLimit = 5;
+				break;
 			case DUST_L:
 				newParticle.x = x - dust1.getWidth() / 2;
 				newParticle.y = y - dust1.getHeight() / 2;
-				newParticle.dx = MathUtils.random(-1f, 0);
+				newParticle.dx = MathUtils.random(-2f, 0);
 				newParticle.dy = MathUtils.random(0.2f, 0.5f);
-				newParticle.ticks = MathUtils.random(20);
-				newParticle.frameLimit = 11;
+				newParticle.ticks = MathUtils.random(4);
+				newParticle.frameLimit = 5;
 				break;
 			case DUST_R:
 				newParticle.x = x - dust1.getWidth() / 2;
 				newParticle.y = y - dust1.getHeight() / 2;
-				newParticle.dx = MathUtils.random(0, 1f);
+				newParticle.dx = MathUtils.random(0, 2f);
 				newParticle.dy = MathUtils.random(0.2f, 0.5f);
-				newParticle.ticks = MathUtils.random(20);
+				newParticle.ticks = MathUtils.random(4);
+				newParticle.frameLimit = 5;
+				break;
+			case DROP:
+				newParticle.x = x - drop.getWidth() / 2;
+				newParticle.y = y - drop.getHeight() / 2;
+				newParticle.dx = MathUtils.random(-1.5f, 1.5f);
+				newParticle.dy = MathUtils.random(1f, 4f);
+				newParticle.ay = -0.1f;
+				newParticle.ticks = MathUtils.random(4);
+				newParticle.frameLimit = 11;
+				break;
+			case GEM:
+				newParticle.x = x - gem.getWidth() / 2;
+				newParticle.y = y - gem.getHeight() / 2;
+				newParticle.dy = 2;
+				newParticle.ay = -0.05f;
 				newParticle.frameLimit = 11;
 				break;
 			}
@@ -267,8 +326,7 @@ public class MainGame implements ApplicationListener {
 	}
 
 	private void drawBlocks() {
-		/* draw blocks at their position and transparency based on their
-		 * properties and buffer timers */
+		/* draw blocks at their position and transparency based on their properties and buffer timers */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
@@ -278,11 +336,11 @@ public class MainGame implements ApplicationListener {
 					if (timer[i][j] > 0) timer[i][j]--;
 					int bufferX = 0;
 					int bufferY = 0;
-
 					switch (block.command) {
 					case MOVE_UP:
 						bufferY = (Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
 						break;
+					case DROWN:
 					case FALL:
 					case MOVE_DOWN:
 						bufferY = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
@@ -295,9 +353,10 @@ public class MainGame implements ApplicationListener {
 						bufferX = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
 						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Vars.blockSize, drawY);
 						break;
-					case GEM:
-					case BIG_GEM:
-						createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+					case BREAK:
+						if (board.getSpecial()[i][j] == null || !board.getSpecial()[i][j].hazard) {
+							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+						}
 						break;
 					case PATH_ENTER:
 						setAlpha(timer[i][j] * 1f / Vars.timePath);
@@ -308,12 +367,12 @@ public class MainGame implements ApplicationListener {
 					default:
 						break;
 					}
-
 					drawY += bufferY;
 					drawX += bufferX;
-
-					if (block.move) drawBlock("block", drawX, drawY);
-					else drawBlock("fixed", drawX, drawY);
+					if (block.move) {
+						if (block.bomb) drawBlock("bomb", drawX, drawY);
+						else drawBlock("block", drawX, drawY);
+					} else drawBlock("fixed", drawX, drawY);
 
 					if (block.gemC) drawBlock("gemsC", drawX, drawY);
 					else {
@@ -331,6 +390,22 @@ public class MainGame implements ApplicationListener {
 
 	private void drawBlock(String filename, int x, int y) {
 		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.blockSize, Vars.blockSize);
+	}
+
+	private void drawWater() {
+		// setAlpha(0.8f);
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				int drawX = boardOffsetX + i * Vars.blockSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				Special special = board.getSpecial()[i][j];
+				if (special != null && special.hazard) {
+					if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY);
+					else drawBlock("waterF", drawX, drawY);
+				}
+			}
+		}
+		// setAlpha(1);
 	}
 
 	private void drawCursor() {
@@ -351,18 +426,28 @@ public class MainGame implements ApplicationListener {
 				particles.removeValue(particle, false);
 				particlePool.free(particle);
 			} else {
+				Sprite sprite = null;
 				switch (particle.type) {
 				case SPARKLE:
-					sprites.draw(sparkle1.getFrameAt(particle.frame()), particle.x, particle.y, sparkle1.getWidth(), sparkle1.getHeight());
+					sprite = sparkle1;
+					break;
+				case GEM:
+					sprite = gem;
 					break;
 				case DIRT:
-					sprites.draw(dirt1.getFrameAt(particle.frame()), particle.x, particle.y, dirt1.getWidth(), dirt1.getHeight());
+					sprite = dirt1;
 					break;
+				case DROP:
+					sprite = drop;
+					break;
+				case DUST:
 				case DUST_L:
 				case DUST_R:
-					sprites.draw(dust1.getFrameAt(particle.frame()), particle.x, particle.y, dirt1.getWidth(), dirt1.getHeight());
-				break;
+					sprite = dust1;
+					break;
 				}
+				if (sprite != null) sprites.draw(sprite.getFrame(particle.frame()), particle.getX(), particle.getY(),
+					sprite.getWidth(), sprite.getHeight());
 			}
 		}
 	}
@@ -371,7 +456,10 @@ public class MainGame implements ApplicationListener {
 		float zoomW = 1f / (int) (height / Vars.blockSize / board.getHeight());
 		float zoomH = 1f / (int) (width / Vars.blockSize / board.getWidth());
 		camera.zoom = Math.max(zoomW, zoomH);
+		Gdx.gl20.glLineWidth(1 / camera.zoom);
 		viewport.update(width, height);
+		board.reset();
+		resetTimer();
 	}
 
 	public void pause() {}

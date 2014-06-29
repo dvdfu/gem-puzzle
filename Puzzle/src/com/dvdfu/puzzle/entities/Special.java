@@ -17,7 +17,7 @@ public class Special {
 		return this;
 	}
 	
-	public Special hazard() {
+	public Special setHazard() {
 		path = false;
 		hazard = true;
 		return this;

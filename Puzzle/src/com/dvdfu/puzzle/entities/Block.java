@@ -2,12 +2,13 @@ package com.dvdfu.puzzle.entities;
 
 public class Block {
 	public enum Command {
-		HOLD, GEM, BIG_GEM, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH_ENTER, PATH_EXIT, FALL
+		HOLD, BREAK, EXPLODE, DROWN, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH_ENTER, PATH_EXIT, FALL
 	};
 	public Command command;
 	public boolean active;
 	public boolean move;
 	public boolean fall;
+	public boolean bomb;
 	public boolean gemC;
 	public boolean gemU;
 	public boolean gemD;
@@ -25,6 +26,7 @@ public class Block {
 		active = false;
 		move = false;
 		fall = false;
+		bomb = false;
 		gemC = false;
 		gemU = false;
 		gemD = false;
@@ -37,6 +39,7 @@ public class Block {
 		active = true;
 		this.move = move;
 		this.fall = fall;
+		bomb = false;
 		gemC = false;
 		gemU = false;
 		gemD = false;
@@ -49,11 +52,25 @@ public class Block {
 		active = true;
 		this.move = move;
 		this.fall = fall;
+		bomb = false;
 		gemC = !u && !d && !r && !l;
 		gemU = u;
 		gemD = d;
 		gemR = r;
 		gemL = l;
+		return this;
+	}
+	
+	public Block setBomb(boolean fall) {
+		active = true;
+		move = true;
+		this.fall = fall;
+		bomb = true;
+		gemC = false;
+		gemU = false;
+		gemD = false;
+		gemR = false;
+		gemL = false;
 		return this;
 	}
 	

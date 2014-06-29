@@ -10,20 +10,23 @@ public class Board {
 	private int cursorY;
 
 	public Board(String seed, int width, int height) {
+		this.width = width;
+		this.height = height;
 		cursorX = 0;
 		cursorY = 0;
 		grid = new Block[width][height];
 		specials = new Special[width][height];
+		reset();
+	}
+
+	public void reset() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				grid[i][j] = null;
 				specials[i][j] = null;
 			}
 		}
-
-		grid[0][0] = new Block().setGem(true, false, false, false, false, false);
-		grid[1][0] = new Block().setGem(true, false, false, false, false, false);
-		grid[2][0] = new Block().setGem(true, false, false, false, false, false);
+		addBlock(new Block().setGem(true, false, false, false, false, false), 2, 0);
 		grid[3][0] = new Block().setGem(true, true, true, false, false, false);
 		grid[4][0] = new Block().setGem(true, false, false, true, false, false);
 		grid[0][1] = new Block().setGem(true, false, false, false, true, false);
@@ -37,11 +40,25 @@ public class Board {
 		grid[3][4] = new Block().setGem(true, true, false, false, false, false);
 		grid[4][5] = new Block().setGem(true, false, false, false, false, true);
 
-		this.width = width;
-		this.height = height;
+		for (int i = 5; i < 8; i++) {
+			for (int j = 5; j < 10; j++) {
+				grid[i][j] = new Block().setStatic();
+			}
+		}
+		
+		for (int i = 0; i < 5; i++) {
+			for (int j = 7; j < 10; j++) {
+				specials[i][j] = new Special().setHazard();
+			}
+		}
+
 		cursorBlock = null;
-		addPath(3, 7, 0, 0);
-		addPath(2, 1, 3, 1);
+		// addPath(3, 9, 0, 0);
+		addPath(2, 1, 7, 4);
+	}
+	
+	public void addBlock(Block block, int x, int y) {
+		grid[x][y] = block;
 	}
 
 	public void addPath(int x1, int y1, int x2, int y2) {
@@ -55,39 +72,58 @@ public class Board {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
-				if (block != null && block.command == Block.Command.HOLD) {
+				if (block != null) {
 					// moves blocks that can fall or are selected
 					if (block.active) {
 						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
 						else if (block.move && block == cursorBlock) moveBlockToCursor(i, j);
+						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD
+							&& gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
+							if (block.isGem()) block.command = Block.Command.BREAK;
+							else block.command = Block.Command.BREAK;
+							grid[i][j + 1].command = Block.Command.BREAK;
+							grid[i][j - 1].command = Block.Command.BREAK;
+							grid[i + 1][j].command = Block.Command.BREAK;
+							grid[i - 1][j].command = Block.Command.BREAK;
+						}
+						if (specials[i][j] != null && specials[i][j].hazard) block.command = Block.Command.DROWN;
 					}
 					// marks gems for deletion
 					// takes priority over moving blocks
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
-							block.command = Block.Command.GEM;
-							grid[i][j - 1].command = Block.Command.GEM;
+							block.command = Block.Command.BREAK;
+							grid[i][j - 1].command = Block.Command.BREAK;
 						}
 						if (block.gemD && gridHas(i, j + 1) && grid[i][j + 1].gemU) {
-							block.command = Block.Command.GEM;
-							grid[i][j + 1].command = Block.Command.GEM;
+							block.command = Block.Command.BREAK;
+							grid[i][j + 1].command = Block.Command.BREAK;
 						}
 						if (block.gemR && gridHas(i + 1, j) && grid[i + 1][j].gemL) {
-							block.command = Block.Command.GEM;
-							grid[i + 1][j].command = Block.Command.GEM;
+							block.command = Block.Command.BREAK;
+							grid[i + 1][j].command = Block.Command.BREAK;
 						}
 						if (block.gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
-							block.command = Block.Command.GEM;
-							grid[i - 1][j].command = Block.Command.GEM;
+							block.command = Block.Command.BREAK;
+							grid[i - 1][j].command = Block.Command.BREAK;
 						}
-						if (block.gemC) {
-							if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD && gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
-								block.command = Block.Command.BIG_GEM;
-								grid[i][j + 1].command = Block.Command.GEM;
-								grid[i][j - 1].command = Block.Command.GEM;
-								grid[i + 1][j].command = Block.Command.GEM;
-								grid[i - 1][j].command = Block.Command.GEM;
-							}
+					}
+					if (block.bomb) {
+						if (gridHas(i, j - 1) && grid[i][j - 1].active) {
+							block.command = Block.Command.EXPLODE;
+							grid[i][j - 1].command = Block.Command.BREAK;
+						}
+						if (gridHas(i, j + 1) && grid[i][j + 1].active) {
+							block.command = Block.Command.EXPLODE;
+							grid[i][j + 1].command = Block.Command.BREAK;
+						}
+						if (gridHas(i - 1, j) && grid[i - 1][j].active) {
+							block.command = Block.Command.EXPLODE;
+							grid[i - 1][j].command = Block.Command.BREAK;
+						}
+						if (gridHas(i + 1, j) && grid[i + 1][j].active) {
+							block.command = Block.Command.EXPLODE;
+							grid[i + 1][j].command = Block.Command.BREAK;
 						}
 					}
 				}
@@ -105,21 +141,19 @@ public class Board {
 		}
 	}
 
-	private boolean gridHas(int x, int y) {
+	public final boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
 
-	private boolean gridEmpty(int x, int y) {
+	public final boolean gridEmpty(int x, int y) {
 		return gridValid(x, y) && grid[x][y] == null;
 	}
 
-	private boolean gridValid(int x, int y) {
+	public final boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 
-	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access
-	 * and are intended for use by the viewer which retrieves grid information
-	 * to draw */
+	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access and are intended for use by the viewer which retrieves grid information to draw */
 
 	public final Block[][] getGrid() {
 		return grid;
@@ -149,9 +183,7 @@ public class Board {
 		return cursorY;
 	}
 
-	/* PUBLIC CONTROLLER FUNCTIONS The following functions have public access
-	 * and are intended for use by the controller which allows the board to be
-	 * manipulated */
+	/* PUBLIC CONTROLLER FUNCTIONS The following functions have public access and are intended for use by the controller which allows the board to be manipulated */
 
 	public final boolean isBuffered() {
 		for (int i = 0; i < width; i++) {
@@ -162,6 +194,7 @@ public class Board {
 		return false;
 	}
 
+	/* Used at the VERY end of a buffering sequence */
 	public void useBuffer() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -175,11 +208,9 @@ public class Board {
 					block.visited = true;
 					boolean hold = true;
 					switch (block.command) {
-					case GEM:
-						unselect();
-						grid[i][j] = null;
-						break;
-					case BIG_GEM:
+					case DROWN:
+					case EXPLODE:
+					case BREAK:
 						unselect();
 						grid[i][j] = null;
 						break;

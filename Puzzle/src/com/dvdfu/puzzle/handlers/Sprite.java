@@ -13,7 +13,7 @@ public class Sprite {
 		}
 	}
 
-	public TextureRegion getFrameAt(int frame) {
+	public TextureRegion getFrame(int frame) {
 		return frames[frame % frames.length];
 	}
 	
