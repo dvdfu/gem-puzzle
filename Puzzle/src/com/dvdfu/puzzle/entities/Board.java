@@ -9,7 +9,7 @@ public class Board {
 	private int cursorX;
 	private int cursorY;
 
-	public Board(String seed, int width, int height) {
+	public Board(int width, int height) {
 		this.width = width;
 		this.height = height;
 		cursorX = 0;

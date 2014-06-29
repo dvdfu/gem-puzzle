@@ -43,7 +43,7 @@ public class Particle implements Poolable {
 	}
 
 	public final boolean dead() {
-		return tick > frameLimit * Vars.ticksPerFrame;
+		return tick >= frameLimit * Vars.ticksPerFrame;
 	}
 	
 	public void setPosition(float x, float y) {
