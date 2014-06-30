@@ -24,6 +24,9 @@ public class Board {
 			for (int j = 0; j < height; j++) {
 				grid[i][j] = null;
 				specials[i][j] = null;
+				if (i >= 5 && i < 8 && j >= 5) grid[i][j] = new Block("0");
+				if (i < 5 && j >= 7) specials[i][j] = new Special().setHazard();
+				if (i >= 5 && i <= 6 && j >= 3 && j < 7) addButton(4, 5, i, j, i * j % 2 == 0);
 			}
 		}
 		addBlock(new Block().setGem(true, false, false, false, false, false), 2, 0);
@@ -39,23 +42,10 @@ public class Board {
 		grid[2][3] = new Block().setGem(true, false, true, true, false, true);
 		grid[3][4] = new Block().setGem(true, true, false, false, false, false);
 
-		for (int i = 5; i < 8; i++) {
-			for (int j = 5; j < 10; j++) {
-				grid[i][j] = new Block("0");
-			}
-		}
-		
-		for (int i = 0; i < 5; i++) {
-			for (int j = 7; j < 10; j++) {
-				specials[i][j] = new Special().setHazard();
-			}
-		}
-
 		cursorBlock = null;
-		// addPath(3, 9, 0, 0);
 		addPath(2, 1, 7, 4);
 	}
-	
+
 	public void addBlock(Block block, int x, int y) {
 		grid[x][y] = block;
 	}
@@ -67,10 +57,27 @@ public class Board {
 		}
 	}
 
+	public void addButton(int buttonX, int buttonY, int gateX, int gateY, boolean gateOriginal) {
+		if (gridValid(buttonX, buttonY) && gridValid(gateX, gateY) && !(buttonX == gateX && buttonY == gateY)) {
+			specials[buttonX][buttonY] = new Special().setButton();
+			specials[gateX][gateY] = new Special().setGate(buttonX, buttonY, gateOriginal);
+		}
+	}
+
 	public void update() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
+				Special special = specials[i][j];
+				if (special != null) {
+					if (special.button) {
+						special.toggled = gridHas(i, j);
+					} else if (special.gate) {
+						if (specials[special.destX][special.destY].toggled) special.toggled = !special.gateOriginal;
+						else special.toggled = special.gateOriginal;
+						if (special.toggled && block != null) block.command = Block.Command.BREAK;
+					}
+				}
 				if (block != null) {
 					// moves blocks that can fall or are selected
 					if (block.active) {
@@ -145,11 +152,15 @@ public class Board {
 	}
 
 	public final boolean gridEmpty(int x, int y) {
-		return gridValid(x, y) && grid[x][y] == null;
+		return gridValid(x, y) && grid[x][y] == null && !gridHasGate(x, y);
 	}
 
 	public final boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
+	}
+
+	public final boolean gridHasGate(int x, int y) {
+		return specials[x][y] != null && specials[x][y].gate && specials[x][y].toggled;
 	}
 
 	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access and are intended for use by the viewer which retrieves grid information to draw */
@@ -269,7 +280,7 @@ public class Board {
 	}
 
 	public boolean select() {
-		if (cursorBlock == null && !gridEmpty(cursorX, cursorY) && grid[cursorX][cursorY].move) {
+		if (cursorBlock == null && gridHas(cursorX, cursorY) && grid[cursorX][cursorY].move) {
 			cursorBlock = grid[cursorX][cursorY];
 			return true;
 		}

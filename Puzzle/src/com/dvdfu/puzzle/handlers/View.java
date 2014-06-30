@@ -91,6 +91,8 @@ public class View {
 		assets.load("img/dirt1.png", Texture.class);
 		assets.load("img/dust1.png", Texture.class);
 		assets.load("img/bomb.png", Texture.class);
+		assets.load("img/gate.png", Texture.class);
+		assets.load("img/button.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -316,7 +318,11 @@ public class View {
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				drawBlock("grid", drawX, drawY);
 				Special special = board.getSpecial()[i][j];
-				if (special != null && special.path) drawBlock("path", drawX, drawY);
+				if (special != null) {
+					if (special.path) drawBlock("path", drawX, drawY);
+					else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
+					else if (special.button && !special.toggled) drawBlock("button", drawX, drawY);
+				}
 			}
 		}
 	}
@@ -422,8 +428,8 @@ public class View {
 				particles.removeValue(particle, false);
 				particlePool.free(particle);
 			} else {
-				if (particle.getSprite() != null) sprites.draw(particle.getSprite().getFrame(particle.frame()), particle.getX(), particle.getY(),
-					particle.getSprite().getWidth(), particle.getSprite().getHeight());
+				if (particle.getSprite() != null) sprites.draw(particle.getSprite().getFrame(particle.frame()),
+					particle.getX(), particle.getY(), particle.getSprite().getWidth(), particle.getSprite().getHeight());
 			}
 		}
 	}
