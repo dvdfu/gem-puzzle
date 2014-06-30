@@ -1,6 +1,7 @@
 package com.dvdfu.puzzle;
 
 import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.dvdfu.puzzle.entities.Board;
 import com.dvdfu.puzzle.handlers.Vars;
 import com.dvdfu.puzzle.handlers.View;
@@ -12,6 +13,18 @@ public class MainGame implements ApplicationListener {
 	public void create() {
 		board = new Board(Vars.boardWidth, Vars.boardHeight);
 		view = new View(board);
+	}
+	
+	/*
+	 * make the tileset for Tiled 
+	 * load boards by tilesets
+	 * create bombs
+	 * create buttons and gates
+	 */
+	
+	private void loadBoard(String filename) { 
+		TiledMap map = new TiledMap();
+		map.dispose();
 	}
 
 	public void dispose() {

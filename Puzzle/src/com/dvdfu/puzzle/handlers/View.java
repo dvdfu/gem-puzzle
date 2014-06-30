@@ -258,39 +258,46 @@ public class View {
 				newParticle.setPosition(x - sparkle1.getWidth() / 2, y - sparkle1.getHeight() / 2);
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(20), 12);
+				newParticle.setSprite(sparkle1);
 				break;
 			case DIRT:
 				newParticle.setPosition(x - dirt1.getWidth() / 2, y - Vars.blockSize / 2);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
+				newParticle.setSprite(dirt1);
 				break;
 			case DUST:
 				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setSprite(dust1);
 				break;
 			case DUST_L:
 				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setSprite(dust1);
 				break;
 			case DUST_R:
 				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setSprite(dust1);
 				break;
 			case DROP:
 				newParticle.setPosition(x - drop.getWidth() / 2, y - drop.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(4), 12);
+				newParticle.setSprite(drop);
 				break;
 			case GEM:
 				newParticle.setPosition(x - gem.getWidth() / 2, y - gem.getHeight() / 2);
 				newParticle.setVelocity(0, 3.2f);
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(0, 8);
+				newParticle.setSprite(gem);
 				break;
 			}
 			particles.add(newParticle);
@@ -415,28 +422,8 @@ public class View {
 				particles.removeValue(particle, false);
 				particlePool.free(particle);
 			} else {
-				Sprite sprite = null;
-				switch (particle.type) {
-				case SPARKLE:
-					sprite = sparkle1;
-					break;
-				case GEM:
-					sprite = gem;
-					break;
-				case DIRT:
-					sprite = dirt1;
-					break;
-				case DROP:
-					sprite = drop;
-					break;
-				case DUST:
-				case DUST_L:
-				case DUST_R:
-					sprite = dust1;
-					break;
-				}
-				if (sprite != null) sprites.draw(sprite.getFrame(particle.frame()), particle.getX(), particle.getY(),
-					sprite.getWidth(), sprite.getHeight());
+				if (particle.getSprite() != null) sprites.draw(particle.getSprite().getFrame(particle.frame()), particle.getX(), particle.getY(),
+					particle.getSprite().getWidth(), particle.getSprite().getHeight());
 			}
 		}
 	}

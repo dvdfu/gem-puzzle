@@ -2,6 +2,7 @@ package com.dvdfu.puzzle.entities;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool.Poolable;
+import com.dvdfu.puzzle.handlers.Sprite;
 import com.dvdfu.puzzle.handlers.Vars;
 
 public class Particle implements Poolable {
@@ -10,7 +11,7 @@ public class Particle implements Poolable {
 	}
 
 	public Type type;
-	public String filename;
+	private Sprite sprite;
 	private float x;
 	private float y;
 	private float dx;
@@ -29,6 +30,10 @@ public class Particle implements Poolable {
 		x += dx;
 		y += dy;
 	}
+	
+	public final Sprite getSprite() {
+		return sprite;
+	}
 
 	public final int getX() {
 		return (int) x;
@@ -44,6 +49,10 @@ public class Particle implements Poolable {
 
 	public final boolean dead() {
 		return tick >= frameLimit * Vars.ticksPerFrame;
+	}
+	
+	public void setSprite(Sprite sprite) {
+		this.sprite = sprite;
 	}
 	
 	public void setPosition(float x, float y) {

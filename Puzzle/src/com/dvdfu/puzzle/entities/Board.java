@@ -38,11 +38,10 @@ public class Board {
 		grid[1][2] = new Block().setActive(true, false);
 		grid[2][3] = new Block().setGem(true, false, true, true, false, true);
 		grid[3][4] = new Block().setGem(true, true, false, false, false, false);
-		grid[4][5] = new Block().setGem(true, false, false, false, false, true);
 
 		for (int i = 5; i < 8; i++) {
 			for (int j = 5; j < 10; j++) {
-				grid[i][j] = new Block().setStatic();
+				grid[i][j] = new Block("0");
 			}
 		}
 		
