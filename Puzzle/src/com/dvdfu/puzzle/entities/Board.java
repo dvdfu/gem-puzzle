@@ -26,7 +26,7 @@ public class Board {
 				specials[i][j] = null;
 				if (i >= 5 && i < 8 && j >= 5) grid[i][j] = new Block("0");
 				if (i < 5 && j >= 7) specials[i][j] = new Special().setHazard();
-				if (i >= 5 && i <= 6 && j >= 3 && j < 7) addButton(4, 5, i, j, i * j % 2 == 0);
+				if (i == 5 && j >= 3 && j < 5) addButton(4, 5, i, j, true);
 			}
 		}
 		addBlock(new Block().setGem(true, false, false, false, false, false), 2, 0);
@@ -36,11 +36,14 @@ public class Board {
 		grid[1][1] = new Block().setGem(true, false, true, false, true, false);
 		grid[2][1] = new Block().setGem(true, false, false, true, true, false);
 		grid[3][2] = new Block().setGem(true, false, false, false, false, true);
-		grid[4][1] = new Block().setGem(true, true, false, false, false, true);
+		grid[4][1] = new Block().setGem(true, false, false, false, false, true);
 		grid[0][2] = new Block().setGem(true, false, true, true, true, true);
 		grid[1][2] = new Block().setActive(true, false);
 		grid[2][3] = new Block().setGem(true, false, true, true, false, true);
-		grid[3][4] = new Block().setGem(true, true, false, false, false, false);
+		grid[3][4] = new Block().setGem(true, false, false, false, false, false);
+		grid[5][0] = new Block().setActive(true, true);
+		grid[5][1] = new Block().setActive(true, true);
+		grid[5][2] = new Block().setActive(true, true);
 
 		cursorBlock = null;
 		addPath(2, 1, 7, 4);
@@ -65,24 +68,18 @@ public class Board {
 	}
 
 	public void update() {
+		// check every block
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
 				Special special = specials[i][j];
-				if (special != null) {
-					if (special.button) {
-						special.toggled = gridHas(i, j);
-					} else if (special.gate) {
-						if (specials[special.destX][special.destY].toggled) special.toggled = !special.gateOriginal;
-						else special.toggled = special.gateOriginal;
-						if (special.toggled && block != null) block.command = Block.Command.BREAK;
-					}
-				}
 				if (block != null) {
-					// moves blocks that can fall or are selected
 					if (block.active) {
+						// drops falling blocks
 						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
+						// moves selected block closer to cursor
 						else if (block.move && block == cursorBlock && !isBuffered()) moveBlockToCursor(i, j);
+						// destroys any fully surrounded block
 						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD
 							&& gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
 							if (block.isGem()) block.command = Block.Command.BREAK;
@@ -92,10 +89,13 @@ public class Board {
 							grid[i + 1][j].command = Block.Command.BREAK;
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
-						if (specials[i][j] != null && specials[i][j].hazard) block.command = Block.Command.DROWN;
+						// destroys blocks caught in water or gates
+						if (special != null) {
+							if (special.hazard) block.command = Block.Command.DROWN;
+							else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
+						}
 					}
-					// marks gems for deletion
-					// takes priority over moving blocks
+					// checks for gem destruction, higher priority
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
 							block.command = Block.Command.BREAK;
@@ -114,7 +114,8 @@ public class Board {
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
 					}
-					if (block.bomb) {
+					// checks for bomb destruction
+					else if (block.bomb) {
 						if (gridHas(i, j - 1) && grid[i][j - 1].active) {
 							block.command = Block.Command.EXPLODE;
 							grid[i][j - 1].command = Block.Command.BREAK;
@@ -131,6 +132,14 @@ public class Board {
 							block.command = Block.Command.EXPLODE;
 							grid[i + 1][j].command = Block.Command.BREAK;
 						}
+					}
+				}
+				// handle button and gate toggling
+				if (special != null) {
+					if (special.button) special.toggled = gridHas(i, j);
+					else if (special.gate) {
+						if (specials[special.destX][special.destY].toggled) special.toggled = !special.gateOriginal;
+						else special.toggled = special.gateOriginal;
 					}
 				}
 			}
@@ -152,7 +161,7 @@ public class Board {
 	}
 
 	public final boolean gridEmpty(int x, int y) {
-		return gridValid(x, y) && grid[x][y] == null && !gridHasGate(x, y);
+		return gridValid(x, y) && ((grid[x][y] == null && !gridHasGate(x, y)) || (grid[x][y] != null && grid[x][y].command == Block.Command.FALL));
 	}
 
 	public final boolean gridValid(int x, int y) {
@@ -221,7 +230,7 @@ public class Board {
 					case DROWN:
 					case EXPLODE:
 					case BREAK:
-						unselect();
+						if (block == cursorBlock) unselect();
 						grid[i][j] = null;
 						break;
 					case MOVE_UP:

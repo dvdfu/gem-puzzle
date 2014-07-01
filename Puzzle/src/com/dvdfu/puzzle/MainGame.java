@@ -19,7 +19,6 @@ public class MainGame implements ApplicationListener {
 	 * make the tileset for Tiled 
 	 * load boards by tilesets
 	 * create bombs
-	 * create buttons and gates
 	 */
 	
 	private void loadBoard(String filename) { 

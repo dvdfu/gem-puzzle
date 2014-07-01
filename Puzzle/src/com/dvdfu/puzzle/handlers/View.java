@@ -110,14 +110,16 @@ public class View {
 		updateCursor();
 		if (timerReady() && board.isBuffered()) updateBuffer();
 		if (!board.isBuffered()) board.update();
-		if (timerReady()) updateTimer();
+		if (timerReady()) updateTimer(); else {
+			System.out.println("A");
+		}
 	}
 
 	public void draw() {
 		sprites.begin();
-		drawGrid();
+		drawGridUnder();
 		drawBlocks();
-		drawWater();
+		drawGridOver();
 		drawParticles();
 		sprites.end();
 		drawCursor();
@@ -151,12 +153,10 @@ public class View {
 				if (block != null) {
 					switch (block.command) {
 					case FALL:
-						if (board.gridValid(i, j + 2)) {
-							if (!board.gridEmpty(i, j + 2)) {
-								createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
-								createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
-								assets.get("aud/remove.wav", Sound.class).play(0.1f);
-							}
+						if (!board.gridEmpty(i, j + 2)) {
+							createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+							createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+							assets.get("aud/remove.wav", Sound.class).play(0.1f);
 						}
 					case MOVE_UP:
 					case MOVE_DOWN:
@@ -173,10 +173,6 @@ public class View {
 						if (block.isGem()) {
 							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
-						}
-						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
-							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
 						}
 						break;
 					case PATH_ENTER:
@@ -204,10 +200,16 @@ public class View {
 		/* when the timer is ready, checks board to see if any of the timers need to be set */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
+				int drawX = boardOffsetX + i * Vars.blockSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
+						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
+							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
+							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
+						}
 					case FALL:
 					case MOVE_UP:
 					case MOVE_DOWN:
@@ -311,7 +313,7 @@ public class View {
 		sprites.setColor(c.r, c.g, c.b, alpha);
 	}
 
-	private void drawGrid() {
+	private void drawGridUnder() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
@@ -320,7 +322,6 @@ public class View {
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.path) drawBlock("path", drawX, drawY);
-					else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 					else if (special.button && !special.toggled) drawBlock("button", drawX, drawY);
 				}
 			}
@@ -394,16 +395,18 @@ public class View {
 		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.blockSize, Vars.blockSize);
 	}
 
-	private void drawWater() {
+	private void drawGridOver() {
 		// setAlpha(0.8f);
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				Special special = board.getSpecial()[i][j];
-				if (special != null && special.hazard) {
-					if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY);
-					else drawBlock("waterF", drawX, drawY);
+				if (special != null) {
+					if (special.hazard) {
+						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY);
+						else drawBlock("waterF", drawX, drawY);
+					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 				}
 			}
 		}

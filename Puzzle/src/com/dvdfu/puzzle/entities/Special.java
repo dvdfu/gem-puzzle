@@ -34,6 +34,7 @@ public class Special {
 	public Special setGate(int buttonX, int buttonY, boolean gateOriginal) {
 		gate = true;
 		this.gateOriginal = gateOriginal;
+		toggled = gateOriginal;
 		destX = buttonX;
 		destY = buttonY;
 		return this;
