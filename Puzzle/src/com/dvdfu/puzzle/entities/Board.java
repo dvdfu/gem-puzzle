@@ -1,5 +1,7 @@
 package com.dvdfu.puzzle.entities;
 
+import com.dvdfu.puzzle.handlers.Vars;
+
 public class Board {
 	private Block grid[][];
 	private Block cursorBlock;
@@ -68,7 +70,19 @@ public class Board {
 	}
 
 	public void update() {
-		// check every block
+		// handle button and gate toggling
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Special special = specials[i][j];
+				if (special != null) {
+					if (special.button) special.toggled = gridHas(i, j);
+					else if (special.gate) {
+						special.toggled = gridHas(special.destX, special.destY) ? !special.gateOriginal : special.gateOriginal;
+					}
+				}
+			}
+		}
+		// check every block and special. Simply changes state, no modifications to the board
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = grid[i][j];
@@ -77,8 +91,6 @@ public class Board {
 					if (block.active) {
 						// drops falling blocks
 						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
-						// moves selected block closer to cursor
-						else if (block.move && block == cursorBlock && !isBuffered()) moveBlockToCursor(i, j);
 						// destroys any fully surrounded block
 						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD
 							&& gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
@@ -134,42 +146,116 @@ public class Board {
 						}
 					}
 				}
-				// handle button and gate toggling
-				if (special != null) {
-					if (special.button) special.toggled = gridHas(i, j);
-					else if (special.gate) {
-						if (specials[special.destX][special.destY].toggled) special.toggled = !special.gateOriginal;
-						else special.toggled = special.gateOriginal;
+			}
+		}
+		if (!isBuffered()) {
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < height; j++) {
+					Block block = grid[i][j];
+					// moves selected block closer to cursor, lowest priority
+					if (block != null && block == cursorBlock && cursorBlock.move) {
+						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Block.Command.MOVE_LEFT;
+						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Block.Command.MOVE_RIGHT;
+						else if (cursorBlock.active && !cursorBlock.fall) {
+							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Block.Command.MOVE_UP;
+							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Block.Command.MOVE_DOWN;
+						}
 					}
 				}
 			}
 		}
 	}
 
-	private void moveBlockToCursor(int x, int y) {
-		if (isBuffered() || !cursorBlock.active) return;
-		if (cursorX < x && gridEmpty(x - 1, y)) grid[x][y].command = Block.Command.MOVE_LEFT;
-		else if (cursorX > x && gridEmpty(x + 1, y)) grid[x][y].command = Block.Command.MOVE_RIGHT;
-		else if (cursorBlock.active && !cursorBlock.fall) {
-			if (cursorY < y && gridEmpty(x, y - 1)) grid[x][y].command = Block.Command.MOVE_UP;
-			else if (cursorY > y && gridEmpty(x, y + 1) && !cursorBlock.fall) grid[x][y].command = Block.Command.MOVE_DOWN;
-		}
-	}
-
-	public final boolean gridHas(int x, int y) {
+	private final boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
 
 	public final boolean gridEmpty(int x, int y) {
-		return gridValid(x, y) && ((grid[x][y] == null && !gridHasGate(x, y)) || (grid[x][y] != null && grid[x][y].command == Block.Command.FALL));
+		return gridValid(x, y)
+			&& (grid[x][y] == null && !gridHasGate(x, y) || grid[x][y] != null && grid[x][y].command == Block.Command.FALL);
 	}
 
 	public final boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 
-	public final boolean gridHasGate(int x, int y) {
+	private final boolean gridHasGate(int x, int y) {
 		return specials[x][y] != null && specials[x][y].gate && specials[x][y].toggled;
+	}
+
+	private boolean isBuffered() {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = grid[i][j];
+				if (block != null && block.command != Block.Command.HOLD) return true;
+			}
+		}
+		return false;
+	}
+
+	/* TIMER FUNCTIONS */
+
+	public int[][] getTimer() {
+		int[][] timer = new int[width][height];
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				timer[i][j] = grid[i][j] != null ? grid[i][j].timer : 0;
+			}
+		}
+		return timer;
+	}
+
+	public boolean checkTimer() {
+		/* when the timer is ready, checks board to see if any of the timers need to be set */
+		boolean modified = false;
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = grid[i][j];
+				if (block != null) {
+					switch (block.command) {
+					case DROWN:
+					case FALL:
+					case MOVE_UP:
+					case MOVE_DOWN:
+					case MOVE_RIGHT:
+					case MOVE_LEFT:
+						block.timer = Vars.timeMove;
+						modified = true;
+						break;
+					case BREAK:
+						block.timer = Vars.timeGem;
+						modified = true;
+						break;
+					case PATH:
+						block.timer = Vars.timePath;
+						modified = true;
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+		return modified;
+	}
+
+	public void updateTimer() {
+		/* when timer is not ready, decrements all timer values */
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = grid[i][j];
+				if (block != null && block.timer > 0) block.timer--;
+			}
+		}
+	}
+
+	public boolean timerReady() {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				if (grid[i][j] != null && grid[i][j].timer > 0) return false;
+			}
+		}
+		return true;
 	}
 
 	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access and are intended for use by the viewer which retrieves grid information to draw */
@@ -204,15 +290,6 @@ public class Board {
 
 	/* PUBLIC CONTROLLER FUNCTIONS The following functions have public access and are intended for use by the controller which allows the board to be manipulated */
 
-	public final boolean isBuffered() {
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				if (grid[i][j] != null && grid[i][j].command != Block.Command.HOLD) { return true; }
-			}
-		}
-		return false;
-	}
-
 	/* Used at the VERY end of a buffering sequence */
 	public void useBuffer() {
 		for (int i = 0; i < width; i++) {
@@ -238,7 +315,7 @@ public class Board {
 						grid[i][j - 1] = block;
 						Special pathU = specials[i][j - 1];
 						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
-							grid[i][j - 1].command = Block.Command.PATH_ENTER;
+							grid[i][j - 1].command = Block.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -248,7 +325,7 @@ public class Board {
 						grid[i][j + 1] = block;
 						Special pathDown = specials[i][j + 1];
 						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
-							grid[i][j + 1].command = Block.Command.PATH_ENTER;
+							grid[i][j + 1].command = Block.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -257,7 +334,7 @@ public class Board {
 						grid[i + 1][j] = block;
 						Special pathRight = specials[i + 1][j];
 						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
-							grid[i + 1][j].command = Block.Command.PATH_ENTER;
+							grid[i + 1][j].command = Block.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -266,18 +343,13 @@ public class Board {
 						grid[i - 1][j] = block;
 						Special pathLeft = specials[i - 1][j];
 						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
-							grid[i - 1][j].command = Block.Command.PATH_ENTER;
+							grid[i - 1][j].command = Block.Command.PATH;
 							hold = false;
 						}
 						break;
-					case PATH_ENTER:
+					case PATH:
 						grid[i][j] = null;
 						grid[specials[i][j].destX][specials[i][j].destY] = block;
-						grid[specials[i][j].destX][specials[i][j].destY].command = Block.Command.PATH_EXIT;
-						hold = false;
-						break;
-					case PATH_EXIT:
-						unselect();
 						break;
 					default:
 						break;

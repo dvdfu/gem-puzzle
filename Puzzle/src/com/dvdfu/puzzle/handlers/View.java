@@ -30,7 +30,6 @@ public class View {
 	private Viewport viewport;
 	private OrthographicCamera camera;
 	private Vector3 mouse;
-	private int[][] timer;
 	private int boardOffsetX;
 	private int boardOffsetY;
 	private Sprite sparkle1;
@@ -54,9 +53,6 @@ public class View {
 		mouse = new Vector3();
 		camera = (OrthographicCamera) viewport.getCamera();
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
-
-		timer = new int[board.getWidth()][board.getHeight()];
-		resetTimer();
 
 		particles = new Array<Particle>();
 		particlePool = new Pool<Particle>() {
@@ -106,13 +102,20 @@ public class View {
 	}
 
 	public void update() {
-		updateView();
-		updateCursor();
-		if (timerReady() && board.isBuffered()) updateBuffer();
-		if (!board.isBuffered()) board.update();
-		if (timerReady()) updateTimer(); else {
-			System.out.println("A");
-		}
+		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
+		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		if (Gdx.input.justTouched() && board.select()) assets.get("aud/select.wav", Sound.class).play();
+		if (!Gdx.input.isTouched() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
+		mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+		sprites.setProjectionMatrix(camera.combined);
+		shapes.setProjectionMatrix(camera.combined);
+		camera.unproject(mouse);
+
+		/* sends mouse information to the board and plays appropriate sound effects */
+		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
+		board.setCursor(cursorX, cursorY);
 	}
 
 	public void draw() {
@@ -133,17 +136,35 @@ public class View {
 		viewport.update(width, height);
 	}
 
-	private void updateView() {
-		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
-		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-		sprites.setProjectionMatrix(camera.combined);
-		shapes.setProjectionMatrix(camera.combined);
-		camera.unproject(mouse);
+	public void beginBuffer() {
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				int drawX = boardOffsetX + i * Vars.blockSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				Block block = board.getGrid()[i][j];
+				if (block != null) {
+					switch (block.command) {
+					case DROWN:
+						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
+							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
+							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
+						}
+					case FALL:
+					case MOVE_UP:
+					case MOVE_DOWN:
+					case MOVE_RIGHT:
+					case MOVE_LEFT:
+					case BREAK:
+					case PATH:
+					default:
+						break;
+					}
+				}
+			}
+		}
 	}
 
-	private void updateBuffer() {
+	public void endBuffer() {
 		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
@@ -175,76 +196,12 @@ public class View {
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
 						break;
-					case PATH_ENTER:
-					case PATH_EXIT:
+					case PATH:
 						break;
 					default:
 						break;
 					}
 				}
-			}
-		}
-		board.useBuffer();
-	}
-
-	private void updateCursor() {
-		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
-		board.setCursor(cursorX, cursorY);
-		if (Gdx.input.justTouched() && board.select()) assets.get("aud/select.wav", Sound.class).play();
-		if (!Gdx.input.isTouched() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
-	}
-
-	private void updateTimer() {
-		/* when the timer is ready, checks board to see if any of the timers need to be set */
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
-				Block block = board.getGrid()[i][j];
-				if (block != null) {
-					switch (block.command) {
-					case DROWN:
-						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
-							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
-						}
-					case FALL:
-					case MOVE_UP:
-					case MOVE_DOWN:
-					case MOVE_RIGHT:
-					case MOVE_LEFT:
-						timer[i][j] = Vars.timeMove;
-						break;
-					case BREAK:
-						timer[i][j] = Vars.timeGem;
-						break;
-					case PATH_ENTER:
-					case PATH_EXIT:
-						timer[i][j] = Vars.timePath;
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	private boolean timerReady() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				if (timer[i][j] > 0) return false;
-			}
-		}
-		return true;
-	}
-
-	private void resetTimer() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				timer[i][j] = 0;
 			}
 		}
 	}
@@ -322,7 +279,10 @@ public class View {
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.path) drawBlock("path", drawX, drawY);
-					else if (special.button && !special.toggled) drawBlock("button", drawX, drawY);
+					else if (special.button) {
+						if (special.toggled) drawBlock("button", drawX, drawY);
+						else drawBlock("button", drawX, drawY);
+					}
 				}
 			}
 		}
@@ -335,8 +295,9 @@ public class View {
 				int drawX = boardOffsetX + i * Vars.blockSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
 				Block block = board.getGrid()[i][j];
+				Special special = board.getSpecial()[i][j];
 				if (block != null) {
-					if (timer[i][j] > 0) timer[i][j]--;
+					int[][] timer = board.getTimer();
 					int bufferX = 0;
 					int bufferY = 0;
 					switch (block.command) {
@@ -361,11 +322,12 @@ public class View {
 							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
 						break;
-					case PATH_ENTER:
-						setAlpha(timer[i][j] * 1f / Vars.timePath);
-						break;
-					case PATH_EXIT:
-						setAlpha((Vars.timePath - timer[i][j]) * 1f / Vars.timePath);
+					case PATH:
+						setAlpha(Math.abs(1 - 2f * timer[i][j] / Vars.timePath));
+						if (timer[i][j] * 2 < Vars.timePath) {
+							drawX = boardOffsetX + special.destX * Vars.blockSize;
+							drawY = boardOffsetY + (board.getHeight() - 1 - special.destY) * Vars.blockSize;
+						}
 						break;
 					default:
 						break;

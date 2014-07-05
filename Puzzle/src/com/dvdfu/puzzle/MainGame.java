@@ -14,14 +14,10 @@ public class MainGame implements ApplicationListener {
 		board = new Board(Vars.boardWidth, Vars.boardHeight);
 		view = new View(board);
 	}
-	
-	/*
-	 * make the tileset for Tiled 
-	 * load boards by tilesets
-	 * create bombs
-	 */
-	
-	private void loadBoard(String filename) { 
+
+	/* make the tileset for Tiled load boards by tilesets create bombs */
+
+	private void loadBoard(String filename) {
 		TiledMap map = new TiledMap();
 		map.dispose();
 	}
@@ -32,6 +28,13 @@ public class MainGame implements ApplicationListener {
 
 	public void render() {
 		view.update();
+		if (board.timerReady()) {
+			view.endBuffer(); // apply end-buffer view changes to all buffered blocks
+			board.useBuffer(); // apply end-buffer board changes to grid
+			// at this point all blocks should have timer = 0 and command = hold
+			board.update(); /* timer is ready, board looks for buffers */
+			if (board.checkTimer()) view.beginBuffer();
+		} else board.updateTimer();
 		view.draw();
 	}
 

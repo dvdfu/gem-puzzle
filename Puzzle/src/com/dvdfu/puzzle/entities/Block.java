@@ -2,7 +2,7 @@ package com.dvdfu.puzzle.entities;
 
 public class Block {
 	public enum Command {
-		HOLD, BREAK, EXPLODE, DROWN, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH_ENTER, PATH_EXIT, FALL
+		HOLD, BREAK, EXPLODE, DROWN, MOVE_UP, MOVE_DOWN, MOVE_RIGHT, MOVE_LEFT, PATH, FALL
 	};
 
 	public Command command;
@@ -18,10 +18,13 @@ public class Block {
 
 	public boolean gemC;
 	public boolean visited;
+	
+	public int timer;
 
 	public Block() {
 		command = Command.HOLD;
 		visited = false;
+		timer = 0;
 		setStatic();
 	}
 	
