@@ -93,6 +93,7 @@ public class View {
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
 		assets.load("aud/splash.mp3", Sound.class);
+		assets.load("aud/break.mp3", Sound.class);
 		assets.finishLoading();
 		sparkle1 = new Sprite(assets.get("img/sparkle1.png", Texture.class), 16, 16);
 		dirt1 = new Sprite(assets.get("img/dirt1.png", Texture.class), 8, 8);
@@ -147,7 +148,7 @@ public class View {
 					case DROWN:
 						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
 							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
-							assets.get("aud/splash.mp3", Sound.class).play(0.1f);
+							assets.get("aud/splash.mp3", Sound.class).play(0.3f);
 						}
 					case FALL:
 					case MOVE_UP:
@@ -189,6 +190,7 @@ public class View {
 							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
+						assets.get("aud/break.mp3", Sound.class).play();
 						break;
 					case DROWN:
 						if (block.isGem()) {

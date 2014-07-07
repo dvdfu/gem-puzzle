@@ -100,11 +100,11 @@ public class Block {
 	}
 
 	public String getID() {
-		String id = "";
 		boolean[] properties = { active, move, fall, bomb, gemU, gemD, gemR, gemL };
-		for (boolean property : properties) {
-			id = id + (property ? "1" : "0");
-		}
-		return "";
+		int n = 0;
+		for (boolean property : properties) n = (n << 1) + (property ? 1 : 0);
+		String id = Integer.toHexString(n);
+		if (id.length() == 1) id = "0" + id;
+		return id;
 	}
 }

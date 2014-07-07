@@ -49,6 +49,16 @@ public class Board {
 
 		cursorBlock = null;
 		addPath(2, 1, 7, 4);
+		/*
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				Block block = grid[j][i];
+				if (block != null) System.out.print(block.getID());
+				else System.out.print("  ");
+			}
+			System.out.println();
+		}
+		*/
 	}
 
 	public void addBlock(Block block, int x, int y) {
