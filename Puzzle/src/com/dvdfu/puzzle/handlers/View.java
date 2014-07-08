@@ -34,6 +34,7 @@ public class View {
 	private Sprite dust1;
 	private Sprite drop;
 	private Sprite gem;
+	private Sprite cracks;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
 	private float timer = 0;
@@ -88,6 +89,7 @@ public class View {
 		assets.load("img/cursor.png", Texture.class);
 		assets.load("img/cursorSelect.png", Texture.class);
 		assets.load("img/dot.png", Texture.class);
+		assets.load("img/cracks.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -99,6 +101,7 @@ public class View {
 		dust1 = new Sprite(assets.get("img/dust1.png", Texture.class), 8, 8);
 		drop = new Sprite(assets.get("img/drops.png", Texture.class), 8, 8);
 		gem = new Sprite(assets.get("img/gem.png", Texture.class), 16, 16);
+		cracks = new Sprite(assets.get("img/cracks.png", Texture.class), 32, 32);
 	}
 
 	public void update(float x, float y) {
@@ -123,9 +126,9 @@ public class View {
 		drawGridUnder();
 		drawBlocks();
 		drawGridOver();
+		drawCursor();
 		drawParticles();
 		sprites.end();
-		drawCursor();
 		timer += 1 / 16f;
 		if (timer >= 1) timer = 0;
 	}
@@ -147,7 +150,7 @@ public class View {
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
-						createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
+						createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize, 16, 0, 16);
 						assets.get("aud/splash.mp3", Sound.class).play(0.3f);
 						break;
 					default:
@@ -179,15 +182,10 @@ public class View {
 					case MOVE_LEFT:
 						break;
 					case BREAK:
-						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
-							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
-						}
 						assets.get("aud/break.mp3", Sound.class).play();
-						break;
 					case DROWN:
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 8);
+							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 8);
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
 						break;
@@ -202,54 +200,64 @@ public class View {
 	}
 
 	private void createParticle(Particle.Type type, int x, int y) {
-		createParticle(type, x, y, 1);
+		createParticle(type, x, y, 0, 0, 1);
 	}
 
 	private void createParticle(Particle.Type type, int x, int y, int num) {
+		createParticle(type, x, y, 0, 0, num);
+	}
+	
+	private void createParticle(Particle.Type type, int x, int y, int randX, int randY) {
+		createParticle(type, x, y, randX, randY, 1);
+	}
+
+	private void createParticle(Particle.Type type, int x, int y, int randX, int randY, int num) {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
+			int xr = x + MathUtils.random(-randX, randX);
+			int yr = y + MathUtils.random(-randY, randY);
 			switch (type) {
 			case SPARKLE:
-				newParticle.setPosition(x - sparkle1.getWidth() / 2, y - sparkle1.getHeight() / 2);
+				newParticle.setPosition(xr - sparkle1.getWidth() / 2, yr - sparkle1.getHeight() / 2);
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(20), 12);
 				newParticle.setSprite(sparkle1);
 				break;
 			case DIRT:
-				newParticle.setPosition(x - dirt1.getWidth() / 2, y - Vars.blockSize / 2);
+				newParticle.setPosition(xr - dirt1.getWidth() / 2, yr - Vars.blockSize / 2);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
 				newParticle.setSprite(dirt1);
 				break;
 			case DUST:
-				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(4), 6);
 				newParticle.setSprite(dust1);
 				break;
 			case DUST_L:
-				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(4), 6);
 				newParticle.setSprite(dust1);
 				break;
 			case DUST_R:
-				newParticle.setPosition(x - dust1.getWidth() / 2, y - dust1.getHeight() / 2);
+				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(4), 6);
 				newParticle.setSprite(dust1);
 				break;
 			case DROP:
-				newParticle.setPosition(x - drop.getWidth() / 2, y - drop.getHeight() / 2);
+				newParticle.setPosition(xr - drop.getWidth() / 2, yr - drop.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(4), 12);
 				newParticle.setSprite(drop);
 				break;
 			case GEM:
-				newParticle.setPosition(x - gem.getWidth() / 2, y - gem.getHeight() / 2);
+				newParticle.setPosition(xr - gem.getWidth() / 2, yr - gem.getHeight() / 2);
 				newParticle.setVelocity(0, 3.2f);
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(0, 8);
@@ -316,7 +324,7 @@ public class View {
 						break;
 					case BREAK:
 						if (board.getSpecial()[i][j] == null || !board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16);
 						}
 						break;
 					case PATH:
@@ -344,6 +352,9 @@ public class View {
 						if (block.gemR) drawBlock("gemsR", drawX, drawY);
 					}
 					if (block.fall) drawBlock("fall", drawX, drawY);
+					if (block.command == Block.Command.BREAK) {
+						sprites.draw(cracks.getFrame((Vars.timeGem - timer[i][j]) * 8 / Vars.timeGem), drawX, drawY);
+					}
 					setAlpha(1);
 				}
 			}
@@ -374,7 +385,6 @@ public class View {
 	}
 
 	private void drawCursor() {
-		sprites.begin();
 		int cursorX = boardOffsetX + board.getCursorX() * Vars.blockSize;
 		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.blockSize;
 		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
@@ -393,7 +403,6 @@ public class View {
 				}
 			} else if (special.gate) drawLine(cx, cy, special.destX, special.destY);
 		}
-		sprites.end();
 	}
 
 	private void drawLine(int x1, int y1, int x2, int y2) {
@@ -406,8 +415,8 @@ public class View {
 		int numDots = length / 10;
 		float angle = MathUtils.atan2(dy, dx);
 		for (int i = 0; i <= numDots; i++) {
-			int x = (int) (xo + ((i + timer) % numDots) * length * MathUtils.cos(angle) / numDots - 0.5f);
-			int y = (int) (yo + ((i + timer) % numDots) * length * MathUtils.sin(angle) / numDots - 0.5f);
+			float x = xo + ((i + timer) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
+			float y = yo + ((i + timer) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
 			sprites.draw(assets.get("img/dot.png", Texture.class), x, y);
 		}
 	}

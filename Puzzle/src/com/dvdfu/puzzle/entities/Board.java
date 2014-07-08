@@ -43,7 +43,7 @@ public class Board {
 		grid[1][2] = new Block().setActive(true, false);
 		grid[2][3] = new Block().setGem(true, false, true, true, false, true);
 		grid[3][4] = new Block().setGem(true, false, false, false, false, false);
-		grid[5][0] = new Block().setActive(true, true);
+		grid[5][0] = new Block().setActive(true, false);
 		grid[5][1] = new Block().setActive(true, true);
 		grid[5][2] = new Block().setActive(true, true);
 
@@ -352,6 +352,7 @@ public class Board {
 						}
 						break;
 					case PATH:
+						unselect();
 						grid[i][j] = null;
 						grid[specials[i][j].destX][specials[i][j].destY] = block;
 						break;

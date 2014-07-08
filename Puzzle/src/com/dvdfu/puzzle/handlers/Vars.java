@@ -15,6 +15,6 @@ public class Vars {
 	public static final int blockSize = 32;
 	public static final int timeMove = 4;
 	public static final int timePath = 16;
-	public static final int timeGem = 12;
-	public static final int timeDrown = 12;
+	public static final int timeGem = 16;
+	public static final int timeDrown = 4;
 }
