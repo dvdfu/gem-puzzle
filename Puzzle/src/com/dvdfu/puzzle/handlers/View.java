@@ -8,8 +8,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -26,7 +24,6 @@ public class View {
 	private Board board;
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
-	private ShapeRenderer shapes;
 	private Viewport viewport;
 	private OrthographicCamera camera;
 	private Vector3 mouse;
@@ -39,6 +36,7 @@ public class View {
 	private Sprite gem;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
+	private float timer = 0;
 
 	public View(Board board) {
 		this.board = board;
@@ -47,7 +45,6 @@ public class View {
 		loadAssets();
 
 		sprites = new SpriteBatch();
-		shapes = new ShapeRenderer();
 
 		viewport = new ScreenViewport();
 		mouse = new Vector3();
@@ -65,7 +62,6 @@ public class View {
 	public void dispose() {
 		assets.dispose();
 		sprites.dispose();
-		shapes.dispose();
 	}
 
 	private void loadAssets() {
@@ -89,6 +85,9 @@ public class View {
 		assets.load("img/bomb.png", Texture.class);
 		assets.load("img/gate.png", Texture.class);
 		assets.load("img/button.png", Texture.class);
+		assets.load("img/cursor.png", Texture.class);
+		assets.load("img/cursorSelect.png", Texture.class);
+		assets.load("img/dot.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -102,24 +101,24 @@ public class View {
 		gem = new Sprite(assets.get("img/gem.png", Texture.class), 16, 16);
 	}
 
-	public void update() {
+	public void update(float x, float y) {
 		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
-		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		if (Gdx.input.justTouched() && board.select()) assets.get("aud/select.wav", Sound.class).play();
-		if (!Gdx.input.isTouched() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
-		mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+		mouse.set(x, y, 0);
 		sprites.setProjectionMatrix(camera.combined);
-		shapes.setProjectionMatrix(camera.combined);
 		camera.unproject(mouse);
 
 		/* sends mouse information to the board and plays appropriate sound effects */
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
 		board.setCursor(cursorX, cursorY);
+		if (Input.MouseDown() && board.select()) assets.get("aud/select.wav", Sound.class).play();
+		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
+
 	}
 
 	public void draw() {
+		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		sprites.begin();
 		drawGridUnder();
 		drawBlocks();
@@ -127,13 +126,15 @@ public class View {
 		drawParticles();
 		sprites.end();
 		drawCursor();
+		timer += 1 / 16f;
+		if (timer >= 1) timer = 0;
 	}
 
 	public void resize(int width, int height) {
 		int zoomW = height / Vars.blockSize / board.getHeight();
 		int zoomH = width / Vars.blockSize / board.getWidth();
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
-		Gdx.gl20.glLineWidth(1 / camera.zoom);
+		Gdx.gl20.glLineWidth(2 / camera.zoom);
 		viewport.update(width, height);
 	}
 
@@ -146,17 +147,9 @@ public class View {
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
-						if (board.getSpecial()[i][j] != null && board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
-							assets.get("aud/splash.mp3", Sound.class).play(0.3f);
-						}
-					case FALL:
-					case MOVE_UP:
-					case MOVE_DOWN:
-					case MOVE_RIGHT:
-					case MOVE_LEFT:
-					case BREAK:
-					case PATH:
+						createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16);
+						assets.get("aud/splash.mp3", Sound.class).play(0.3f);
+						break;
 					default:
 						break;
 					}
@@ -307,6 +300,8 @@ public class View {
 						bufferY = (Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
 						break;
 					case DROWN:
+						// setAlpha(1f * timer[i][j] / Vars.timeDrown);
+						break;
 					case FALL:
 					case MOVE_DOWN:
 						bufferY = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
@@ -360,7 +355,6 @@ public class View {
 	}
 
 	private void drawGridOver() {
-		// setAlpha(0.8f);
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Vars.blockSize;
@@ -368,23 +362,54 @@ public class View {
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.hazard) {
-						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY);
-						else drawBlock("waterF", drawX, drawY);
+						// setAlpha(0.6f);
+						drawBlock("waterF", drawX, drawY);
+						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
+							+ Vars.blockSize);
+						// setAlpha(1);
 					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 				}
 			}
 		}
-		// setAlpha(1);
 	}
 
 	private void drawCursor() {
-		shapes.begin(ShapeType.Line);
-		if (board.isSelected()) shapes.setColor(Color.RED);
-		else shapes.setColor(Color.BLUE);
+		sprites.begin();
 		int cursorX = boardOffsetX + board.getCursorX() * Vars.blockSize;
 		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.blockSize;
-		shapes.rect(cursorX, cursorY, Vars.blockSize, Vars.blockSize);
-		shapes.end();
+		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
+		else drawBlock("cursor", cursorX, cursorY);
+		Special special = board.getSpecial()[board.getCursorX()][board.getCursorY()];
+		if (special != null && !board.isSelected()) {
+			int cx = board.getCursorX();
+			int cy = board.getCursorY();
+			if (special.path) drawLine(cx, cy, special.destX, special.destY);
+			else if (special.button) {
+				for (int i = 0; i < board.getWidth(); i++) {
+					for (int j = 0; j < board.getHeight(); j++) {
+						Special target = board.getSpecial()[i][j];
+						if (target != null && target.destX == cx && target.destY == cy) drawLine(cx, cy, i, j);
+					}
+				}
+			} else if (special.gate) drawLine(cx, cy, special.destX, special.destY);
+		}
+		sprites.end();
+	}
+
+	private void drawLine(int x1, int y1, int x2, int y2) {
+		int xo = boardOffsetX + x1 * Vars.blockSize + Vars.blockSize / 2;
+		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Vars.blockSize + Vars.blockSize / 2;
+		drawBlock("cursor", boardOffsetX + x2 * Vars.blockSize, boardOffsetY + (board.getHeight() - 1 - y2) * Vars.blockSize);
+		int dx = (x2 - x1) * Vars.blockSize;
+		int dy = (y1 - y2) * Vars.blockSize;
+		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+		int numDots = length / 10;
+		float angle = MathUtils.atan2(dy, dx);
+		for (int i = 0; i <= numDots; i++) {
+			int x = (int) (xo + ((i + timer) % numDots) * length * MathUtils.cos(angle) / numDots - 0.5f);
+			int y = (int) (yo + ((i + timer) % numDots) * length * MathUtils.sin(angle) / numDots - 0.5f);
+			sprites.draw(assets.get("img/dot.png", Texture.class), x, y);
+		}
 	}
 
 	private void drawParticles() {

@@ -1,8 +1,10 @@
 package com.dvdfu.puzzle;
 
 import com.badlogic.gdx.ApplicationListener;
-import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.Gdx;
 import com.dvdfu.puzzle.entities.Board;
+import com.dvdfu.puzzle.handlers.Input;
+import com.dvdfu.puzzle.handlers.InputController;
 import com.dvdfu.puzzle.handlers.Vars;
 import com.dvdfu.puzzle.handlers.View;
 
@@ -11,15 +13,9 @@ public class MainGame implements ApplicationListener {
 	private View view;
 
 	public void create() {
+		Gdx.input.setInputProcessor(new InputController());
 		board = new Board(Vars.boardWidth, Vars.boardHeight);
 		view = new View(board);
-	}
-
-	/* make the tileset for Tiled load boards by tilesets create bombs */
-
-	private void loadBoard(String filename) {
-		TiledMap map = new TiledMap();
-		map.dispose();
 	}
 
 	public void dispose() {
@@ -27,7 +23,7 @@ public class MainGame implements ApplicationListener {
 	}
 
 	public void render() {
-		view.update();
+		view.update(Input.mouse.x, Input.mouse.y);
 		if (board.timerReady()) {
 			view.endBuffer(); // apply end-buffer view changes to all buffered blocks
 			board.useBuffer(); // apply end-buffer board changes to grid
@@ -36,6 +32,7 @@ public class MainGame implements ApplicationListener {
 			if (board.checkTimer()) view.beginBuffer();
 		} else board.updateTimer();
 		view.draw();
+		Input.update();
 	}
 
 	public void resize(int width, int height) {

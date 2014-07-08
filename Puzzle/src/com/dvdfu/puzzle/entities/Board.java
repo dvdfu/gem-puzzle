@@ -27,8 +27,8 @@ public class Board {
 				grid[i][j] = null;
 				specials[i][j] = null;
 				if (i >= 5 && i < 8 && j >= 5) grid[i][j] = new Block("0");
-				if (i < 5 && j >= 7) specials[i][j] = new Special().setHazard();
-				if (i == 5 && j >= 3 && j < 5) addButton(4, 5, i, j, true);
+				if (i < 5 && j == 9) specials[i][j] = new Special().setHazard();
+				if (i == 5 && j >= 3 && j < 5) addButton(1, 5, i, j, true);
 			}
 		}
 		addBlock(new Block().setGem(true, false, false, false, false, false), 2, 0);
@@ -49,16 +49,7 @@ public class Board {
 
 		cursorBlock = null;
 		addPath(2, 1, 7, 4);
-		/*
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				Block block = grid[j][i];
-				if (block != null) System.out.print(block.getID());
-				else System.out.print("  ");
-			}
-			System.out.println();
-		}
-		*/
+		/*for (int i = 0; i < height; i++) { for (int j = 0; j < width; j++) { Block block = grid[j][i]; if (block != null) System.out.print(block.getID()); else System.out.print("  "); } System.out.println(); } */
 	}
 
 	public void addBlock(Block block, int x, int y) {
@@ -111,11 +102,6 @@ public class Board {
 							grid[i + 1][j].command = Block.Command.BREAK;
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
-						// destroys blocks caught in water or gates
-						if (special != null) {
-							if (special.hazard) block.command = Block.Command.DROWN;
-							else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
-						}
 					}
 					// checks for gem destruction, higher priority
 					if (block.isGem()) {
@@ -135,6 +121,11 @@ public class Board {
 							block.command = Block.Command.BREAK;
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
+					}
+					// destroys blocks caught in water or gates
+					if (special != null) {
+						if (special.hazard) block.command = Block.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
 					}
 					// checks for bomb destruction
 					else if (block.bomb) {
@@ -224,6 +215,9 @@ public class Board {
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
+						block.timer = Vars.timeDrown;
+						modified = true;
+						break;
 					case FALL:
 					case MOVE_UP:
 					case MOVE_DOWN:
