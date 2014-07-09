@@ -137,8 +137,8 @@ public class View {
 		drawCursor();
 		drawParticles();
 		sprites.end();
-		if (timer <= 0) timer = 16;
-		else timer--;
+		if (timer < 16) timer++;
+		else timer = 0;
 	}
 
 	public void resize(int width, int height) {
@@ -191,7 +191,7 @@ public class View {
 					case EXPLODE:
 						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
 						createParticle(Particle.Type.DUST, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
-						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 16);
+						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 32);
 					case BREAK:
 						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
 						assets.get("aud/break.mp3", Sound.class).play();
@@ -225,64 +225,57 @@ public class View {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
-			Sprite sprite;
+			Sprite sprite = null;
 			int xr = x + MathUtils.random(-randX, randX);
 			int yr = y + MathUtils.random(-randY, randY);
 			switch (type) {
 			case SPARKLE:
-				newParticle.setPosition(xr - sparkle1.getWidth() / 2, yr - sparkle1.getHeight() / 2);
+				sprite = sparkle1;
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(20), 12);
-				newParticle.setSprite(sparkle1);
 				break;
 			case DIRT:
-				newParticle.setPosition(xr - dirt1.getWidth() / 2, yr - Vars.halfSize);
+				sprite = dirt1;
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
-				newParticle.setSprite(dirt1);
 				break;
 			case DUST:
-				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
+				sprite = dust1;
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(4), 6);
-				newParticle.setSprite(dust1);
 				break;
 			case DUST_L:
-				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
+				sprite = dust1;
 				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(12), 6);
-				newParticle.setSprite(dust1);
 				break;
 			case DUST_R:
-				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
+				sprite = dust1;
 				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(12), 6);
-				newParticle.setSprite(dust1);
 				break;
 			case DROP:
-				newParticle.setPosition(xr - drop.getWidth() / 2, yr - drop.getHeight() / 2);
+				sprite = drop;
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
-				newParticle.setSprite(drop);
 				break;
 			case GEM:
-				newParticle.setPosition(xr - gem.getWidth() / 2, yr - gem.getHeight() / 2);
+				sprite = gem;
 				newParticle.setVelocity(0, 3.2f);
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(0, 8);
-				newParticle.setSprite(gem);
 				break;
 			case FIRE:
 				if (MathUtils.randomBoolean()) sprite = fire;
 				else sprite = fire2;
-				newParticle.setPosition(xr - sprite.getWidth() / 2, yr - sprite.getHeight() / 2);
-				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setVector(MathUtils.random(3f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 8);
-				newParticle.setSprite(sprite);
 				break;
 			}
+			newParticle.setPosition(xr - sprite.getWidth() / 2,  yr - sprite.getHeight() / 2);
+			newParticle.setSprite(sprite);
 			particles.add(newParticle);
 		}
 	}
@@ -396,15 +389,15 @@ public class View {
 	}
 
 	private void drawCursor() {
-		int cursorX = boardOffsetX + board.getCursorX() * Vars.fullSize;
-		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.fullSize;
+		int cx = board.getCursorX();
+		int cy = board.getCursorY();
+		int cursorX = boardOffsetX + cx * Vars.fullSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - cy) * Vars.fullSize;
 		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
 		else drawBlock("cursor", cursorX, cursorY);
-		Special special = board.getSpecial()[board.getCursorX()][board.getCursorY()];
-		if (special != null) {
-			int cx = board.getCursorX();
-			int cy = board.getCursorY();
-			if (special.path) drawLine(cx, cy, special.destX, special.destY);
+		Special special = board.getSpecial()[cx][cy];
+		if (special != null && !board.isSelected()) {
+ 			if (special.path) drawLine(cx, cy, special.destX, special.destY);
 			else if (special.button) {
 				for (int i = 0; i < board.getWidth(); i++) {
 					for (int j = 0; j < board.getHeight(); j++) {

@@ -168,7 +168,7 @@ public class Board {
 		}
 	}
 
-	private final boolean gridHas(int x, int y) {
+	public final boolean gridHas(int x, int y) {
 		return gridValid(x, y) && grid[x][y] != null;
 	}
 
