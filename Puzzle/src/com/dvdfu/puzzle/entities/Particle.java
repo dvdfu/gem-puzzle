@@ -7,7 +7,7 @@ import com.dvdfu.puzzle.handlers.Vars;
 
 public class Particle implements Poolable {
 	public enum Type {
-		SPARKLE, DIRT, DUST, DUST_L, DUST_R, DROP, GEM
+		SPARKLE, DIRT, DUST, DUST_L, DUST_R, DROP, GEM, FIRE
 	}
 
 	public Type type;

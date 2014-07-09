@@ -30,8 +30,8 @@ public class EditorView {
 
 	public EditorView(Board board) {
 		this.board = board;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.blockSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.blockSize) / 2;
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
 		loadAssets();
 
 		sprites = new SpriteBatch();
@@ -90,8 +90,8 @@ public class EditorView {
 		camera.unproject(mouse);
 
 		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
+		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.fullSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.fullSize;
 		board.setCursor(cursorX, cursorY);
 	}
 
@@ -105,8 +105,8 @@ public class EditorView {
 	}
 
 	public void resize(int width, int height) {
-		int zoomW = height / Vars.blockSize / board.getHeight();
-		int zoomH = width / Vars.blockSize / board.getWidth();
+		int zoomW = height / Vars.fullSize / board.getHeight();
+		int zoomH = width / Vars.fullSize / board.getWidth();
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
 		Gdx.gl20.glLineWidth(1 / camera.zoom);
 		viewport.update(width, height);
@@ -120,8 +120,8 @@ public class EditorView {
 	private void drawGridUnder() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				drawBlock("grid", drawX, drawY);
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
@@ -139,8 +139,8 @@ public class EditorView {
 		/* draw blocks at their position and transparency based on their properties and buffer timers */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Block block = board.getGrid()[i][j];
 				if (block.move) {
 					if (block.bomb) drawBlock("bomb", drawX, drawY);
@@ -161,14 +161,14 @@ public class EditorView {
 	}
 
 	private void drawBlock(String filename, int x, int y) {
-		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.blockSize, Vars.blockSize);
+		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.fullSize, Vars.fullSize);
 	}
 
 	private void drawGridOver() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.hazard) {
@@ -184,9 +184,9 @@ public class EditorView {
 		shapes.begin(ShapeType.Line);
 		if (board.isSelected()) shapes.setColor(Color.RED);
 		else shapes.setColor(Color.BLUE);
-		int cursorX = boardOffsetX + board.getCursorX() * Vars.blockSize;
-		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.blockSize;
-		shapes.rect(cursorX, cursorY, Vars.blockSize, Vars.blockSize);
+		int cursorX = boardOffsetX + board.getCursorX() * Vars.fullSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.fullSize;
+		shapes.rect(cursorX, cursorY, Vars.fullSize, Vars.fullSize);
 		shapes.end();
 	}
 }

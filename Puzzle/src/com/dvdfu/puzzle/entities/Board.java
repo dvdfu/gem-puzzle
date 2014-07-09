@@ -45,7 +45,7 @@ public class Board {
 		grid[3][4] = new Block().setGem(true, false, false, false, false, false);
 		grid[5][0] = new Block().setActive(true, false);
 		grid[5][1] = new Block().setActive(true, true);
-		grid[5][2] = new Block().setActive(true, true);
+		grid[5][2] = new Block().setActive(false, true);
 		grid[7][2] = new Block().setBomb(false);
 
 		cursorBlock = null;
@@ -216,6 +216,9 @@ public class Board {
 				if (block != null) {
 					switch (block.command) {
 					case EXPLODE:
+						block.timer = Vars.timeExplode;
+						modified = true;
+						break;
 					case DROWN:
 						block.timer = Vars.timeDrown;
 						modified = true;

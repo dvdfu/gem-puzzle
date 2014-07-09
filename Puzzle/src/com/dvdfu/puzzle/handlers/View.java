@@ -35,14 +35,16 @@ public class View {
 	private Sprite drop;
 	private Sprite gem;
 	private Sprite cracks;
+	private Sprite fire;
+	private Sprite fire2;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
-	private float timer = 0;
+	private int timer;
 
 	public View(Board board) {
 		this.board = board;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.blockSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.blockSize) / 2;
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
 		loadAssets();
 
 		sprites = new SpriteBatch();
@@ -58,6 +60,8 @@ public class View {
 				return new Particle();
 			}
 		};
+
+		timer = 0;
 	}
 
 	public void dispose() {
@@ -90,6 +94,8 @@ public class View {
 		assets.load("img/cursorSelect.png", Texture.class);
 		assets.load("img/dot.png", Texture.class);
 		assets.load("img/cracks.png", Texture.class);
+		assets.load("img/fire.png", Texture.class);
+		assets.load("img/fire2.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -102,6 +108,8 @@ public class View {
 		drop = new Sprite(assets.get("img/drops.png", Texture.class), 8, 8);
 		gem = new Sprite(assets.get("img/gem.png", Texture.class), 16, 16);
 		cracks = new Sprite(assets.get("img/cracks.png", Texture.class), 32, 32);
+		fire = new Sprite(assets.get("img/fire.png", Texture.class), 4, 4);
+		fire2 = new Sprite(assets.get("img/fire2.png", Texture.class), 8, 8);
 	}
 
 	public void update(float x, float y) {
@@ -109,10 +117,10 @@ public class View {
 		mouse.set(x, y, 0);
 		sprites.setProjectionMatrix(camera.combined);
 		camera.unproject(mouse);
-																																																																					
+
 		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
+		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.fullSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.fullSize;
 		board.setCursor(cursorX, cursorY);
 		if (Input.MouseDown() && board.select()) assets.get("aud/select.wav", Sound.class).play();
 		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
@@ -129,13 +137,13 @@ public class View {
 		drawCursor();
 		drawParticles();
 		sprites.end();
-		timer += 1 / 16f;
-		if (timer >= 1) timer = 0;
+		if (timer <= 0) timer = 16;
+		else timer--;
 	}
 
 	public void resize(int width, int height) {
-		int zoomW = height / Vars.blockSize / board.getHeight();
-		int zoomH = width / Vars.blockSize / board.getWidth();
+		int zoomW = height / Vars.fullSize / board.getHeight();
+		int zoomH = width / Vars.fullSize / board.getWidth();
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
 		Gdx.gl20.glLineWidth(2 / camera.zoom);
 		viewport.update(width, height);
@@ -144,13 +152,13 @@ public class View {
 	public void beginBuffer() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
-						createParticle(Particle.Type.DROP, drawX + Vars.blockSize / 2, drawY + Vars.blockSize, 16, 0, 16);
+						createParticle(Particle.Type.DROP, drawX + Vars.halfSize, drawY + Vars.fullSize, 16, 0, 16);
 						assets.get("aud/splash.mp3", Sound.class).play(0.3f);
 						break;
 					default:
@@ -165,8 +173,8 @@ public class View {
 		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
@@ -174,27 +182,23 @@ public class View {
 						if (!board.gridEmpty(i, j + 2)) {
 							Special special = board.getSpecial()[i][j + 1];
 							if (board.gridValid(i, j + 1) && (special == null || !special.hazard)) {
-								createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
-								createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+								createParticle(Particle.Type.DUST_L, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
+								createParticle(Particle.Type.DUST_R, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
 								assets.get("aud/remove.wav", Sound.class).play(0.1f);
 							}
 						}
-					case MOVE_UP:
-					case MOVE_DOWN:
-					case MOVE_RIGHT:
-					case MOVE_LEFT:
 						break;
 					case EXPLODE:
-						createParticle(Particle.Type.DUST, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 32);
+						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
+						createParticle(Particle.Type.DUST, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
+						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 16);
 					case BREAK:
-						if (board.getSpecial()[i][j] == null || !board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 16);
-						}
+						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
 						assets.get("aud/break.mp3", Sound.class).play();
 					case DROWN:
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 8);
-							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
+							createParticle(Particle.Type.SPARKLE, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 8);
+							createParticle(Particle.Type.GEM, drawX + Vars.halfSize, drawY + Vars.halfSize);
 						}
 						break;
 					default:
@@ -212,7 +216,7 @@ public class View {
 	private void createParticle(Particle.Type type, int x, int y, int num) {
 		createParticle(type, x, y, 0, 0, num);
 	}
-	
+
 	private void createParticle(Particle.Type type, int x, int y, int randX, int randY) {
 		createParticle(type, x, y, randX, randY, 1);
 	}
@@ -221,6 +225,7 @@ public class View {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
+			Sprite sprite;
 			int xr = x + MathUtils.random(-randX, randX);
 			int yr = y + MathUtils.random(-randY, randY);
 			switch (type) {
@@ -231,7 +236,7 @@ public class View {
 				newParticle.setSprite(sparkle1);
 				break;
 			case DIRT:
-				newParticle.setPosition(xr - dirt1.getWidth() / 2, yr - Vars.blockSize / 2);
+				newParticle.setPosition(xr - dirt1.getWidth() / 2, yr - Vars.halfSize);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
@@ -246,13 +251,13 @@ public class View {
 			case DUST_L:
 				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
-				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setDuration(MathUtils.random(12), 6);
 				newParticle.setSprite(dust1);
 				break;
 			case DUST_R:
 				newParticle.setPosition(xr - dust1.getWidth() / 2, yr - dust1.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
-				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setDuration(MathUtils.random(12), 6);
 				newParticle.setSprite(dust1);
 				break;
 			case DROP:
@@ -269,6 +274,14 @@ public class View {
 				newParticle.setDuration(0, 8);
 				newParticle.setSprite(gem);
 				break;
+			case FIRE:
+				if (MathUtils.randomBoolean()) sprite = fire;
+				else sprite = fire2;
+				newParticle.setPosition(xr - sprite.getWidth() / 2, yr - sprite.getHeight() / 2);
+				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setDuration(MathUtils.random(12), 8);
+				newParticle.setSprite(sprite);
+				break;
 			}
 			particles.add(newParticle);
 		}
@@ -282,8 +295,8 @@ public class View {
 	private void drawGridUnder() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				drawBlock("grid", drawX, drawY);
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
@@ -301,8 +314,8 @@ public class View {
 		/* draw blocks at their position and transparency based on their properties and buffer timers */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Block block = board.getGrid()[i][j];
 				Special special = board.getSpecial()[i][j];
 				if (block != null) {
@@ -311,28 +324,25 @@ public class View {
 					int bufferY = 0;
 					switch (block.command) {
 					case MOVE_UP:
-						bufferY = (Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
-						break;
-					case DROWN:
-						// setAlpha(1f * timer[i][j] / Vars.timeDrown);
+						bufferY = (Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
 						break;
 					case FALL:
 					case MOVE_DOWN:
-						bufferY = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
+						bufferY = -(Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
 						break;
 					case MOVE_RIGHT:
-						bufferX = (Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
+						bufferX = (Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
 						if (block.fall) createParticle(Particle.Type.DUST_L, drawX + bufferX, drawY);
 						break;
 					case MOVE_LEFT:
-						bufferX = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
-						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Vars.blockSize, drawY);
+						bufferX = -(Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
+						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Vars.fullSize, drawY);
 						break;
 					case PATH:
 						setAlpha(Math.abs(1 - 2f * timer[i][j] / Vars.timePath));
 						if (timer[i][j] * 2 < Vars.timePath) {
-							drawX = boardOffsetX + special.destX * Vars.blockSize;
-							drawY = boardOffsetY + (board.getHeight() - 1 - special.destY) * Vars.blockSize;
+							drawX = boardOffsetX + special.destX * Vars.fullSize;
+							drawY = boardOffsetY + (board.getHeight() - 1 - special.destY) * Vars.fullSize;
 						}
 						break;
 					default:
@@ -363,21 +373,21 @@ public class View {
 	}
 
 	private void drawBlock(String filename, int x, int y) {
-		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.blockSize, Vars.blockSize);
+		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.fullSize, Vars.fullSize);
 	}
 
 	private void drawGridOver() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.blockSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.blockSize;
+				int drawX = boardOffsetX + i * Vars.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.hazard) {
 						// setAlpha(0.6f);
 						drawBlock("waterF", drawX, drawY);
 						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
-							+ Vars.blockSize);
+							+ Vars.fullSize);
 						// setAlpha(1);
 					}
 				}
@@ -386,12 +396,12 @@ public class View {
 	}
 
 	private void drawCursor() {
-		int cursorX = boardOffsetX + board.getCursorX() * Vars.blockSize;
-		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.blockSize;
+		int cursorX = boardOffsetX + board.getCursorX() * Vars.fullSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.fullSize;
 		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
 		else drawBlock("cursor", cursorX, cursorY);
 		Special special = board.getSpecial()[board.getCursorX()][board.getCursorY()];
-		if (special != null && !board.isSelected()) {
+		if (special != null) {
 			int cx = board.getCursorX();
 			int cy = board.getCursorY();
 			if (special.path) drawLine(cx, cy, special.destX, special.destY);
@@ -407,17 +417,17 @@ public class View {
 	}
 
 	private void drawLine(int x1, int y1, int x2, int y2) {
-		int xo = boardOffsetX + x1 * Vars.blockSize + Vars.blockSize / 2;
-		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Vars.blockSize + Vars.blockSize / 2;
-		drawBlock("cursor", boardOffsetX + x2 * Vars.blockSize, boardOffsetY + (board.getHeight() - 1 - y2) * Vars.blockSize);
-		int dx = (x2 - x1) * Vars.blockSize;
-		int dy = (y1 - y2) * Vars.blockSize;
+		int xo = boardOffsetX + x1 * Vars.fullSize + Vars.halfSize;
+		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Vars.fullSize + Vars.halfSize;
+		drawBlock("cursor", boardOffsetX + x2 * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Vars.fullSize);
+		int dx = (x2 - x1) * Vars.fullSize;
+		int dy = (y1 - y2) * Vars.fullSize;
 		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 		int numDots = length / 10;
 		float angle = MathUtils.atan2(dy, dx);
 		for (int i = 0; i <= numDots; i++) {
-			float x = xo + ((i + timer) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
-			float y = yo + ((i + timer) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
+			float x = xo + ((i + timer / 16f) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
+			float y = yo + ((i + timer / 16f) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
 			sprites.draw(assets.get("img/dot.png", Texture.class), x, y);
 		}
 	}
