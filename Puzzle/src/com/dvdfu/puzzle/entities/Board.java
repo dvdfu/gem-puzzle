@@ -46,6 +46,7 @@ public class Board {
 		grid[5][0] = new Block().setActive(true, false);
 		grid[5][1] = new Block().setActive(true, true);
 		grid[5][2] = new Block().setActive(true, true);
+		grid[7][2] = new Block().setBomb(false);
 
 		cursorBlock = null;
 		addPath(2, 1, 7, 4);
@@ -103,6 +104,11 @@ public class Board {
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
 					}
+					// destroys blocks caught in water or gates
+					if (special != null) {
+						if (special.hazard) block.command = Block.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
+					}
 					// checks for gem destruction, higher priority
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD) {
@@ -122,28 +128,23 @@ public class Board {
 							grid[i - 1][j].command = Block.Command.BREAK;
 						}
 					}
-					// destroys blocks caught in water or gates
-					if (special != null) {
-						if (special.hazard) block.command = Block.Command.DROWN;
-						else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
-					}
 					// checks for bomb destruction
 					else if (block.bomb) {
 						if (gridHas(i, j - 1) && grid[i][j - 1].active) {
 							block.command = Block.Command.EXPLODE;
-							grid[i][j - 1].command = Block.Command.BREAK;
+							grid[i][j - 1].command = Block.Command.EXPLODE;
 						}
 						if (gridHas(i, j + 1) && grid[i][j + 1].active) {
 							block.command = Block.Command.EXPLODE;
-							grid[i][j + 1].command = Block.Command.BREAK;
+							grid[i][j + 1].command = Block.Command.EXPLODE;
 						}
 						if (gridHas(i - 1, j) && grid[i - 1][j].active) {
 							block.command = Block.Command.EXPLODE;
-							grid[i - 1][j].command = Block.Command.BREAK;
+							grid[i - 1][j].command = Block.Command.EXPLODE;
 						}
 						if (gridHas(i + 1, j) && grid[i + 1][j].active) {
 							block.command = Block.Command.EXPLODE;
-							grid[i + 1][j].command = Block.Command.BREAK;
+							grid[i + 1][j].command = Block.Command.EXPLODE;
 						}
 					}
 				}
@@ -214,6 +215,7 @@ public class Board {
 				Block block = grid[i][j];
 				if (block != null) {
 					switch (block.command) {
+					case EXPLODE:
 					case DROWN:
 						block.timer = Vars.timeDrown;
 						modified = true;

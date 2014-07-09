@@ -109,7 +109,7 @@ public class View {
 		mouse.set(x, y, 0);
 		sprites.setProjectionMatrix(camera.combined);
 		camera.unproject(mouse);
-
+																																																																					
 		/* sends mouse information to the board and plays appropriate sound effects */
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.blockSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.blockSize;
@@ -172,24 +172,30 @@ public class View {
 					switch (block.command) {
 					case FALL:
 						if (!board.gridEmpty(i, j + 2)) {
-							createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
-							createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
-							assets.get("aud/remove.wav", Sound.class).play(0.1f);
+							Special special = board.getSpecial()[i][j + 1];
+							if (board.gridValid(i, j + 1) && (special == null || !special.hazard)) {
+								createParticle(Particle.Type.DUST_L, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+								createParticle(Particle.Type.DUST_R, drawX + Vars.blockSize / 2, drawY - Vars.blockSize, 4);
+								assets.get("aud/remove.wav", Sound.class).play(0.1f);
+							}
 						}
 					case MOVE_UP:
 					case MOVE_DOWN:
 					case MOVE_RIGHT:
 					case MOVE_LEFT:
 						break;
+					case EXPLODE:
+						createParticle(Particle.Type.DUST, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 32);
 					case BREAK:
+						if (board.getSpecial()[i][j] == null || !board.getSpecial()[i][j].hazard) {
+							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 16);
+						}
 						assets.get("aud/break.mp3", Sound.class).play();
 					case DROWN:
 						if (block.isGem()) {
 							createParticle(Particle.Type.SPARKLE, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16, 8);
 							createParticle(Particle.Type.GEM, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2);
 						}
-						break;
-					case PATH:
 						break;
 					default:
 						break;
@@ -253,7 +259,7 @@ public class View {
 				newParticle.setPosition(xr - drop.getWidth() / 2, yr - drop.getHeight() / 2);
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
 				newParticle.setAcceleration(0, -0.1f);
-				newParticle.setDuration(MathUtils.random(4), 12);
+				newParticle.setDuration(MathUtils.random(20), 12);
 				newParticle.setSprite(drop);
 				break;
 			case GEM:
@@ -285,7 +291,7 @@ public class View {
 					else if (special.button) {
 						if (special.toggled) drawBlock("button", drawX, drawY);
 						else drawBlock("button", drawX, drawY);
-					}
+					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 				}
 			}
 		}
@@ -321,11 +327,6 @@ public class View {
 					case MOVE_LEFT:
 						bufferX = -(Vars.timeMove - timer[i][j]) * Vars.blockSize / Vars.timeMove;
 						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Vars.blockSize, drawY);
-						break;
-					case BREAK:
-						if (board.getSpecial()[i][j] == null || !board.getSpecial()[i][j].hazard) {
-							createParticle(Particle.Type.DIRT, drawX + Vars.blockSize / 2, drawY + Vars.blockSize / 2, 16, 16);
-						}
 						break;
 					case PATH:
 						setAlpha(Math.abs(1 - 2f * timer[i][j] / Vars.timePath));
@@ -378,7 +379,7 @@ public class View {
 						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
 							+ Vars.blockSize);
 						// setAlpha(1);
-					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
+					}
 				}
 			}
 		}

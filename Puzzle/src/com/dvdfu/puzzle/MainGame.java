@@ -32,6 +32,9 @@ public class MainGame implements ApplicationListener {
 			if (board.checkTimer()) view.beginBuffer();
 		} else board.updateTimer();
 		view.draw();
+		if (Input.KeyPressed(Input.SPACEBAR)) {
+			board.reset();
+		}
 		Input.update();
 	}
 
