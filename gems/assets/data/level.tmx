@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" width="6" height="6" tilewidth="32" tileheight="32">
+ <tileset firstgid="1" name="sheet" tilewidth="32" tileheight="32">
+  <image source="../Pictures/Sprites/puzzle/sheet.png" width="64" height="128"/>
+ </tileset>
+ <layer name="fixed" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjZmBgYEbCDEg0AxY+uhw+NejmMuARh/EBDxgANA==
+  </data>
+ </layer>
+ <layer name="move" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYMAOGIkQY0TC6PLY9OMThwEAAvgACQ==
+  </data>
+ </layer>
+ <layer name="C" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYCAfsFOgFxcAAALcAAg=
+  </data>
+ </layer>
+ <layer name="fall" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYCAfsEIxMh8bG10PPgAABtAAGg==
+  </data>
+ </layer>
+ <layer name="U" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYKAeYKOCGQACKAAH
+  </data>
+ </layer>
+ <layer name="D" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYCAecJCgllwAAAOwAAk=
+  </data>
+ </layer>
+ <layer name="L" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYMAOWHCIYwNMJKglBAADCAAH
+  </data>
+ </layer>
+ <layer name="R" width="6" height="6">
+  <data encoding="base64" compression="zlib">
+   eJxjYBhcAAAAkAAB
+  </data>
+ </layer>
+</map>
