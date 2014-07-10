@@ -18,5 +18,5 @@ public class Vars {
 	public static final int timePath = 16;
 	public static final int timeGem = 16;
 	public static final int timeDrown = 2;
-	public static final int timeExplode = 24;
+	public static final int timeExplode = 2;
 }

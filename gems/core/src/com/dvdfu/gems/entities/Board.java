@@ -92,7 +92,7 @@ public class Board {
 				if (block != null) {
 					if (block.active) {
 						// drops falling blocks
-						if (block.fall && gridEmpty(i, j + 1)) block.command = Block.Command.FALL;
+						if (block.fall && gridEmpty(i, j + 1) && block.command != Block.Command.BREAK) block.command = Block.Command.FALL;
 						// destroys any fully surrounded block
 						if (gridHas(i, j + 1) && grid[i][j + 1].gemU && gridHas(i, j - 1) && grid[i][j - 1].gemD
 							&& gridHas(i + 1, j) && grid[i + 1][j].gemL && gridHas(i - 1, j) && grid[i - 1][j].gemR) {
