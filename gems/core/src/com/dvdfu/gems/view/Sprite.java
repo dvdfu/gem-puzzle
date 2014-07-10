@@ -1,4 +1,4 @@
-package com.dvdfu.gems.handlers;
+package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;

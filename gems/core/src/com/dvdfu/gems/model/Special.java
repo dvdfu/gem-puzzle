@@ -1,4 +1,4 @@
-package com.dvdfu.gems.entities;
+package com.dvdfu.gems.model;
 
 public class Special {
 	public boolean path;
@@ -9,8 +9,6 @@ public class Special {
 	public boolean toggled;
 	public int destX;
 	public int destY;
-
-	public Special() {}
 
 	public Special setPath(int destX, int destY) {
 		path = true;

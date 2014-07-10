@@ -2,19 +2,19 @@ package com.dvdfu.gems;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.dvdfu.gems.entities.Board;
-import com.dvdfu.gems.handlers.EditorView;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.InputController;
 import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.model.EditorBoard;
+import com.dvdfu.gems.view.EditorView;
 
 public class Editor implements ApplicationListener {
-	private Board board;
+	private EditorBoard board;
 	private EditorView view;
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
-		board = new Board(Vars.boardWidth, Vars.boardHeight);
+		board = new EditorBoard(Vars.boardWidth, Vars.boardHeight);
 		view = new EditorView(board);
 	}
 
@@ -23,16 +23,9 @@ public class Editor implements ApplicationListener {
 	}
 
 	public void render() {
+		board.update();
 		view.update(Input.mouse.x, Input.mouse.y);
-		if (board.timerReady()) {
-			view.endBuffer(); // apply end-buffer view changes to all buffered blocks
-			board.useBuffer(); // apply end-buffer board changes to grid
-			// at this point all blocks should have timer = 0 and command = hold
-			board.update(); /* timer is ready, board looks for buffers */
-			if (board.checkTimer()) view.beginBuffer();
-		} else board.updateTimer();
 		view.draw();
-		if (Input.KeyPressed(Input.SPACEBAR)) board.reset();
 		Input.update();
 	}
 

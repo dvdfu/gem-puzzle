@@ -1,4 +1,4 @@
-package com.dvdfu.gems.entities;
+package com.dvdfu.gems.model;
 
 public class Block {
 	public enum Command {
@@ -26,21 +26,6 @@ public class Block {
 		visited = false;
 		timer = 0;
 		setStatic();
-	}
-	
-	public Block(String id) {
-		active = id.charAt(0) == '1';
-		if (active) {
-			move = id.charAt(1) == '1';
-			fall = id.charAt(2) == '1';
-			bomb = id.charAt(3) == '1';
-			gemU = id.charAt(4) == '1';
-			gemD = id.charAt(5) == '1';
-			gemR = id.charAt(6) == '1';
-			gemL = id.charAt(7) == '1';
-		} else setStatic();
-		command = Command.HOLD;
-		visited = false;
 	}
 
 	public Block setStatic() {
@@ -97,14 +82,5 @@ public class Block {
 
 	public boolean isGem() {
 		return gemC || gemU || gemD || gemR || gemL;
-	}
-
-	public String getID() {
-		boolean[] properties = { active, move, fall, bomb, gemU, gemD, gemR, gemL };
-		int n = 0;
-		for (boolean property : properties) n = (n << 1) + (property ? 1 : 0);
-		String id = Integer.toHexString(n);
-		if (id.length() == 1) id = "0" + id;
-		return id;
 	}
 }

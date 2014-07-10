@@ -2,7 +2,7 @@ package com.dvdfu.gems.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.dvdfu.gems.MainGame;
+import com.dvdfu.gems.Editor;
 import com.dvdfu.gems.handlers.Vars;
 
 public class DesktopLauncher {
@@ -11,6 +11,6 @@ public class DesktopLauncher {
 		config.title = "";
 		config.width = Vars.screenWidth;
 		config.height = Vars.screenHeight;
-		new LwjglApplication(new MainGame(), config);
+		new LwjglApplication(new Editor(), config);
 	}
 }

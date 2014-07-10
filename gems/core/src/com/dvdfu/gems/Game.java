@@ -2,13 +2,13 @@ package com.dvdfu.gems;
 
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
-import com.dvdfu.gems.entities.Board;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.InputController;
 import com.dvdfu.gems.handlers.Vars;
-import com.dvdfu.gems.handlers.View;
+import com.dvdfu.gems.model.Board;
+import com.dvdfu.gems.view.View;
 
-public class MainGame implements ApplicationListener {
+public class Game implements ApplicationListener {
 	private Board board;
 	private View view;
 

@@ -1,8 +1,7 @@
-package com.dvdfu.gems.entities;
+package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool.Poolable;
-import com.dvdfu.gems.handlers.Sprite;
 import com.dvdfu.gems.handlers.Vars;
 
 public class Particle implements Poolable {

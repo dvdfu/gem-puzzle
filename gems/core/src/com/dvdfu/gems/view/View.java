@@ -1,4 +1,4 @@
-package com.dvdfu.gems.handlers;
+package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
@@ -15,12 +15,13 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.dvdfu.gems.entities.Block;
-import com.dvdfu.gems.entities.Board;
-import com.dvdfu.gems.entities.Particle;
-import com.dvdfu.gems.entities.Special;
+import com.dvdfu.gems.handlers.Input;
+import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.model.Block;
+import com.dvdfu.gems.model.Board;
+import com.dvdfu.gems.model.Special;
 
-public class EditorView {
+public class View {
 	private Board board;
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
@@ -41,7 +42,7 @@ public class EditorView {
 	private Pool<Particle> particlePool;
 	private int timer;
 
-	public EditorView(Board board) {
+	public View(Board board) {
 		this.board = board;
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
@@ -191,7 +192,7 @@ public class EditorView {
 					case EXPLODE:
 						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
 						createParticle(Particle.Type.DUST, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
-						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 16);
+						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 32);
 					case BREAK:
 						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
 						assets.get("aud/break.mp3", Sound.class).play();
@@ -270,11 +271,11 @@ public class EditorView {
 			case FIRE:
 				if (MathUtils.randomBoolean()) sprite = fire;
 				else sprite = fire2;
-				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setVector(MathUtils.random(3f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 8);
 				break;
 			}
-			newParticle.setPosition(xr - sprite.getWidth() / 2,  yr - sprite.getHeight() / 2);
+			newParticle.setPosition(xr - sprite.getWidth() / 2, yr - sprite.getHeight() / 2);
 			newParticle.setSprite(sprite);
 			particles.add(newParticle);
 		}
@@ -389,14 +390,14 @@ public class EditorView {
 	}
 
 	private void drawCursor() {
-		int cursorX = boardOffsetX + board.getCursorX() * Vars.fullSize;
-		int cursorY = boardOffsetY + (board.getHeight() - 1 - board.getCursorY()) * Vars.fullSize;
+		int cx = board.getCursorX();
+		int cy = board.getCursorY();
+		int cursorX = boardOffsetX + cx * Vars.fullSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - cy) * Vars.fullSize;
 		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
 		else drawBlock("cursor", cursorX, cursorY);
-		Special special = board.getSpecial()[board.getCursorX()][board.getCursorY()];
-		if (special != null) {
-			int cx = board.getCursorX();
-			int cy = board.getCursorY();
+		Special special = board.getSpecial()[cx][cy];
+		if (special != null && !board.isSelected()) {
 			if (special.path) drawLine(cx, cy, special.destX, special.destY);
 			else if (special.button) {
 				for (int i = 0; i < board.getWidth(); i++) {

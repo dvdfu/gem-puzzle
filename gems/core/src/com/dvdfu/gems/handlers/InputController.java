@@ -45,6 +45,39 @@ public class InputController extends InputAdapter {
 		case Keys.SPACE:
 			Input.setKey(Input.SPACEBAR, true);
 			break;
+		case Keys.TAB:
+			Input.setKey(Input.TAB, true);
+			break;
+		case Keys.DEL:
+			Input.setKey(Input.BACKSPACE, true);
+			break;
+		case Keys.A:
+			Input.setKey(Input.A, true);
+			break;
+		case Keys.B:
+			Input.setKey(Input.B, true);
+			break;
+		case Keys.F:
+			Input.setKey(Input.F, true);
+			break;
+		case Keys.G:
+			Input.setKey(Input.G, true);
+			break;
+		case Keys.H:
+			Input.setKey(Input.H, true);
+			break;
+		case Keys.M:
+			Input.setKey(Input.M, true);
+			break;
+		case Keys.P:
+			Input.setKey(Input.P, true);
+			break;
+		case Keys.PAGE_UP:
+			Input.setKey(Input.PGUP, true);
+			break;
+		case Keys.PAGE_DOWN:
+			Input.setKey(Input.PGDN, true);
+			break;
 		}
 		return true;
 	}
@@ -66,10 +99,42 @@ public class InputController extends InputAdapter {
 		case Keys.SPACE:
 			Input.setKey(Input.SPACEBAR, false);
 			break;
+		case Keys.TAB:
+			Input.setKey(Input.TAB, false);
+			break;
+		case Keys.BACKSPACE:
+			Input.setKey(Input.BACKSPACE, false);
+			break;
+		case Keys.A:
+			Input.setKey(Input.A, false);
+			break;
+		case Keys.B:
+			Input.setKey(Input.B, false);
+			break;
+		case Keys.F:
+			Input.setKey(Input.F, false);
+			break;
+		case Keys.G:
+			Input.setKey(Input.G, false);
+			break;
+		case Keys.H:
+			Input.setKey(Input.H, false);
+			break;
+		case Keys.M:
+			Input.setKey(Input.M, false);
+			break;
+		case Keys.P:
+			Input.setKey(Input.P, false);
+			break;
+		case Keys.PAGE_UP:
+			Input.setKey(Input.PGUP, false);
+			break;
+		case Keys.PAGE_DOWN:
+			Input.setKey(Input.PGDN, false);
 		}
 		return true;
 	}
-	
+
 	private void updateMouse(int x, int y) {
 		Input.mouse.x = x;
 		Input.mouse.y = y;
