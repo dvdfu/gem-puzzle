@@ -50,6 +50,19 @@ public class EditorBoard {
 		modified = false;
 	}
 
+	public void getID() {
+		String id = "name;" + width + ";" + height + ";";
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				EditorBlock block = gridBlock[i][j];
+				if (block != null) id += i + "" + j + block.getID();
+				Special special = gridSpecial[i][j];
+				if (special != null) id += i + "" + j + special.getID();
+			}
+		}
+		System.out.print(id);
+	}
+
 	private void pushState() {
 		GridState state = new GridState(width, height);
 		for (int i = 0; i < width; i++) {
@@ -62,12 +75,12 @@ public class EditorBoard {
 		redoStack.clear();
 		modified = false;
 	}
-	
+
 	public void undoState() {
 		if (undoStack.empty()) return;
 		GridState temp = undoStack.pop();
 		if (undoStack.empty()) {
-			reset();
+			undoStack.push(temp);
 			return;
 		}
 		GridState state = undoStack.peek();
@@ -105,11 +118,11 @@ public class EditorBoard {
 		cursorBlock = null;
 	}
 
-	public void addBlock(EditorBlock block, int x, int y) {
+	private void addBlock(EditorBlock block, int x, int y) {
 		gridBlock[x][y] = block;
 	}
 
-	public void addPath(int x1, int y1, int x2, int y2) {
+	private void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
 			clearSpecial(x1, y1);
 			clearSpecial(x2, y2);
@@ -118,7 +131,7 @@ public class EditorBoard {
 		}
 	}
 
-	public void addGate(int gateX, int gateY, int buttonX, int buttonY, boolean gateOriginal) {
+	private void addGate(int gateX, int gateY, int buttonX, int buttonY, boolean gateOriginal) {
 		if (gridValid(buttonX, buttonY) && gridValid(gateX, gateY) && !(buttonX == gateX && buttonY == gateY)) {
 			clearSpecial(gateX, gateY);
 			gridSpecial[buttonX][buttonY] = new Special().setButton();
@@ -200,6 +213,7 @@ public class EditorBoard {
 			modified = true;
 		}
 		if (Input.KeyDown(Input.H)) {
+			clearSpecial(cursorX, cursorY);
 			gridSpecial[cursorX][cursorY] = new Special().setHazard();
 			gridBlock[cursorX][cursorY] = null;
 			modified = true;
@@ -238,7 +252,7 @@ public class EditorBoard {
 				modified = true;
 			}
 		}
-		
+
 		// UNDO
 		if (Input.MouseReleased() && modified) pushState();
 		for (int i = 0; i < Input.keys.length; i++) {
@@ -249,6 +263,7 @@ public class EditorBoard {
 		}
 		if (Input.KeyPressed(Input.PGUP)) undoState();
 		if (Input.KeyPressed(Input.PGDN)) redoState();
+		if (Input.KeyPressed(Input.TAB)) getID();
 	}
 
 	public final boolean gridHas(int x, int y) {

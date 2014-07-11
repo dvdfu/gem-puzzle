@@ -4,7 +4,6 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.InputController;
-import com.dvdfu.gems.handlers.Vars;
 import com.dvdfu.gems.model.EditorBoard;
 import com.dvdfu.gems.view.EditorView;
 
@@ -14,7 +13,7 @@ public class Editor implements ApplicationListener {
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
-		board = new EditorBoard(Vars.boardWidth, Vars.boardHeight);
+		board = new EditorBoard(8, 10);
 		view = new EditorView(board);
 	}
 

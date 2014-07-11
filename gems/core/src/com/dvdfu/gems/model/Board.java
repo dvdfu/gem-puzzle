@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.dvdfu.gems.handlers.Vars;
 
 public class Board {
+	private String name;
 	private Block gridBlock[][];
 	private Block cursorBlock;
 	private Special gridSpecial[][];
@@ -12,63 +13,83 @@ public class Board {
 	private int cursorX;
 	private int cursorY;
 
-	public Board(int width, int height) {
+	public Board(String name, int width, int height) {
+		this.name = name;
 		this.width = width;
 		this.height = height;
 		cursorX = 0;
 		cursorY = 0;
 		gridBlock = new Block[width][height];
 		gridSpecial = new Special[width][height];
-		reset();
-	}
-
-	public void reset() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				gridBlock[i][j] = null;
 				gridSpecial[i][j] = null;
-				if (i >= 5 && i < 8 && j >= 5) gridBlock[i][j] = new Block();
-				if (i < 5 && j == 9) gridSpecial[i][j] = new Special().setHazard();
-				if (i == 5 && j >= 3 && j < 5) addButton(1, 5, i, j, true);
 			}
 		}
-		addBlock(new Block().setGem(true, false, false, false, false, false), 2, 0);
-		gridBlock[3][0] = new Block().setGem(true, true, true, false, false, false);
-		gridBlock[4][0] = new Block().setGem(true, false, false, true, false, false);
-		gridBlock[0][1] = new Block().setGem(true, false, false, false, true, false);
-		gridBlock[1][1] = new Block().setGem(true, false, true, false, true, false);
-		gridBlock[2][1] = new Block().setGem(true, false, false, true, true, false);
-		gridBlock[3][2] = new Block().setGem(true, false, false, false, false, true);
-		gridBlock[4][1] = new Block().setGem(true, false, false, false, false, true);
-		gridBlock[0][2] = new Block().setGem(true, false, true, true, true, true);
-		gridBlock[1][2] = new Block().setActive(true, false);
-		gridBlock[2][3] = new Block().setGem(true, false, true, true, false, true);
-		gridBlock[3][4] = new Block().setGem(true, false, false, false, false, false);
-		gridBlock[5][0] = new Block().setActive(true, false);
-		gridBlock[5][1] = new Block().setActive(true, true);
-		gridBlock[5][2] = new Block().setActive(false, true);
-		gridBlock[7][2] = new Block().setBomb(false);
-
-		cursorBlock = null;
-		addPath(2, 1, 7, 4);
-		/* for (int i = 0; i < height; i++) { for (int j = 0; j < width; j++) { Block block = grid[j][i]; if (block != null) System.out.print(block.getID()); else System.out.print("  "); } System.out.println(); } */
 	}
 
-	public void addBlock(Block block, int x, int y) {
-		gridBlock[x][y] = block;
-	}
-
-	public void addPath(int x1, int y1, int x2, int y2) {
-		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
-			gridSpecial[x1][y1] = new Special().setPath(x2, y2);
-			gridSpecial[x2][y2] = new Special().setPath(x1, y1);
-		}
-	}
-
-	public void addButton(int buttonX, int buttonY, int gateX, int gateY, boolean gateOriginal) {
-		if (gridValid(buttonX, buttonY) && gridValid(gateX, gateY) && !(buttonX == gateX && buttonY == gateY)) {
-			gridSpecial[buttonX][buttonY] = new Special().setButton();
-			gridSpecial[gateX][gateY] = new Special().setGate(buttonX, buttonY, gateOriginal);
+	public void addByID(char[] id) {
+		int x = Character.getNumericValue(id[0]);
+		int y = Character.getNumericValue(id[1]);
+		if (id[2] == 'b') {
+			Block block = new Block();
+			for (int i = 3; i < id.length; i++) {
+				switch (id[i]) {
+				case 'a':
+					block.active = true;
+					break;
+				case 'm':
+					block.move = true;
+					break;
+				case 'f':
+					block.fall = true;
+					break;
+				case 'b':
+					block.bomb = true;
+					break;
+				case 'c':
+					block.gemC = true;
+					break;
+				case 'u':
+					block.gemU = true;
+					break;
+				case 'd':
+					block.gemD = true;
+					break;
+				case 'r':
+					block.gemR = true;
+					break;
+				case 'l':
+					block.gemL = true;
+					break;
+				}
+			}
+			gridBlock[x][y] = block;
+		} else if (id[2] == 's') {
+			Special special = null;
+			int destX;
+			int destY;
+			switch (id[3]) {
+			case 'p':
+				destX = Character.getNumericValue(4);
+				destY = Character.getNumericValue(5);
+				special = new Special().setPath(destX, destY);
+				break;
+			case 'h':
+				special = new Special().setHazard();
+				break;
+			case 'b':
+				special = new Special().setButton();
+				break;
+			case 'g':
+				boolean gateOriginal = id[6] == 't';
+				destX = Character.getNumericValue(id[4]);
+				destY = Character.getNumericValue(id[5]);
+				special = new Special().setGate(destX, destY, gateOriginal);
+				break;
+			}
+			gridSpecial[x][y] = special;
 		}
 	}
 
@@ -85,17 +106,16 @@ public class Board {
 				}
 			}
 		}
-		// check every block and special. Simply changes state, no modifications
-		// to the board
+		// check every block and special. Simply changes state, no modifications to the board
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = gridBlock[i][j];
 				Special special = gridSpecial[i][j];
 				if (block != null) {
 					if (block.active) {
-						// drops falling blocks
+						// drops block if it falls
 						if (block.fall && gridEmpty(i, j + 1) && block.command != Block.Command.BREAK) block.command = Block.Command.FALL;
-						// destroys any fully surrounded block
+						// destroy block if it is active and surrounded
 						if (gridHas(i, j + 1) && gridBlock[i][j + 1].gemU && gridHas(i, j - 1) && gridBlock[i][j - 1].gemD
 							&& gridHas(i + 1, j) && gridBlock[i + 1][j].gemL && gridHas(i - 1, j) && gridBlock[i - 1][j].gemR) {
 							if (block.isGem()) block.command = Block.Command.BREAK;
@@ -106,12 +126,12 @@ public class Board {
 							gridBlock[i - 1][j].command = Block.Command.BREAK;
 						}
 					}
-					// destroys blocks caught in water or gates
+					// destroy block if in toggled gate or water
 					if (special != null) {
 						if (special.hazard) block.command = Block.Command.DROWN;
 						else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
 					}
-					// checks for gem destruction, higher priority
+					// destroy block if it is a gem and matched
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && gridBlock[i][j - 1].gemD) {
 							block.command = Block.Command.BREAK;
@@ -130,7 +150,7 @@ public class Board {
 							gridBlock[i - 1][j].command = Block.Command.BREAK;
 						}
 					}
-					// checks for bomb destruction
+					// destroy block if it is a bomb and matched
 					else if (block.bomb) {
 						if (gridHas(i, j - 1) && gridBlock[i][j - 1].active) {
 							block.command = Block.Command.EXPLODE;
@@ -278,6 +298,10 @@ public class Board {
 
 	public final Special[][] getSpecial() {
 		return gridSpecial;
+	}
+
+	public final String getName() {
+		return name;
 	}
 
 	public final int getWidth() {

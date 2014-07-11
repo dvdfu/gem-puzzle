@@ -25,59 +25,6 @@ public class Block {
 		command = Command.HOLD;
 		visited = false;
 		timer = 0;
-		setStatic();
-	}
-
-	public Block setStatic() {
-		active = false;
-		move = false;
-		fall = false;
-		bomb = false;
-		gemC = false;
-		gemU = false;
-		gemD = false;
-		gemR = false;
-		gemL = false;
-		return this;
-	}
-
-	public Block setActive(boolean move, boolean fall) {
-		active = true;
-		this.move = move;
-		this.fall = fall;
-		bomb = false;
-		gemC = false;
-		gemU = false;
-		gemD = false;
-		gemR = false;
-		gemL = false;
-		return this;
-	}
-
-	public Block setGem(boolean move, boolean fall, boolean u, boolean d, boolean r, boolean l) {
-		active = true;
-		this.move = move;
-		this.fall = fall;
-		bomb = false;
-		gemC = !u && !d && !r && !l;
-		gemU = u;
-		gemD = d;
-		gemR = r;
-		gemL = l;
-		return this;
-	}
-
-	public Block setBomb(boolean fall) {
-		active = true;
-		move = true;
-		this.fall = fall;
-		bomb = true;
-		gemC = false;
-		gemU = false;
-		gemD = false;
-		gemR = false;
-		gemL = false;
-		return this;
 	}
 
 	public boolean isGem() {

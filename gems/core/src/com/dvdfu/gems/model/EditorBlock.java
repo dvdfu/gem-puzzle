@@ -10,7 +10,21 @@ public class EditorBlock {
 	public boolean gemR;
 	public boolean gemL;
 	public boolean gemC;
-	
+
+	public String getID() {
+		String id = "b";
+		if (active) id += "a";
+		if (move) id += "m";
+		if (fall) id += "f";
+		if (bomb) id += "b";
+		if (gemC) id += "c";
+		if (gemU) id += "u";
+		if (gemD) id += "d";
+		if (gemR) id += "r";
+		if (gemL) id += "l";
+		return id + ";";
+	}
+
 	public void toggleActive() {
 		active ^= true;
 		if (!active) {
@@ -23,18 +37,18 @@ public class EditorBlock {
 			gemL = false;
 		}
 	}
-	
+
 	public void toggleMove() {
 		move ^= true;
-		if (move) active = false;
+		if (move) active = true;
 		else bomb = false;
 	}
-	
+
 	public void toggleFall() {
 		fall ^= true;
 		if (fall) active = true;
 	}
-	
+
 	public void toggleBomb() {
 		bomb ^= true;
 		if (bomb) {
@@ -47,7 +61,7 @@ public class EditorBlock {
 			gemL = false;
 		}
 	}
-	
+
 	public void toggleGemU() {
 		gemU ^= true;
 		if (gemU) {
@@ -56,7 +70,7 @@ public class EditorBlock {
 			bomb = false;
 		}
 	}
-	
+
 	public void toggleGemD() {
 		gemD ^= true;
 		if (gemD) {
@@ -65,7 +79,7 @@ public class EditorBlock {
 			bomb = false;
 		}
 	}
-	
+
 	public void toggleGemR() {
 		gemR ^= true;
 		if (gemR) {
@@ -74,7 +88,7 @@ public class EditorBlock {
 			bomb = false;
 		}
 	}
-	
+
 	public void toggleGemL() {
 		gemL ^= true;
 		if (gemL) {
@@ -83,7 +97,7 @@ public class EditorBlock {
 			bomb = false;
 		}
 	}
-	
+
 	public void toggleGemC() {
 		gemC ^= true;
 		if (gemC) {

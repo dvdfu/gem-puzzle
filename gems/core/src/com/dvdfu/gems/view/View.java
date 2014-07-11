@@ -218,10 +218,6 @@ public class View {
 		createParticle(type, x, y, 0, 0, num);
 	}
 
-	private void createParticle(Particle.Type type, int x, int y, int randX, int randY) {
-		createParticle(type, x, y, randX, randY, 1);
-	}
-
 	private void createParticle(Particle.Type type, int x, int y, int randX, int randY, int num) {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();

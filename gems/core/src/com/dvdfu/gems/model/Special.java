@@ -17,6 +17,15 @@ public class Special {
 		this.destY = destY;
 		return this;
 	}
+	
+	public String getID() {
+		String id = "s";
+		if (path) id += "p" + destX + "" + destY;
+		else if (hazard) id += "h";
+		else if (button) id += "b";
+		else if (gate) id += "g" + destX + "" + destY + (gateOriginal ? "t" : "f");
+		return id + ";";
+	}
 
 	public Special setHazard() {
 		path = false;

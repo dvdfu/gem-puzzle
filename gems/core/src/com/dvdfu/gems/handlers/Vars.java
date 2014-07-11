@@ -1,12 +1,10 @@
 package com.dvdfu.gems.handlers;
 
 public class Vars {
-	public static final int boardWidth = 8;
-	public static final int boardHeight = 10;
-	public static final int screenWidth = (boardWidth + 1) * 32;
-	public static final int screenHeight = (boardHeight + 1) * 32;
-	// public static final int screenWidth = 360;
-	// public static final int screenHeight = 640;
+	public static final boolean editor = false;
+	
+	public static final int screenWidth = 480;
+	public static final int screenHeight = 480;
 
 	public static final int ticksPerSecond = 60;
 	public static final int ticksPerFrame = 4;
