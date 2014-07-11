@@ -3,8 +3,8 @@ package com.dvdfu.gems.handlers;
 public class Vars {
 	public static final boolean editor = false;
 	
-	public static final int screenWidth = 480;
-	public static final int screenHeight = 480;
+	public static final int screenWidth = 32 * 9;
+	public static final int screenHeight = 32 * 11;
 
 	public static final int ticksPerSecond = 60;
 	public static final int ticksPerFrame = 4;

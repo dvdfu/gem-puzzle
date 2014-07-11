@@ -62,6 +62,7 @@ public class EditorBoard {
 				if (special != null) id += i + "" + j + special.getID();
 			}
 		}
+		System.out.println(id);
 		FileHandle file = Gdx.files.local("data/test.txt");
 		file.writeString(id, false);
 	}
@@ -264,8 +265,10 @@ public class EditorBoard {
 				break;
 			}
 		}
-		if (Input.KeyPressed(Input.PGUP)) undoState();
-		if (Input.KeyPressed(Input.PGDN)) redoState();
+		if (Input.KeyDown(Input.CTRL)) {
+			if (Input.KeyPressed(Input.Z)) undoState();
+			if (Input.KeyPressed(Input.Y)) redoState();
+		}
 		if (Input.KeyPressed(Input.TAB)) getID();
 	}
 

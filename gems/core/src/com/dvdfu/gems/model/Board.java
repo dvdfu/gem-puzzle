@@ -28,6 +28,20 @@ public class Board {
 			}
 		}
 	}
+	
+	public void resetBoard(String name, int width, int height) {
+		this.name = name;
+		this.width = width;
+		this.height = height;
+		gridBlock = new Block[width][height];
+		gridSpecial = new Special[width][height];
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				gridBlock[i][j] = null;
+				gridSpecial[i][j] = null;
+			}
+		}
+	}
 
 	public void addByID(char[] id) {
 		int x = Character.getNumericValue(id[0]);
@@ -72,8 +86,8 @@ public class Board {
 			int destY;
 			switch (id[3]) {
 			case 'p':
-				destX = Character.getNumericValue(4);
-				destY = Character.getNumericValue(5);
+				destX = id[4] - 48;
+				destY = id[5] - 48;
 				special = new Special().setPath(destX, destY);
 				break;
 			case 'h':
@@ -84,8 +98,8 @@ public class Board {
 				break;
 			case 'g':
 				boolean gateOriginal = id[6] == 't';
-				destX = Character.getNumericValue(id[4]);
-				destY = Character.getNumericValue(id[5]);
+				destX = id[4] - 48;
+				destY = id[5] - 48;
 				special = new Special().setGate(destX, destY, gateOriginal);
 				break;
 			}

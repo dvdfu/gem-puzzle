@@ -72,11 +72,14 @@ public class InputController extends InputAdapter {
 		case Keys.P:
 			Input.setKey(Input.P, true);
 			break;
-		case Keys.PAGE_UP:
-			Input.setKey(Input.PGUP, true);
+		case Keys.Y:
+			Input.setKey(Input.Y, true);
 			break;
-		case Keys.PAGE_DOWN:
-			Input.setKey(Input.PGDN, true);
+		case Keys.Z:
+			Input.setKey(Input.Z, true);
+			break;
+		case Keys.CONTROL_LEFT:
+			Input.setKey(Input.CTRL, true);
 			break;
 		}
 		return true;
@@ -126,11 +129,15 @@ public class InputController extends InputAdapter {
 		case Keys.P:
 			Input.setKey(Input.P, false);
 			break;
-		case Keys.PAGE_UP:
-			Input.setKey(Input.PGUP, false);
+		case Keys.Y:
+			Input.setKey(Input.Y, false);
 			break;
-		case Keys.PAGE_DOWN:
-			Input.setKey(Input.PGDN, false);
+		case Keys.Z:
+			Input.setKey(Input.Z, false);
+			break;
+		case Keys.CONTROL_LEFT:
+			Input.setKey(Input.CTRL, false);
+			break;
 		}
 		return true;
 	}

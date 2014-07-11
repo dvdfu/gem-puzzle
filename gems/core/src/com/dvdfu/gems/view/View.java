@@ -1,6 +1,7 @@
 package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -21,7 +22,7 @@ import com.dvdfu.gems.model.Block;
 import com.dvdfu.gems.model.Board;
 import com.dvdfu.gems.model.Special;
 
-public class View {
+public class View implements Screen {
 	private Board board;
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
@@ -47,9 +48,7 @@ public class View {
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
 		loadAssets();
-
 		sprites = new SpriteBatch();
-
 		viewport = new ScreenViewport();
 		mouse = new Vector3();
 		camera = (OrthographicCamera) viewport.getCamera();
@@ -63,6 +62,12 @@ public class View {
 		};
 
 		timer = 0;
+	}
+
+	public void setBoard(Board board) {
+		this.board = board;
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
 	}
 
 	public void dispose() {
@@ -97,6 +102,7 @@ public class View {
 		assets.load("img/cracks.png", Texture.class);
 		assets.load("img/fire.png", Texture.class);
 		assets.load("img/fire2.png", Texture.class);
+		assets.load("img/blockstatic.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -126,20 +132,6 @@ public class View {
 		if (Input.MouseDown() && board.select()) assets.get("aud/select.wav", Sound.class).play();
 		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
 
-	}
-
-	public void draw() {
-		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		sprites.begin();
-		drawGridUnder();
-		drawBlocks();
-		drawGridOver();
-		drawCursor();
-		drawParticles();
-		sprites.end();
-		if (timer < 16) timer++;
-		else timer = 0;
 	}
 
 	public void resize(int width, int height) {
@@ -343,7 +335,10 @@ public class View {
 					if (block.move) {
 						if (block.bomb) drawBlock("bomb", drawX, drawY);
 						else drawBlock("block", drawX, drawY);
-					} else drawBlock("fixed", drawX, drawY);
+					} else {
+						if (block.active) drawBlock("fixed", drawX, drawY);
+						else drawBlock("blockstatic", drawX, drawY);
+					}
 
 					if (block.gemC) drawBlock("gemsC", drawX, drawY);
 					else {
@@ -435,4 +430,26 @@ public class View {
 			}
 		}
 	}
+
+	public void render(float delta) {
+		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		sprites.begin();
+		drawGridUnder();
+		drawBlocks();
+		drawGridOver();
+		drawCursor();
+		drawParticles();
+		sprites.end();
+		if (timer < 16) timer++;
+		else timer = 0;
+	}
+
+	public void show() {}
+
+	public void hide() {}
+
+	public void pause() {}
+
+	public void resume() {}
 }

@@ -1,1 +1,1 @@
-name;8;10;01b;02b;03b;11b;14b;21b;24b;25b;26b;32b;33b;34b;35b;43b;44b;
+name;8;10;14bar;18bamb;23badr;24bac;25baur;28sp67;32bad;33bac;34sp63;35bac;36bau;43badl;44bac;45baul;54bal;57bamb;62bamudrl;63sp34;66bamb;67sp28;68bamb;77bamb;

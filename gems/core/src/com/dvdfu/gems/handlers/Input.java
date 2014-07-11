@@ -22,9 +22,10 @@ public class Input {
 	public static final int H = 11;
 	public static final int M = 12;
 	public static final int P = 13;
-	public static final int PGUP = 14;
-	public static final int PGDN = 15;
-	private static final int NUM_KEYS = 16;
+	public static final int Y = 14;
+	public static final int Z = 15;
+	public static final int CTRL = 16;
+	private static final int NUM_KEYS = 17;
 	static {
 		mouse = new Vector2();
 		keys = new boolean[NUM_KEYS];

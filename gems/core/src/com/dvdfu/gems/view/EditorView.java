@@ -1,6 +1,7 @@
 package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -17,7 +18,7 @@ import com.dvdfu.gems.model.EditorBlock;
 import com.dvdfu.gems.model.EditorBoard;
 import com.dvdfu.gems.model.Special;
 
-public class EditorView {
+public class EditorView implements Screen {
 	private EditorBoard board;
 	private AssetManager assets = new AssetManager();
 	private SpriteBatch sprites;
@@ -73,6 +74,7 @@ public class EditorView {
 		assets.load("img/cracks.png", Texture.class);
 		assets.load("img/fire.png", Texture.class);
 		assets.load("img/fire2.png", Texture.class);
+		assets.load("img/blockstatic.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
@@ -91,19 +93,6 @@ public class EditorView {
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.fullSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.fullSize;
 		board.setCursor(cursorX, cursorY);
-	}
-
-	public void draw() {
-		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
-		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		sprites.begin();
-		drawGridUnder();
-		drawBlocks();
-		drawGridOver();
-		drawCursor();
-		sprites.end();
-		if (timer < 16) timer++;
-		else timer = 0;
 	}
 
 	public void resize(int width, int height) {
@@ -148,7 +137,10 @@ public class EditorView {
 					if (block.move) {
 						if (block.bomb) drawBlock("bomb", drawX, drawY);
 						else drawBlock("block", drawX, drawY);
-					} else drawBlock("fixed", drawX, drawY);
+					} else {
+						if (block.active) drawBlock("fixed", drawX, drawY);
+						else drawBlock("blockstatic", drawX, drawY);
+					}
 
 					if (block.gemC) drawBlock("gemsC", drawX, drawY);
 					else {
@@ -213,7 +205,7 @@ public class EditorView {
 				+ (board.getHeight() - 1 - board.placeY) * Vars.fullSize);
 			drawLine(cx, cy, board.placeX, board.placeY);
 		}
-		
+
 		if (board.placingPath) {
 			drawBlock("path", cursorX, cursorY);
 			drawBlock("path", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY
@@ -237,4 +229,25 @@ public class EditorView {
 			sprites.draw(assets.get("img/dot.png", Texture.class), x, y);
 		}
 	}
+
+	public void render(float delta) {
+		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		sprites.begin();
+		drawGridUnder();
+		drawBlocks();
+		drawGridOver();
+		drawCursor();
+		sprites.end();
+		if (timer < 16) timer++;
+		else timer = 0;
+	}
+
+	public void show() {}
+
+	public void hide() {}
+
+	public void pause() {}
+
+	public void resume() {}
 }
