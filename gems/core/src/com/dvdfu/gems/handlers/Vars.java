@@ -1,7 +1,7 @@
 package com.dvdfu.gems.handlers;
 
 public class Vars {
-	public static final boolean editor = false;
+	public static final boolean editor = true;
 	
 	public static final int screenWidth = 480;
 	public static final int screenHeight = 480;

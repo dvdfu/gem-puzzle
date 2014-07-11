@@ -20,9 +20,8 @@ public class Game implements ApplicationListener {
 	}
 
 	private void loadLevel() {
-		// FileHandle file = new FileHandle("/home/david/test.txt");
-		// String data = file.readString();
-		String data = "name;8;10;03b;04b;05b;06b;07b;09sh;10bam;11bamfl;12bam;13b;14b;15b;16b;17b;19sh;20bamu;21bamfudrl;22bamd;23bb;24b;25b;26b;27b;29sh;30bamc;31bamfr;32bam;33b;34b;35b;36b;37b;39sh;43b;44b;45b;46b;47b;49sh;53sg72t;59sh;63sg72t;69sh;72sb;73b;74b;75b;76b;77b;79sh;";
+		FileHandle file = Gdx.files.local("data/test.txt");
+		String data = file.readString();
 		Array<char[]> dataArray = new Array<char[]>();
 		while (data.length() > 1) {
 			dataArray.add(data.substring(0, data.indexOf(';')).toCharArray());

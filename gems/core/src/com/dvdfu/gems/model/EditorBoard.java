@@ -1,6 +1,8 @@
 package com.dvdfu.gems.model;
 
 import java.util.Stack;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.MathUtils;
 import com.dvdfu.gems.handlers.Input;
 
@@ -60,7 +62,8 @@ public class EditorBoard {
 				if (special != null) id += i + "" + j + special.getID();
 			}
 		}
-		System.out.print(id);
+		FileHandle file = Gdx.files.local("data/test.txt");
+		file.writeString(id, false);
 	}
 
 	private void pushState() {
