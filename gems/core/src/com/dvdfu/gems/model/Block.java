@@ -1,11 +1,11 @@
 package com.dvdfu.gems.model;
 
-import com.dvdfu.gems.handlers.Enums;
-import com.dvdfu.gems.handlers.Enums.Command;
+import com.dvdfu.gems.handlers.Res;
+import com.dvdfu.gems.handlers.Res.Command;
 
 public class Block {
 
-	public Enums.Command command;
+	public Res.Command command;
 	public boolean active;
 	public boolean move;
 	public boolean fall;

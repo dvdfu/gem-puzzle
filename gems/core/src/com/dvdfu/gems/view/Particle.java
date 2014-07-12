@@ -2,7 +2,7 @@ package com.dvdfu.gems.view;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool.Poolable;
-import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.handlers.Res;
 
 public class Particle implements Poolable {
 	public enum Type {
@@ -10,7 +10,7 @@ public class Particle implements Poolable {
 	}
 
 	public Type type;
-	private Sprite sprite;
+	private Animation sprite;
 	private float x;
 	private float y;
 	private float dx;
@@ -30,7 +30,7 @@ public class Particle implements Poolable {
 		y += dy;
 	}
 	
-	public final Sprite getSprite() {
+	public final Animation getSprite() {
 		return sprite;
 	}
 
@@ -43,14 +43,14 @@ public class Particle implements Poolable {
 	}
 
 	public final int frame() {
-		return tick / Vars.ticksPerFrame;
+		return tick / Res.ticksPerFrame;
 	}
 
 	public final boolean dead() {
-		return tick >= frameLimit * Vars.ticksPerFrame;
+		return tick >= frameLimit * Res.ticksPerFrame;
 	}
 	
-	public void setSprite(Sprite sprite) {
+	public void setSprite(Animation sprite) {
 		this.sprite = sprite;
 	}
 	

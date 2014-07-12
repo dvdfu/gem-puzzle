@@ -5,9 +5,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
-import com.dvdfu.gems.handlers.Enums;
-import com.dvdfu.gems.handlers.Enums.Cursors;
 import com.dvdfu.gems.handlers.Input;
+import com.dvdfu.gems.handlers.Res;
+import com.dvdfu.gems.handlers.Res.Cursors;
 
 public class EditorBoard {
 	private EditorBlock cursorBlock;
@@ -17,7 +17,7 @@ public class EditorBoard {
 	private boolean cursorVisited[][];
 	private Stack<String> undoStack;
 	private Stack<String> redoStack;
-	private Enums.Cursors cursorState;
+	private Res.Cursors cursorState;
 	private String name;
 	private int width;
 	private int height;
@@ -200,11 +200,11 @@ public class EditorBoard {
 
 	// CURSOR PLACEMENT
 
-	public void setCursorState(Enums.Cursors state) {
+	public void setCursorState(Res.Cursors state) {
 		cursorState = state;
 	}
 
-	public Enums.Cursors getCursorState() {
+	public Res.Cursors getCursorState() {
 		return cursorState;
 	}
 
@@ -360,23 +360,23 @@ public class EditorBoard {
 			}
 		}
 		if (Input.KeyPressed(Input.SPACEBAR)) {
-			cursorState = Enums.Cursors.GEM_CENTER;
+			cursorState = Res.Cursors.GEM_CENTER;
 		} else if (Input.KeyPressed(Input.ARROW_UP)) {
-			cursorState = Enums.Cursors.GEM_UP;
+			cursorState = Res.Cursors.GEM_UP;
 		} else if (Input.KeyPressed(Input.ARROW_DOWN)) {
-			cursorState = Enums.Cursors.GEM_DOWN;
+			cursorState = Res.Cursors.GEM_DOWN;
 		} else if (Input.KeyPressed(Input.ARROW_RIGHT)) {
-			cursorState = Enums.Cursors.GEM_RIGHT;
+			cursorState = Res.Cursors.GEM_RIGHT;
 		} else if (Input.KeyPressed(Input.ARROW_LEFT)) {
-			cursorState = Enums.Cursors.GEM_LEFT;
+			cursorState = Res.Cursors.GEM_LEFT;
 		} else if (Input.KeyPressed(Input.A)) {
-			cursorState = Enums.Cursors.BLOCK_ACTIVE;
+			cursorState = Res.Cursors.BLOCK_ACTIVE;
 		} else if (Input.KeyPressed(Input.B)) {
-			cursorState = Enums.Cursors.BOMB;
+			cursorState = Res.Cursors.BOMB;
 		} else if (Input.KeyPressed(Input.F)) {
-			cursorState = Enums.Cursors.FALL;
+			cursorState = Res.Cursors.FALL;
 		} else if (Input.KeyPressed(Input.M)) {
-			cursorState = Enums.Cursors.BLOCK_MOVE;
+			cursorState = Res.Cursors.BLOCK_MOVE;
 		}
 		// UNDO
 		if (Input.MouseReleased() && modified) pushState();

@@ -1,0 +1,194 @@
+
+images.png
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+block_cracks
+  rotate: false
+  xy: 1, 29
+  size: 256, 32
+  orig: 256, 32
+  offset: 0, 0
+  index: -1
+particle_sparkle
+  rotate: false
+  xy: 1, 11
+  size: 96, 16
+  orig: 96, 16
+  offset: 0, 0
+  index: -1
+particle_fire
+  rotate: false
+  xy: 259, 53
+  size: 64, 8
+  orig: 64, 8
+  offset: 0, 0
+  index: 2
+particle_droplet
+  rotate: false
+  xy: 1, 1
+  size: 48, 8
+  orig: 48, 8
+  offset: 0, 0
+  index: -1
+particle_dirt
+  rotate: false
+  xy: 99, 19
+  size: 48, 8
+  orig: 48, 8
+  offset: 0, 0
+  index: -1
+particle_dust
+  rotate: false
+  xy: 259, 43
+  size: 48, 8
+  orig: 48, 8
+  offset: 0, 0
+  index: -1
+block_active
+  rotate: false
+  xy: 259, 9
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_gem_c
+  rotate: false
+  xy: 293, 9
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+cursor_select
+  rotate: false
+  xy: 327, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+water_body
+  rotate: false
+  xy: 361, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_move
+  rotate: false
+  xy: 395, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+cursor_unselect
+  rotate: false
+  xy: 429, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+path
+  rotate: false
+  xy: 463, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_gem_r
+  rotate: false
+  xy: 497, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_gem_u
+  rotate: false
+  xy: 531, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+grid
+  rotate: false
+  xy: 565, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_falling
+  rotate: false
+  xy: 599, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+water_head
+  rotate: false
+  xy: 633, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+bomb
+  rotate: false
+  xy: 667, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+gate
+  rotate: false
+  xy: 701, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_gem_d
+  rotate: false
+  xy: 735, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_gem_l
+  rotate: false
+  xy: 769, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+block_static
+  rotate: false
+  xy: 803, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+button
+  rotate: false
+  xy: 837, 29
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+particle_fire
+  rotate: false
+  xy: 51, 5
+  size: 32, 4
+  orig: 32, 4
+  offset: 0, 0
+  index: 1
+particle_gem
+  rotate: false
+  xy: 327, 11
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+dot
+  rotate: false
+  xy: 99, 15
+  size: 2, 2
+  orig: 2, 2
+  offset: 0, 0
+  index: -1

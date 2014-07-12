@@ -2,8 +2,7 @@ package com.dvdfu.gems.model;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
-import com.dvdfu.gems.handlers.Enums;
-import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.handlers.Res;
 
 public class Board {
 	private String name;
@@ -146,59 +145,59 @@ public class Board {
 				if (block != null) {
 					if (block.active) {
 						// drops block if it falls
-						if (block.fall && gridEmpty(i, j + 1) && block.command != Enums.Command.BREAK) block.command = Enums.Command.FALL;
+						if (block.fall && gridEmpty(i, j + 1) && block.command != Res.Command.BREAK) block.command = Res.Command.FALL;
 						// destroy block if it is active and surrounded
 						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD
 							&& gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
-							if (block.isGem()) block.command = Enums.Command.BREAK;
-							else block.command = Enums.Command.BREAK;
-							gridBlocks[i][j + 1].command = Enums.Command.BREAK;
-							gridBlocks[i][j - 1].command = Enums.Command.BREAK;
-							gridBlocks[i + 1][j].command = Enums.Command.BREAK;
-							gridBlocks[i - 1][j].command = Enums.Command.BREAK;
+							if (block.isGem()) block.command = Res.Command.BREAK;
+							else block.command = Res.Command.BREAK;
+							gridBlocks[i][j + 1].command = Res.Command.BREAK;
+							gridBlocks[i][j - 1].command = Res.Command.BREAK;
+							gridBlocks[i + 1][j].command = Res.Command.BREAK;
+							gridBlocks[i - 1][j].command = Res.Command.BREAK;
 						}
 					}
 					// destroy block if in toggled gate or water
 					if (special != null) {
-						if (special.water) block.command = Enums.Command.DROWN;
-						else if (special.gate && special.toggled) block.command = Enums.Command.BREAK;
+						if (special.water) block.command = Res.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Res.Command.BREAK;
 					}
 					// destroy block if it is a gem and matched
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD) {
-							block.command = Enums.Command.BREAK;
-							gridBlocks[i][j - 1].command = Enums.Command.BREAK;
+							block.command = Res.Command.BREAK;
+							gridBlocks[i][j - 1].command = Res.Command.BREAK;
 						}
 						if (block.gemD && gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU) {
-							block.command = Enums.Command.BREAK;
-							gridBlocks[i][j + 1].command = Enums.Command.BREAK;
+							block.command = Res.Command.BREAK;
+							gridBlocks[i][j + 1].command = Res.Command.BREAK;
 						}
 						if (block.gemR && gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL) {
-							block.command = Enums.Command.BREAK;
-							gridBlocks[i + 1][j].command = Enums.Command.BREAK;
+							block.command = Res.Command.BREAK;
+							gridBlocks[i + 1][j].command = Res.Command.BREAK;
 						}
 						if (block.gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
-							block.command = Enums.Command.BREAK;
-							gridBlocks[i - 1][j].command = Enums.Command.BREAK;
+							block.command = Res.Command.BREAK;
+							gridBlocks[i - 1][j].command = Res.Command.BREAK;
 						}
 					}
 					// destroy block if it is a bomb and matched
 					else if (block.bomb) {
 						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].active) {
-							block.command = Enums.Command.EXPLODE;
-							gridBlocks[i][j - 1].command = Enums.Command.EXPLODE;
+							block.command = Res.Command.EXPLODE;
+							gridBlocks[i][j - 1].command = Res.Command.EXPLODE;
 						}
 						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].active) {
-							block.command = Enums.Command.EXPLODE;
-							gridBlocks[i][j + 1].command = Enums.Command.EXPLODE;
+							block.command = Res.Command.EXPLODE;
+							gridBlocks[i][j + 1].command = Res.Command.EXPLODE;
 						}
 						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].active) {
-							block.command = Enums.Command.EXPLODE;
-							gridBlocks[i - 1][j].command = Enums.Command.EXPLODE;
+							block.command = Res.Command.EXPLODE;
+							gridBlocks[i - 1][j].command = Res.Command.EXPLODE;
 						}
 						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].active) {
-							block.command = Enums.Command.EXPLODE;
-							gridBlocks[i + 1][j].command = Enums.Command.EXPLODE;
+							block.command = Res.Command.EXPLODE;
+							gridBlocks[i + 1][j].command = Res.Command.EXPLODE;
 						}
 					}
 				}
@@ -210,11 +209,11 @@ public class Board {
 					Block block = gridBlocks[i][j];
 					// moves selected block closer to cursor, lowest priority
 					if (block != null && block == cursorBlock && cursorBlock.move) {
-						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Enums.Command.MOVE_LEFT;
-						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Enums.Command.MOVE_RIGHT;
+						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Res.Command.MOVE_LEFT;
+						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Res.Command.MOVE_RIGHT;
 						else if (cursorBlock.active && !cursorBlock.fall) {
-							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Enums.Command.MOVE_UP;
-							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Enums.Command.MOVE_DOWN;
+							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Res.Command.MOVE_UP;
+							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Res.Command.MOVE_DOWN;
 						}
 					}
 				}
@@ -229,7 +228,7 @@ public class Board {
 	public final boolean gridEmpty(int x, int y) {
 		return gridValid(x, y)
 			&& (gridBlocks[x][y] == null && !gridHasGate(x, y) || gridBlocks[x][y] != null
-				&& gridBlocks[x][y].command == Enums.Command.FALL);
+				&& gridBlocks[x][y].command == Res.Command.FALL);
 	}
 
 	public final boolean gridValid(int x, int y) {
@@ -244,7 +243,7 @@ public class Board {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = gridBlocks[i][j];
-				if (block != null && block.command != Enums.Command.HOLD) return true;
+				if (block != null && block.command != Res.Command.HOLD) return true;
 			}
 		}
 		return false;
@@ -271,11 +270,11 @@ public class Board {
 				if (block != null) {
 					switch (block.command) {
 					case EXPLODE:
-						block.timer = Vars.timeExplode;
+						block.timer = Res.timeExplode;
 						modified = true;
 						break;
 					case DROWN:
-						block.timer = Vars.timeDrown;
+						block.timer = Res.timeDrown;
 						modified = true;
 						break;
 					case FALL:
@@ -283,15 +282,15 @@ public class Board {
 					case MOVE_DOWN:
 					case MOVE_RIGHT:
 					case MOVE_LEFT:
-						block.timer = Vars.timeMove;
+						block.timer = Res.timeMove;
 						modified = true;
 						break;
 					case BREAK:
-						block.timer = Vars.timeGem;
+						block.timer = Res.timeGem;
 						modified = true;
 						break;
 					case PATH:
-						block.timer = Vars.timePath;
+						block.timer = Res.timePath;
 						modified = true;
 						break;
 					default:
@@ -383,7 +382,7 @@ public class Board {
 						gridBlocks[i][j - 1] = block;
 						Special pathU = gridSpecials[i][j - 1];
 						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
-							gridBlocks[i][j - 1].command = Enums.Command.PATH;
+							gridBlocks[i][j - 1].command = Res.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -392,11 +391,11 @@ public class Board {
 						gridBlocks[i][j + 1] = block;
 						Special pathFall = gridSpecials[i][j + 1];
 						if (pathFall != null && pathFall.path && gridEmpty(pathFall.destX, pathFall.destY)) {
-							gridBlocks[i][j + 1].command = Enums.Command.PATH;
+							gridBlocks[i][j + 1].command = Res.Command.PATH;
 							hold = false;
 						}
 						if (gridEmpty(i, j + 2)) {
-							block.command = Enums.Command.FALL;
+							block.command = Res.Command.FALL;
 							hold = false;
 						}
 						break;
@@ -405,7 +404,7 @@ public class Board {
 						gridBlocks[i][j + 1] = block;
 						Special pathDown = gridSpecials[i][j + 1];
 						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
-							gridBlocks[i][j + 1].command = Enums.Command.PATH;
+							gridBlocks[i][j + 1].command = Res.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -414,7 +413,7 @@ public class Board {
 						gridBlocks[i + 1][j] = block;
 						Special pathRight = gridSpecials[i + 1][j];
 						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
-							gridBlocks[i + 1][j].command = Enums.Command.PATH;
+							gridBlocks[i + 1][j].command = Res.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -423,7 +422,7 @@ public class Board {
 						gridBlocks[i - 1][j] = block;
 						Special pathLeft = gridSpecials[i - 1][j];
 						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
-							gridBlocks[i - 1][j].command = Enums.Command.PATH;
+							gridBlocks[i - 1][j].command = Res.Command.PATH;
 							hold = false;
 						}
 						break;
@@ -435,7 +434,7 @@ public class Board {
 					default:
 						break;
 					}
-					if (hold) block.command = Enums.Command.HOLD;
+					if (hold) block.command = Res.Command.HOLD;
 				}
 			}
 		}

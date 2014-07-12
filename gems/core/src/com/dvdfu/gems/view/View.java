@@ -16,9 +16,8 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.dvdfu.gems.handlers.Enums;
 import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.handlers.Res;
 import com.dvdfu.gems.model.Block;
 import com.dvdfu.gems.model.Board;
 import com.dvdfu.gems.model.Special;
@@ -32,14 +31,14 @@ public class View implements Screen {
 	private Vector3 mouse;
 	private int boardOffsetX;
 	private int boardOffsetY;
-	private Sprite sparkle1;
-	private Sprite dirt1;
-	private Sprite dust1;
-	private Sprite drop;
-	private Sprite gem;
-	private Sprite cracks;
-	private Sprite fire;
-	private Sprite fire2;
+	private Animation sparkle1;
+	private Animation dirt1;
+	private Animation dust1;
+	private Animation drop;
+	private Animation gem;
+	private Animation cracks;
+	private Animation fire;
+	private Animation fire2;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
 	private int timer;
@@ -65,8 +64,8 @@ public class View implements Screen {
 
 	public void setBoard(Board board) {
 		this.board = board;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
 	}
 
 	public void dispose() {
@@ -75,47 +74,21 @@ public class View implements Screen {
 	}
 
 	private void loadAssets() {
-		assets.load("img/block.png", Texture.class);
-		assets.load("img/fixed.png", Texture.class);
-		assets.load("img/gem.png", Texture.class);
-		assets.load("img/gemsC.png", Texture.class);
-		assets.load("img/gemsD.png", Texture.class);
-		assets.load("img/gemsL.png", Texture.class);
-		assets.load("img/gemsR.png", Texture.class);
-		assets.load("img/gemsU.png", Texture.class);
-		assets.load("img/fall.png", Texture.class);
 		assets.load("img/path.png", Texture.class);
-		assets.load("img/drops.png", Texture.class);
-		assets.load("img/water.png", Texture.class);
-		assets.load("img/waterF.png", Texture.class);
-		assets.load("img/grid.png", Texture.class);
-		assets.load("img/sparkle1.png", Texture.class);
-		assets.load("img/dirt1.png", Texture.class);
-		assets.load("img/dust1.png", Texture.class);
-		assets.load("img/bomb.png", Texture.class);
-		assets.load("img/gate.png", Texture.class);
-		assets.load("img/button.png", Texture.class);
-		assets.load("img/cursor.png", Texture.class);
-		assets.load("img/cursorSelect.png", Texture.class);
-		assets.load("img/dot.png", Texture.class);
-		assets.load("img/cracks.png", Texture.class);
-		assets.load("img/fire.png", Texture.class);
-		assets.load("img/fire2.png", Texture.class);
-		assets.load("img/blockstatic.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
 		assets.load("aud/splash.mp3", Sound.class);
 		assets.load("aud/break.mp3", Sound.class);
 		assets.finishLoading();
-		sparkle1 = new Sprite(assets.get("img/sparkle1.png", Texture.class), 16, 16);
-		dirt1 = new Sprite(assets.get("img/dirt1.png", Texture.class), 8, 8);
-		dust1 = new Sprite(assets.get("img/dust1.png", Texture.class), 8, 8);
-		drop = new Sprite(assets.get("img/drops.png", Texture.class), 8, 8);
-		gem = new Sprite(assets.get("img/gem.png", Texture.class), 16, 16);
-		cracks = new Sprite(assets.get("img/cracks.png", Texture.class), 32, 32);
-		fire = new Sprite(assets.get("img/fire.png", Texture.class), 4, 4);
-		fire2 = new Sprite(assets.get("img/fire2.png", Texture.class), 8, 8);
+		sparkle1 = new Animation(Res.atlas.createSprite("particle_sparkle"), 16, 16);
+		dirt1 = new Animation(Res.atlas.createSprite("particle_dirt"), 8, 8);
+		dust1 = new Animation(Res.atlas.createSprite("particle_dust"), 8, 8);
+		drop = new Animation(Res.atlas.createSprite("particle_droplet"), 8, 8);
+		gem = new Animation(Res.atlas.createSprite("particle_gem"), 16, 16);
+		cracks = new Animation(Res.atlas.createSprite("block_cracks"), 32, 32);
+		fire = new Animation(Res.atlas.createSprite("particle_fire"), 4, 4);
+		fire2 = new Animation(Res.atlas.createSprite("particle_fire"), 8, 8);
 	}
 
 	public void update(float x, float y) {
@@ -125,8 +98,8 @@ public class View implements Screen {
 		camera.unproject(mouse);
 
 		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.fullSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.fullSize;
+		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
 		board.setCursor(cursorX, cursorY);
 		if (Input.MouseDown() && board.select()) assets.get("aud/select.wav", Sound.class).play();
 		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
@@ -134,8 +107,8 @@ public class View implements Screen {
 	}
 
 	public void resize(int width, int height) {
-		int zoomW = height / Vars.fullSize / board.getHeight();
-		int zoomH = width / Vars.fullSize / board.getWidth();
+		int zoomW = height / Res.fullSize / board.getHeight();
+		int zoomH = width / Res.fullSize / board.getWidth();
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
 		Gdx.gl20.glLineWidth(2 / camera.zoom);
 		viewport.update(width, height);
@@ -144,13 +117,13 @@ public class View implements Screen {
 	public void beginBuffer() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
-						createParticle(Particle.Type.DROP, drawX + Vars.halfSize, drawY + Vars.fullSize, 16, 0, 16);
+						createParticle(Particle.Type.DROP, drawX + Res.halfSize, drawY + Res.fullSize, 16, 0, 16);
 						assets.get("aud/splash.mp3", Sound.class).play(0.3f);
 						break;
 					default:
@@ -165,8 +138,8 @@ public class View implements Screen {
 		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Block block = board.getGrid()[i][j];
 				if (block != null) {
 					switch (block.command) {
@@ -174,23 +147,23 @@ public class View implements Screen {
 						if (!board.gridEmpty(i, j + 2)) {
 							Special special = board.getSpecial()[i][j + 1];
 							if (board.gridValid(i, j + 1) && (special == null || !special.water)) {
-								createParticle(Particle.Type.DUST_L, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
-								createParticle(Particle.Type.DUST_R, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
+								createParticle(Particle.Type.DUST_L, drawX + Res.halfSize, drawY - Res.fullSize, 4);
+								createParticle(Particle.Type.DUST_R, drawX + Res.halfSize, drawY - Res.fullSize, 4);
 								assets.get("aud/remove.wav", Sound.class).play(0.1f);
 							}
 						}
 						break;
 					case EXPLODE:
-						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
-						createParticle(Particle.Type.DUST, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
-						createParticle(Particle.Type.FIRE, drawX + Vars.halfSize, drawY + Vars.halfSize, 4, 4, 32);
+						createParticle(Particle.Type.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Particle.Type.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Particle.Type.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
 					case BREAK:
-						createParticle(Particle.Type.DIRT, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 16);
+						createParticle(Particle.Type.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
 						assets.get("aud/break.mp3", Sound.class).play();
 					case DROWN:
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Vars.halfSize, drawY + Vars.halfSize, 16, 16, 8);
-							createParticle(Particle.Type.GEM, drawX + Vars.halfSize, drawY + Vars.halfSize);
+							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
 						}
 						break;
 					default:
@@ -213,7 +186,7 @@ public class View implements Screen {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
-			Sprite sprite = null;
+			Animation sprite = null;
 			int xr = x + MathUtils.random(-randX, randX);
 			int yr = y + MathUtils.random(-randY, randY);
 			switch (type) {
@@ -276,8 +249,8 @@ public class View implements Screen {
 	private void drawGridUnder() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				drawBlock("grid", drawX, drawY);
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
@@ -295,8 +268,8 @@ public class View implements Screen {
 		/* draw blocks at their position and transparency based on their properties and buffer timers */
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Block block = board.getGrid()[i][j];
 				Special special = board.getSpecial()[i][j];
 				if (block != null) {
@@ -305,25 +278,25 @@ public class View implements Screen {
 					int bufferY = 0;
 					switch (block.command) {
 					case MOVE_UP:
-						bufferY = (Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
+						bufferY = (Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
 						break;
 					case FALL:
 					case MOVE_DOWN:
-						bufferY = -(Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
+						bufferY = -(Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
 						break;
 					case MOVE_RIGHT:
-						bufferX = (Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
+						bufferX = (Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
 						if (block.fall) createParticle(Particle.Type.DUST_L, drawX + bufferX, drawY);
 						break;
 					case MOVE_LEFT:
-						bufferX = -(Vars.timeMove - timer[i][j]) * Vars.fullSize / Vars.timeMove;
-						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Vars.fullSize, drawY);
+						bufferX = -(Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
+						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Res.fullSize, drawY);
 						break;
 					case PATH:
-						setAlpha(Math.abs(1 - 2f * timer[i][j] / Vars.timePath));
-						if (timer[i][j] * 2 < Vars.timePath) {
-							drawX = boardOffsetX + special.destX * Vars.fullSize;
-							drawY = boardOffsetY + (board.getHeight() - 1 - special.destY) * Vars.fullSize;
+						setAlpha(Math.abs(1 - 2f * timer[i][j] / Res.timePath));
+						if (timer[i][j] * 2 < Res.timePath) {
+							drawX = boardOffsetX + special.destX * Res.fullSize;
+							drawY = boardOffsetY + (board.getHeight() - 1 - special.destY) * Res.fullSize;
 						}
 						break;
 					default:
@@ -333,22 +306,23 @@ public class View implements Screen {
 					drawX += bufferX;
 					if (block.move) {
 						if (block.bomb) drawBlock("bomb", drawX, drawY);
-						else drawBlock("block", drawX, drawY);
+						else drawBlock("block_move", drawX, drawY);
 					} else {
-						if (block.active) drawBlock("fixed", drawX, drawY);
-						else drawBlock("blockstatic", drawX, drawY);
+						if (block.active) drawBlock("block_active", drawX, drawY);
+						else drawBlock("block_static", drawX, drawY);
 					}
 
-					if (block.gemC) drawBlock("gemsC", drawX, drawY);
+					if (block.gemC) drawBlock("block_gem_c", drawX, drawY);
 					else {
-						if (block.gemD) drawBlock("gemsD", drawX, drawY);
-						if (block.gemU) drawBlock("gemsU", drawX, drawY);
-						if (block.gemL) drawBlock("gemsL", drawX, drawY);
-						if (block.gemR) drawBlock("gemsR", drawX, drawY);
+						if (block.gemD) drawBlock("block_gem_d", drawX, drawY);
+						if (block.gemU) drawBlock("block_gem_u", drawX, drawY);
+						if (block.gemL) drawBlock("block_gem_l", drawX, drawY);
+						if (block.gemR) drawBlock("block_gem_r", drawX, drawY);
 					}
-					if (block.fall) drawBlock("fall", drawX, drawY);
-					if (block.command == Enums.Command.BREAK) {
-						sprites.draw(cracks.getFrame((Vars.timeGem - timer[i][j]) * 7 / Vars.timeGem), drawX, drawY);
+					if (block.fall) drawBlock("block_falling", drawX, drawY);
+					
+					if (block.command == Res.Command.BREAK) {
+						sprites.draw(cracks.getFrame((Res.timeGem - timer[i][j]) * 7 / Res.timeGem), drawX, drawY);
 					}
 					setAlpha(1);
 				}
@@ -356,22 +330,22 @@ public class View implements Screen {
 		}
 	}
 
-	private void drawBlock(String filename, int x, int y) {
-		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.fullSize, Vars.fullSize);
+	private void drawBlock(String file, int x, int y) {
+		sprites.draw(Res.atlas.createSprite(file), x, y);
 	}
 
 	private void drawGridOver() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
 					if (special.water) {
 						// setAlpha(0.6f);
 						drawBlock("waterF", drawX, drawY);
 						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
-							+ Vars.fullSize);
+							+ Res.fullSize);
 						// setAlpha(1);
 					}
 				}
@@ -382,10 +356,10 @@ public class View implements Screen {
 	private void drawCursor() {
 		int cx = board.getCursorX();
 		int cy = board.getCursorY();
-		int cursorX = boardOffsetX + cx * Vars.fullSize;
-		int cursorY = boardOffsetY + (board.getHeight() - 1 - cy) * Vars.fullSize;
-		if (board.isSelected()) drawBlock("cursorSelect", cursorX, cursorY);
-		else drawBlock("cursor", cursorX, cursorY);
+		int cursorX = boardOffsetX + cx * Res.fullSize;
+		int cursorY = boardOffsetY + (board.getHeight() - 1 - cy) * Res.fullSize;
+		if (board.isSelected()) drawBlock("cursor_select", cursorX, cursorY);
+		else drawBlock("cursor_unselect", cursorX, cursorY);
 		Special special = board.getSpecial()[cx][cy];
 		if (special != null && !board.isSelected()) {
 			if (special.path) drawLine(cx, cy, special.destX, special.destY);
@@ -401,11 +375,11 @@ public class View implements Screen {
 	}
 
 	private void drawLine(int x1, int y1, int x2, int y2) {
-		int xo = boardOffsetX + x1 * Vars.fullSize + Vars.halfSize;
-		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Vars.fullSize + Vars.halfSize;
-		drawBlock("cursor", boardOffsetX + x2 * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Vars.fullSize);
-		int dx = (x2 - x1) * Vars.fullSize;
-		int dy = (y1 - y2) * Vars.fullSize;
+		int xo = boardOffsetX + x1 * Res.fullSize + Res.halfSize;
+		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Res.fullSize + Res.halfSize;
+		drawBlock("cursor", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Res.fullSize);
+		int dx = (x2 - x1) * Res.fullSize;
+		int dy = (y1 - y2) * Res.fullSize;
 		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 		int numDots = length / 10;
 		float angle = MathUtils.atan2(dy, dx);
