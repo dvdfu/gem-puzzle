@@ -3,8 +3,7 @@ package com.dvdfu.gems;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
-import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.Preferences;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.InputController;
 import com.dvdfu.gems.model.Board;
@@ -22,31 +21,24 @@ public class MainGame extends Game implements ApplicationListener {
 		Gdx.input.setInputProcessor(new InputController());
 		board = new Board("", 0, 0);
 		view = new View(board);
-		loadLevel();
-		editorBoard = new EditorBoard(8, 10);
+		editorBoard = new EditorBoard("", 0, 0);
 		editorView = new EditorView(editorBoard);
+		loadLevel();
 		setScreen(editorView);
 	}
 
 	private void loadLevel() {
-		FileHandle file = Gdx.files.local("data/test.txt");
-		String data = file.readString();
-		Array<char[]> dataArray = new Array<char[]>();
-		while (data.length() > 1) {
-			dataArray.add(data.substring(0, data.indexOf(';')).toCharArray());
-			data = data.substring(data.indexOf(';') + 1);
-		}
-
-		String name = new String(dataArray.removeIndex(0));
-		int width = Integer.parseInt(new String(dataArray.removeIndex(0)));
-		int height = Integer.parseInt(new String(dataArray.removeIndex(0)));
-		board.resetBoard(name, width, height);
+		Preferences prefs = Gdx.app.getPreferences("prefs");
+		String data = prefs.getString("level", "name;8;10;");
+		board.setState(data);
 		view.setBoard(board);
-		for (char[] cell : dataArray)
-			board.addByID(cell);
+		editorBoard.setState(data);
+		editorView.setBoard(editorBoard);
 	}
 
 	public void dispose() {
+		Preferences prefs = Gdx.app.getPreferences("prefs");
+		prefs.flush();
 		view.dispose();
 		editorView.dispose();
 	}
@@ -58,7 +50,7 @@ public class MainGame extends Game implements ApplicationListener {
 				view.endBuffer(); // apply end-buffer view changes to all buffered blocks
 				board.useBuffer(); // apply end-buffer board changes to grid
 				// at this point all blocks should have timer = 0 and command = hold
-				board.update(); /* timer is ready, board looks for buffers */
+				board.update(); // timer is ready, board looks for buffers
 				if (board.checkTimer()) view.beginBuffer();
 			} else board.updateTimer();
 			if (Input.KeyPressed(Input.TAB)) setScreen(editorView);
@@ -70,7 +62,7 @@ public class MainGame extends Game implements ApplicationListener {
 				setScreen(view);
 			}
 		}
-		
+
 		super.render();
 		Input.update();
 	}

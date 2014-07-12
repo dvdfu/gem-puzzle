@@ -2,7 +2,7 @@ package com.dvdfu.gems.model;
 
 public class Special {
 	public boolean path;
-	public boolean hazard;
+	public boolean water;
 	public boolean button;
 	public boolean gate;
 	public boolean gateOriginal;
@@ -12,7 +12,7 @@ public class Special {
 
 	public Special setPath(int destX, int destY) {
 		path = true;
-		hazard = false;
+		water = false;
 		this.destX = destX;
 		this.destY = destY;
 		return this;
@@ -21,7 +21,7 @@ public class Special {
 	public String getID() {
 		String id = "s";
 		if (path) id += "p" + destX + "" + destY;
-		else if (hazard) id += "h";
+		else if (water) id += "h";
 		else if (button) id += "b";
 		else if (gate) id += "g" + destX + "" + destY + (gateOriginal ? "t" : "f");
 		return id + ";";
@@ -29,7 +29,7 @@ public class Special {
 
 	public Special setHazard() {
 		path = false;
-		hazard = true;
+		water = true;
 		return this;
 	}
 

@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Pool;
 import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dvdfu.gems.handlers.Enums;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.Vars;
 import com.dvdfu.gems.model.Block;
@@ -44,9 +45,7 @@ public class View implements Screen {
 	private int timer;
 
 	public View(Board board) {
-		this.board = board;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
+		setBoard(board);
 		loadAssets();
 		sprites = new SpriteBatch();
 		viewport = new ScreenViewport();
@@ -174,7 +173,7 @@ public class View implements Screen {
 					case FALL:
 						if (!board.gridEmpty(i, j + 2)) {
 							Special special = board.getSpecial()[i][j + 1];
-							if (board.gridValid(i, j + 1) && (special == null || !special.hazard)) {
+							if (board.gridValid(i, j + 1) && (special == null || !special.water)) {
 								createParticle(Particle.Type.DUST_L, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
 								createParticle(Particle.Type.DUST_R, drawX + Vars.halfSize, drawY - Vars.fullSize, 4);
 								assets.get("aud/remove.wav", Sound.class).play(0.1f);
@@ -348,7 +347,7 @@ public class View implements Screen {
 						if (block.gemR) drawBlock("gemsR", drawX, drawY);
 					}
 					if (block.fall) drawBlock("fall", drawX, drawY);
-					if (block.command == Block.Command.BREAK) {
+					if (block.command == Enums.Command.BREAK) {
 						sprites.draw(cracks.getFrame((Vars.timeGem - timer[i][j]) * 7 / Vars.timeGem), drawX, drawY);
 					}
 					setAlpha(1);
@@ -368,7 +367,7 @@ public class View implements Screen {
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				Special special = board.getSpecial()[i][j];
 				if (special != null) {
-					if (special.hazard) {
+					if (special.water) {
 						// setAlpha(0.6f);
 						drawBlock("waterF", drawX, drawY);
 						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY

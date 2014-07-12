@@ -14,6 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dvdfu.gems.handlers.Vars;
+import com.dvdfu.gems.model.Board;
 import com.dvdfu.gems.model.EditorBlock;
 import com.dvdfu.gems.model.EditorBoard;
 import com.dvdfu.gems.model.Special;
@@ -30,9 +31,7 @@ public class EditorView implements Screen {
 	private int timer;
 
 	public EditorView(EditorBoard board) {
-		this.board = board;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
+		setBoard(board);
 		loadAssets();
 		sprites = new SpriteBatch();
 		viewport = new ScreenViewport();
@@ -46,6 +45,13 @@ public class EditorView implements Screen {
 		assets.dispose();
 		sprites.dispose();
 	}
+
+	public void setBoard(EditorBoard board) {
+		this.board = board;
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Vars.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Vars.fullSize) / 2;
+	}
+
 
 	private void loadAssets() {
 		assets.load("img/block.png", Texture.class);
@@ -93,6 +99,7 @@ public class EditorView implements Screen {
 		int cursorX = (int) (mouse.x - boardOffsetX) / Vars.fullSize;
 		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Vars.fullSize;
 		board.setCursor(cursorX, cursorY);
+
 	}
 
 	public void resize(int width, int height) {
@@ -108,24 +115,6 @@ public class EditorView implements Screen {
 		sprites.setColor(c.r, c.g, c.b, alpha);
 	}
 
-	private void drawGridUnder() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
-				drawBlock("grid", drawX, drawY);
-				Special special = board.getSpecial()[i][j];
-				if (special != null) {
-					if (special.path) drawBlock("path", drawX, drawY);
-					else if (special.button) {
-						if (special.toggled) drawBlock("button", drawX, drawY);
-						else drawBlock("button", drawX, drawY);
-					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
-				}
-			}
-		}
-	}
-
 	private void drawBlocks() {
 		/* draw blocks at their position and transparency based on their properties and buffer timers */
 		for (int i = 0; i < board.getWidth(); i++) {
@@ -133,6 +122,8 @@ public class EditorView implements Screen {
 				int drawX = boardOffsetX + i * Vars.fullSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
 				EditorBlock block = board.getGrid()[i][j];
+				Special special = board.getSpecial()[i][j];
+				drawBlock("grid", drawX, drawY);
 				if (block != null) {
 					if (block.move) {
 						if (block.bomb) drawBlock("bomb", drawX, drawY);
@@ -150,6 +141,19 @@ public class EditorView implements Screen {
 						if (block.gemR) drawBlock("gemsR", drawX, drawY);
 					}
 					if (block.fall) drawBlock("fall", drawX, drawY);
+				}
+				if (special != null) {
+					if (block != null) setAlpha(0.5f);
+					if (special.path) drawBlock("path", drawX, drawY);
+					else if (special.button) {
+						if (special.toggled) drawBlock("button", drawX, drawY);
+						else drawBlock("button", drawX, drawY);
+					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
+					else if (special.water) {
+						drawBlock("waterF", drawX, drawY);
+						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
+							+ Vars.fullSize);
+					}
 					setAlpha(1);
 				}
 			}
@@ -158,25 +162,6 @@ public class EditorView implements Screen {
 
 	private void drawBlock(String filename, int x, int y) {
 		sprites.draw(assets.get("img/" + filename + ".png", Texture.class), x, y, Vars.fullSize, Vars.fullSize);
-	}
-
-	private void drawGridOver() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Vars.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Vars.fullSize;
-				Special special = board.getSpecial()[i][j];
-				if (special != null) {
-					if (special.hazard) {
-						// setAlpha(0.6f);
-						drawBlock("waterF", drawX, drawY);
-						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
-							+ Vars.fullSize);
-						// setAlpha(1);
-					}
-				}
-			}
-		}
 	}
 
 	private void drawCursor() {
@@ -198,20 +183,9 @@ public class EditorView implements Screen {
 				}
 			} else if (special.gate) drawLine(cx, cy, special.destX, special.destY);
 		}
-
-		if (board.placingGate) {
-			drawBlock("button", cursorX, cursorY);
-			drawBlock("gate", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY
-				+ (board.getHeight() - 1 - board.placeY) * Vars.fullSize);
-			drawLine(cx, cy, board.placeX, board.placeY);
-		}
-
-		if (board.placingPath) {
-			drawBlock("path", cursorX, cursorY);
-			drawBlock("path", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY
-				+ (board.getHeight() - 1 - board.placeY) * Vars.fullSize);
-			drawLine(cx, cy, board.placeX, board.placeY);
-		}
+		/* if (board.placingGate) { drawBlock("button", cursorX, cursorY); drawBlock("gate", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY) * Vars.fullSize); drawLine(cx, cy, board.placeX, board.placeY);
+		 * } else if (board.placingPath) { drawBlock("path", cursorX, cursorY); drawBlock("path", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY) * Vars.fullSize); drawLine(cx, cy, board.placeX,
+		 * board.placeY); } */
 	}
 
 	private void drawLine(int x1, int y1, int x2, int y2) {
@@ -230,13 +204,31 @@ public class EditorView implements Screen {
 		}
 	}
 
+	private void drawGUI() {
+		switch (board.getCursorState()) {
+		case BLOCK_ACTIVE: break;
+		case BLOCK_MOVE: break;
+		case BLOCK_STATIC: break;
+		case BOMB: break;
+		case ERASER: break;
+		case FALL: break;
+		case GATE: break;
+		case GEM_CENTER: break;
+		case GEM_DOWN: break;
+		case GEM_LEFT: break;
+		case GEM_RIGHT: break;
+		case GEM_UP: break;
+		case PATH: break;
+		case WATER: break;
+		default: break;
+		}
+	}
+
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		sprites.begin();
-		drawGridUnder();
 		drawBlocks();
-		drawGridOver();
 		drawCursor();
 		sprites.end();
 		if (timer < 16) timer++;

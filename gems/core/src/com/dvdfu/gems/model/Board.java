@@ -1,13 +1,15 @@
 package com.dvdfu.gems.model;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
+import com.dvdfu.gems.handlers.Enums;
 import com.dvdfu.gems.handlers.Vars;
 
 public class Board {
 	private String name;
-	private Block gridBlock[][];
+	private Block gridBlocks[][];
 	private Block cursorBlock;
-	private Special gridSpecial[][];
+	private Special gridSpecials[][];
 	private int width;
 	private int height;
 	private int cursorX;
@@ -19,33 +21,49 @@ public class Board {
 		this.height = height;
 		cursorX = 0;
 		cursorY = 0;
-		gridBlock = new Block[width][height];
-		gridSpecial = new Special[width][height];
+		gridBlocks = new Block[width][height];
+		gridSpecials = new Special[width][height];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				gridBlock[i][j] = null;
-				gridSpecial[i][j] = null;
+				gridBlocks[i][j] = null;
+				gridSpecials[i][j] = null;
 			}
 		}
 	}
 	
+	public void setState(String data) {
+		Array<char[]> dataArray = new Array<char[]>();
+		while (data.length() > 1) {
+			dataArray.add(data.substring(0, data.indexOf(';')).toCharArray());
+			data = data.substring(data.indexOf(';') + 1);
+		}
+		String newName = new String(dataArray.removeIndex(0));
+		int width = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		int height = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		resetBoard(newName, width, height);
+		for (char[] cell : dataArray)
+			addByID(cell);
+	}
+	
 	public void resetBoard(String name, int width, int height) {
 		this.name = name;
-		this.width = width;
-		this.height = height;
-		gridBlock = new Block[width][height];
-		gridSpecial = new Special[width][height];
+		if (this.width != width || this.height != height) {
+			this.width = width;
+			this.height = height;
+			gridBlocks = new Block[width][height];
+			gridSpecials = new Special[width][height];
+		}
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				gridBlock[i][j] = null;
-				gridSpecial[i][j] = null;
+				gridBlocks[i][j] = null;
+				gridSpecials[i][j] = null;
 			}
 		}
 	}
 
 	public void addByID(char[] id) {
-		int x = Character.getNumericValue(id[0]);
-		int y = Character.getNumericValue(id[1]);
+		int x = id[0] - 48;
+		int y = id[1] - 48;
 		if (id[2] == 'b') {
 			Block block = new Block();
 			for (int i = 3; i < id.length; i++) {
@@ -79,7 +97,7 @@ public class Board {
 					break;
 				}
 			}
-			gridBlock[x][y] = block;
+			gridBlocks[x][y] = block;
 		} else if (id[2] == 's') {
 			Special special = null;
 			int destX;
@@ -103,7 +121,7 @@ public class Board {
 				special = new Special().setGate(destX, destY, gateOriginal);
 				break;
 			}
-			gridSpecial[x][y] = special;
+			gridSpecials[x][y] = special;
 		}
 	}
 
@@ -111,7 +129,7 @@ public class Board {
 		// handle button and gate toggling
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Special special = gridSpecial[i][j];
+				Special special = gridSpecials[i][j];
 				if (special != null) {
 					if (special.button) special.toggled = gridHas(i, j);
 					else if (special.gate) {
@@ -123,64 +141,64 @@ public class Board {
 		// check every block and special. Simply changes state, no modifications to the board
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Block block = gridBlock[i][j];
-				Special special = gridSpecial[i][j];
+				Block block = gridBlocks[i][j];
+				Special special = gridSpecials[i][j];
 				if (block != null) {
 					if (block.active) {
 						// drops block if it falls
-						if (block.fall && gridEmpty(i, j + 1) && block.command != Block.Command.BREAK) block.command = Block.Command.FALL;
+						if (block.fall && gridEmpty(i, j + 1) && block.command != Enums.Command.BREAK) block.command = Enums.Command.FALL;
 						// destroy block if it is active and surrounded
-						if (gridHas(i, j + 1) && gridBlock[i][j + 1].gemU && gridHas(i, j - 1) && gridBlock[i][j - 1].gemD
-							&& gridHas(i + 1, j) && gridBlock[i + 1][j].gemL && gridHas(i - 1, j) && gridBlock[i - 1][j].gemR) {
-							if (block.isGem()) block.command = Block.Command.BREAK;
-							else block.command = Block.Command.BREAK;
-							gridBlock[i][j + 1].command = Block.Command.BREAK;
-							gridBlock[i][j - 1].command = Block.Command.BREAK;
-							gridBlock[i + 1][j].command = Block.Command.BREAK;
-							gridBlock[i - 1][j].command = Block.Command.BREAK;
+						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD
+							&& gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
+							if (block.isGem()) block.command = Enums.Command.BREAK;
+							else block.command = Enums.Command.BREAK;
+							gridBlocks[i][j + 1].command = Enums.Command.BREAK;
+							gridBlocks[i][j - 1].command = Enums.Command.BREAK;
+							gridBlocks[i + 1][j].command = Enums.Command.BREAK;
+							gridBlocks[i - 1][j].command = Enums.Command.BREAK;
 						}
 					}
 					// destroy block if in toggled gate or water
 					if (special != null) {
-						if (special.hazard) block.command = Block.Command.DROWN;
-						else if (special.gate && special.toggled) block.command = Block.Command.BREAK;
+						if (special.water) block.command = Enums.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Enums.Command.BREAK;
 					}
 					// destroy block if it is a gem and matched
 					if (block.isGem()) {
-						if (block.gemU && gridHas(i, j - 1) && gridBlock[i][j - 1].gemD) {
-							block.command = Block.Command.BREAK;
-							gridBlock[i][j - 1].command = Block.Command.BREAK;
+						if (block.gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD) {
+							block.command = Enums.Command.BREAK;
+							gridBlocks[i][j - 1].command = Enums.Command.BREAK;
 						}
-						if (block.gemD && gridHas(i, j + 1) && gridBlock[i][j + 1].gemU) {
-							block.command = Block.Command.BREAK;
-							gridBlock[i][j + 1].command = Block.Command.BREAK;
+						if (block.gemD && gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU) {
+							block.command = Enums.Command.BREAK;
+							gridBlocks[i][j + 1].command = Enums.Command.BREAK;
 						}
-						if (block.gemR && gridHas(i + 1, j) && gridBlock[i + 1][j].gemL) {
-							block.command = Block.Command.BREAK;
-							gridBlock[i + 1][j].command = Block.Command.BREAK;
+						if (block.gemR && gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL) {
+							block.command = Enums.Command.BREAK;
+							gridBlocks[i + 1][j].command = Enums.Command.BREAK;
 						}
-						if (block.gemL && gridHas(i - 1, j) && gridBlock[i - 1][j].gemR) {
-							block.command = Block.Command.BREAK;
-							gridBlock[i - 1][j].command = Block.Command.BREAK;
+						if (block.gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
+							block.command = Enums.Command.BREAK;
+							gridBlocks[i - 1][j].command = Enums.Command.BREAK;
 						}
 					}
 					// destroy block if it is a bomb and matched
 					else if (block.bomb) {
-						if (gridHas(i, j - 1) && gridBlock[i][j - 1].active) {
-							block.command = Block.Command.EXPLODE;
-							gridBlock[i][j - 1].command = Block.Command.EXPLODE;
+						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].active) {
+							block.command = Enums.Command.EXPLODE;
+							gridBlocks[i][j - 1].command = Enums.Command.EXPLODE;
 						}
-						if (gridHas(i, j + 1) && gridBlock[i][j + 1].active) {
-							block.command = Block.Command.EXPLODE;
-							gridBlock[i][j + 1].command = Block.Command.EXPLODE;
+						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].active) {
+							block.command = Enums.Command.EXPLODE;
+							gridBlocks[i][j + 1].command = Enums.Command.EXPLODE;
 						}
-						if (gridHas(i - 1, j) && gridBlock[i - 1][j].active) {
-							block.command = Block.Command.EXPLODE;
-							gridBlock[i - 1][j].command = Block.Command.EXPLODE;
+						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].active) {
+							block.command = Enums.Command.EXPLODE;
+							gridBlocks[i - 1][j].command = Enums.Command.EXPLODE;
 						}
-						if (gridHas(i + 1, j) && gridBlock[i + 1][j].active) {
-							block.command = Block.Command.EXPLODE;
-							gridBlock[i + 1][j].command = Block.Command.EXPLODE;
+						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].active) {
+							block.command = Enums.Command.EXPLODE;
+							gridBlocks[i + 1][j].command = Enums.Command.EXPLODE;
 						}
 					}
 				}
@@ -189,14 +207,14 @@ public class Board {
 		if (!isBuffered()) {
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
-					Block block = gridBlock[i][j];
+					Block block = gridBlocks[i][j];
 					// moves selected block closer to cursor, lowest priority
 					if (block != null && block == cursorBlock && cursorBlock.move) {
-						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Block.Command.MOVE_LEFT;
-						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Block.Command.MOVE_RIGHT;
+						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Enums.Command.MOVE_LEFT;
+						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Enums.Command.MOVE_RIGHT;
 						else if (cursorBlock.active && !cursorBlock.fall) {
-							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Block.Command.MOVE_UP;
-							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Block.Command.MOVE_DOWN;
+							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Enums.Command.MOVE_UP;
+							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Enums.Command.MOVE_DOWN;
 						}
 					}
 				}
@@ -205,13 +223,13 @@ public class Board {
 	}
 
 	public final boolean gridHas(int x, int y) {
-		return gridValid(x, y) && gridBlock[x][y] != null;
+		return gridValid(x, y) && gridBlocks[x][y] != null;
 	}
 
 	public final boolean gridEmpty(int x, int y) {
 		return gridValid(x, y)
-			&& (gridBlock[x][y] == null && !gridHasGate(x, y) || gridBlock[x][y] != null
-				&& gridBlock[x][y].command == Block.Command.FALL);
+			&& (gridBlocks[x][y] == null && !gridHasGate(x, y) || gridBlocks[x][y] != null
+				&& gridBlocks[x][y].command == Enums.Command.FALL);
 	}
 
 	public final boolean gridValid(int x, int y) {
@@ -219,14 +237,14 @@ public class Board {
 	}
 
 	private final boolean gridHasGate(int x, int y) {
-		return gridSpecial[x][y] != null && gridSpecial[x][y].gate && gridSpecial[x][y].toggled;
+		return gridSpecials[x][y] != null && gridSpecials[x][y].gate && gridSpecials[x][y].toggled;
 	}
 
 	public boolean isBuffered() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Block block = gridBlock[i][j];
-				if (block != null && block.command != Block.Command.HOLD) return true;
+				Block block = gridBlocks[i][j];
+				if (block != null && block.command != Enums.Command.HOLD) return true;
 			}
 		}
 		return false;
@@ -238,7 +256,7 @@ public class Board {
 		int[][] timer = new int[width][height];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				timer[i][j] = gridBlock[i][j] != null ? gridBlock[i][j].timer : 0;
+				timer[i][j] = gridBlocks[i][j] != null ? gridBlocks[i][j].timer : 0;
 			}
 		}
 		return timer;
@@ -249,7 +267,7 @@ public class Board {
 		boolean modified = false;
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Block block = gridBlock[i][j];
+				Block block = gridBlocks[i][j];
 				if (block != null) {
 					switch (block.command) {
 					case EXPLODE:
@@ -289,7 +307,7 @@ public class Board {
 		/* when timer is not ready, decrements all timer values */
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Block block = gridBlock[i][j];
+				Block block = gridBlocks[i][j];
 				if (block != null && block.timer > 0) block.timer--;
 			}
 		}
@@ -298,7 +316,7 @@ public class Board {
 	public boolean timerReady() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				if (gridBlock[i][j] != null && gridBlock[i][j].timer > 0) return false;
+				if (gridBlocks[i][j] != null && gridBlocks[i][j].timer > 0) return false;
 			}
 		}
 		return true;
@@ -307,11 +325,11 @@ public class Board {
 	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access and are intended for use by the viewer which retrieves grid information to draw */
 
 	public final Block[][] getGrid() {
-		return gridBlock;
+		return gridBlocks;
 	}
 
 	public final Special[][] getSpecial() {
-		return gridSpecial;
+		return gridSpecials;
 	}
 
 	public final String getName() {
@@ -344,12 +362,12 @@ public class Board {
 	public void useBuffer() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				if (gridBlock[i][j] != null) gridBlock[i][j].visited = false;
+				if (gridBlocks[i][j] != null) gridBlocks[i][j].visited = false;
 			}
 		}
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				Block block = gridBlock[i][j];
+				Block block = gridBlocks[i][j];
 				if (block != null && !block.visited) {
 					block.visited = true;
 					boolean hold = true;
@@ -358,74 +376,74 @@ public class Board {
 					case EXPLODE:
 					case BREAK:
 						if (block == cursorBlock) unselect();
-						gridBlock[i][j] = null;
+						gridBlocks[i][j] = null;
 						break;
 					case MOVE_UP:
-						gridBlock[i][j] = null;
-						gridBlock[i][j - 1] = block;
-						Special pathU = gridSpecial[i][j - 1];
+						gridBlocks[i][j] = null;
+						gridBlocks[i][j - 1] = block;
+						Special pathU = gridSpecials[i][j - 1];
 						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
-							gridBlock[i][j - 1].command = Block.Command.PATH;
+							gridBlocks[i][j - 1].command = Enums.Command.PATH;
 							hold = false;
 						}
 						break;
 					case FALL:
-						gridBlock[i][j] = null;
-						gridBlock[i][j + 1] = block;
-						Special pathFall = gridSpecial[i][j + 1];
+						gridBlocks[i][j] = null;
+						gridBlocks[i][j + 1] = block;
+						Special pathFall = gridSpecials[i][j + 1];
 						if (pathFall != null && pathFall.path && gridEmpty(pathFall.destX, pathFall.destY)) {
-							gridBlock[i][j + 1].command = Block.Command.PATH;
+							gridBlocks[i][j + 1].command = Enums.Command.PATH;
 							hold = false;
 						}
 						if (gridEmpty(i, j + 2)) {
-							block.command = Block.Command.FALL;
+							block.command = Enums.Command.FALL;
 							hold = false;
 						}
 						break;
 					case MOVE_DOWN:
-						gridBlock[i][j] = null;
-						gridBlock[i][j + 1] = block;
-						Special pathDown = gridSpecial[i][j + 1];
+						gridBlocks[i][j] = null;
+						gridBlocks[i][j + 1] = block;
+						Special pathDown = gridSpecials[i][j + 1];
 						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
-							gridBlock[i][j + 1].command = Block.Command.PATH;
+							gridBlocks[i][j + 1].command = Enums.Command.PATH;
 							hold = false;
 						}
 						break;
 					case MOVE_RIGHT:
-						gridBlock[i][j] = null;
-						gridBlock[i + 1][j] = block;
-						Special pathRight = gridSpecial[i + 1][j];
+						gridBlocks[i][j] = null;
+						gridBlocks[i + 1][j] = block;
+						Special pathRight = gridSpecials[i + 1][j];
 						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
-							gridBlock[i + 1][j].command = Block.Command.PATH;
+							gridBlocks[i + 1][j].command = Enums.Command.PATH;
 							hold = false;
 						}
 						break;
 					case MOVE_LEFT:
-						gridBlock[i][j] = null;
-						gridBlock[i - 1][j] = block;
-						Special pathLeft = gridSpecial[i - 1][j];
+						gridBlocks[i][j] = null;
+						gridBlocks[i - 1][j] = block;
+						Special pathLeft = gridSpecials[i - 1][j];
 						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
-							gridBlock[i - 1][j].command = Block.Command.PATH;
+							gridBlocks[i - 1][j].command = Enums.Command.PATH;
 							hold = false;
 						}
 						break;
 					case PATH:
 						unselect();
-						gridBlock[i][j] = null;
-						gridBlock[gridSpecial[i][j].destX][gridSpecial[i][j].destY] = block;
+						gridBlocks[i][j] = null;
+						gridBlocks[gridSpecials[i][j].destX][gridSpecials[i][j].destY] = block;
 						break;
 					default:
 						break;
 					}
-					if (hold) block.command = Block.Command.HOLD;
+					if (hold) block.command = Enums.Command.HOLD;
 				}
 			}
 		}
 	}
 
 	public boolean select() {
-		if (cursorBlock == null && gridHas(cursorX, cursorY) && gridBlock[cursorX][cursorY].move) {
-			cursorBlock = gridBlock[cursorX][cursorY];
+		if (cursorBlock == null && gridHas(cursorX, cursorY) && gridBlocks[cursorX][cursorY].move) {
+			cursorBlock = gridBlocks[cursorX][cursorY];
 			return true;
 		}
 		return false;

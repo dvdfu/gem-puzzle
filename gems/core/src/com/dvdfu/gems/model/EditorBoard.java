@@ -2,269 +2,384 @@ package com.dvdfu.gems.model;
 
 import java.util.Stack;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
+import com.dvdfu.gems.handlers.Enums;
+import com.dvdfu.gems.handlers.Enums.Cursors;
 import com.dvdfu.gems.handlers.Input;
 
 public class EditorBoard {
 	private EditorBlock cursorBlock;
-	private EditorBlock gridBlock[][];
+	private EditorBlock gridBlocks[][];
 	private Special cursorSpecial;
-	private Special gridSpecial[][];
-	private Stack<GridState> undoStack;
-	private Stack<GridState> redoStack;
+	private Special gridSpecials[][];
+	private boolean cursorVisited[][];
+	private Stack<String> undoStack;
+	private Stack<String> redoStack;
+	private Enums.Cursors cursorState;
+	private String name;
 	private int width;
 	private int height;
-	private int cursorX;
-	private int cursorY;
-	public boolean placingPath;
-	public boolean placingGate;
-	public int placeX;
-	public int placeY;
+	private int cX;
+	private int cY;
+	private boolean cursorSet;
+	private boolean cursorPlacing;
+	private int placeX;
+	private int placeY;
 	private boolean modified;
 
-	private class GridState {
-		public EditorBlock blocks[][];
-		public Special specials[][];
-
-		public GridState(int width, int height) {
-			blocks = new EditorBlock[width][height];
-			specials = new Special[width][height];
-		}
-	}
-
-	public EditorBoard(int width, int height) {
+	public EditorBoard(String name, int width, int height) {
+		this.name = name;
 		this.width = width;
 		this.height = height;
-		cursorX = 0;
-		cursorY = 0;
-		gridBlock = new EditorBlock[width][height];
-		gridSpecial = new Special[width][height];
-		placingPath = false;
-		placingGate = false;
+		cursorState = Cursors.BLOCK_STATIC;
+		cursorBlock = null;
+		cX = 0;
+		cY = 0;
+		gridBlocks = new EditorBlock[width][height];
+		gridSpecials = new Special[width][height];
+		cursorVisited = new boolean[width][height];
+		cursorSet = true; // this boolean tells the cursor whether a click will add or remove cell properties depending on the property of the first cell clicked
+		cursorPlacing = false;
 		placeX = 0;
 		placeY = 0;
-		reset();
-
-		undoStack = new Stack<GridState>();
-		redoStack = new Stack<GridState>();
-		pushState();
-		modified = false;
-	}
-
-	public void getID() {
-		String id = "name;" + width + ";" + height + ";";
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				EditorBlock block = gridBlock[i][j];
+				gridBlocks[i][j] = null;
+				gridSpecials[i][j] = null;
+				cursorVisited[i][j] = false;
+			}
+		}
+		modified = false;
+		undoStack = new Stack<String>();
+		redoStack = new Stack<String>();
+		pushState();
+	}
+
+	// GRIDSTATES
+
+	private void getID() {
+		String id = getState();
+		Preferences prefs = Gdx.app.getPreferences("prefs");
+		prefs.putString("level", id);
+	}
+
+	private String getState() {
+		String id = "";
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				EditorBlock block = gridBlocks[i][j];
 				if (block != null) id += i + "" + j + block.getID();
-				Special special = gridSpecial[i][j];
+				Special special = gridSpecials[i][j];
 				if (special != null) id += i + "" + j + special.getID();
 			}
 		}
-		System.out.println(id);
-		FileHandle file = Gdx.files.local("data/test.txt");
-		file.writeString(id, false);
+		return name + ";" + width + ";" + height + ";" + id;
+	}
+
+	public void setState(String data) {
+		Array<char[]> dataArray = new Array<char[]>();
+		while (data.length() > 1) {
+			dataArray.add(data.substring(0, data.indexOf(';')).toCharArray());
+			data = data.substring(data.indexOf(';') + 1);
+		}
+		String newName = new String(dataArray.removeIndex(0));
+		int newWidth = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		int newHeight = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		resetBoard(newName, newWidth, newHeight);
+		for (char[] cell : dataArray) {
+			addCell(cell);
+		}
+	}
+	
+	public void resetBoard(String name, int width, int height) {
+		this.name = name;
+		if (this.width != width || this.height != height) {
+			this.width = width;
+			this.height = height;
+			gridBlocks = new EditorBlock[width][height];
+			gridSpecials = new Special[width][height];
+			cursorVisited = new boolean[width][height];
+		}
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				gridBlocks[i][j] = null;
+				gridSpecials[i][j] = null;
+				cursorVisited[i][j] = false;
+			}
+		}
+	}
+
+	public void addCell(char[] id) {
+		int x = id[0] - 48;
+		int y = id[1] - 48;
+		if (id[2] == 'b') {
+			EditorBlock block = new EditorBlock();
+			for (int i = 3; i < id.length; i++) {
+				switch (id[i]) {
+				case 'a':
+					block.active = true;
+					break;
+				case 'm':
+					block.move = true;
+					break;
+				case 'f':
+					block.fall = true;
+					break;
+				case 'b':
+					block.bomb = true;
+					break;
+				case 'c':
+					block.gemC = true;
+					break;
+				case 'u':
+					block.gemU = true;
+					break;
+				case 'd':
+					block.gemD = true;
+					break;
+				case 'r':
+					block.gemR = true;
+					break;
+				case 'l':
+					block.gemL = true;
+					break;
+				}
+			}
+			gridBlocks[x][y] = block;
+		} else if (id[2] == 's') {
+			Special special = null;
+			int destX;
+			int destY;
+			switch (id[3]) {
+			case 'p':
+				destX = id[4] - 48;
+				destY = id[5] - 48;
+				special = new Special().setPath(destX, destY);
+				break;
+			case 'h':
+				special = new Special().setHazard();
+				break;
+			case 'b':
+				special = new Special().setButton();
+				break;
+			case 'g':
+				boolean gateOriginal = id[6] == 't';
+				destX = id[4] - 48;
+				destY = id[5] - 48;
+				special = new Special().setGate(destX, destY, gateOriginal);
+				break;
+			}
+			gridSpecials[x][y] = special;
+		}
 	}
 
 	private void pushState() {
-		GridState state = new GridState(width, height);
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				state.blocks[i][j] = gridBlock[i][j];
-				state.specials[i][j] = gridSpecial[i][j];
-			}
-		}
-		undoStack.push(state);
+		undoStack.push(getState());
 		redoStack.clear();
 		modified = false;
 	}
 
-	public void undoState() {
+	private void undoState() {
 		if (undoStack.empty()) return;
-		GridState temp = undoStack.pop();
+		String temp = undoStack.pop();
 		if (undoStack.empty()) {
 			undoStack.push(temp);
 			return;
 		}
-		GridState state = undoStack.peek();
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				gridBlock[i][j] = state.blocks[i][j];
-				gridSpecial[i][j] = state.specials[i][j];
-			}
-		}
+		setState(undoStack.peek());
 		redoStack.push(temp);
 	}
 
-	public void redoState() {
+	private void redoState() {
 		if (redoStack.empty()) return;
-		GridState state = redoStack.pop();
-		GridState newState = new GridState(width, height);
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				gridBlock[i][j] = state.blocks[i][j];
-				gridSpecial[i][j] = state.specials[i][j];
-				newState.blocks[i][j] = gridBlock[i][j];
-				newState.specials[i][j] = gridSpecial[i][j];
-			}
-		}
-		undoStack.push(newState);
+		setState(redoStack.pop());
+		undoStack.push(getState());
 	}
 
-	public void reset() {
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				gridBlock[i][j] = null;
-				gridSpecial[i][j] = null;
-			}
-		}
-		cursorBlock = null;
+	// CURSOR PLACEMENT
+
+	public void setCursorState(Enums.Cursors state) {
+		cursorState = state;
+	}
+
+	public Enums.Cursors getCursorState() {
+		return cursorState;
 	}
 
 	private void addBlock(EditorBlock block, int x, int y) {
-		gridBlock[x][y] = block;
+		gridBlocks[x][y] = block;
 	}
 
 	private void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
 			clearSpecial(x1, y1);
 			clearSpecial(x2, y2);
-			gridSpecial[x1][y1] = new Special().setPath(x2, y2);
-			gridSpecial[x2][y2] = new Special().setPath(x1, y1);
+			gridSpecials[x1][y1] = new Special().setPath(x2, y2);
+			gridSpecials[x2][y2] = new Special().setPath(x1, y1);
 		}
 	}
 
 	private void addGate(int gateX, int gateY, int buttonX, int buttonY, boolean gateOriginal) {
 		if (gridValid(buttonX, buttonY) && gridValid(gateX, gateY) && !(buttonX == gateX && buttonY == gateY)) {
 			clearSpecial(gateX, gateY);
-			gridSpecial[buttonX][buttonY] = new Special().setButton();
-			gridSpecial[gateX][gateY] = new Special().setGate(buttonX, buttonY, gateOriginal);
+			gridSpecials[buttonX][buttonY] = new Special().setButton();
+			gridSpecials[gateX][gateY] = new Special().setGate(buttonX, buttonY, gateOriginal);
 		}
 	}
 
 	private void clearSpecial(int x, int y) {
-		Special special = gridSpecial[x][y];
+		Special special = gridSpecials[x][y];
 		if (special == null) return;
 		if (special.path) {
-			gridSpecial[special.destX][special.destY] = null;
-			gridSpecial[x][y] = null;
+			gridSpecials[special.destX][special.destY] = null;
+			gridSpecials[x][y] = null;
 		} else if (special.button) {
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
-					Special gate = gridSpecial[i][j];
-					if (gate != null && gate.gate && gate.destX == x && gate.destY == y) gridSpecial[i][j] = null;
+					Special gate = gridSpecials[i][j];
+					if (gate != null && gate.gate && gate.destX == x && gate.destY == y) gridSpecials[i][j] = null;
 				}
 			}
-			gridSpecial[x][y] = null;
+			gridSpecials[x][y] = null;
+		}
+	}
+
+	private void handleBlocks() {
+		if (Input.MousePressed()) {
+			// tells the cursor if the property of the first clicked cell is true or not. Determines what behaviour the cursor will have later
+			if (cursorBlock == null) cursorSet = true;
+			else {
+				switch (cursorState) {
+				case BOMB:
+					cursorSet = !cursorBlock.bomb;
+					break;
+				case FALL:
+					cursorSet = !cursorBlock.fall;
+					break;
+				case GEM_CENTER:
+					cursorSet = !cursorBlock.gemC;
+					break;
+				case GEM_DOWN:
+					cursorSet = !cursorBlock.gemD;
+					break;
+				case GEM_LEFT:
+					cursorSet = !cursorBlock.gemL;
+					break;
+				case GEM_RIGHT:
+					cursorSet = !cursorBlock.gemR;
+					break;
+				case GEM_UP:
+					cursorSet = !cursorBlock.gemU;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		if (Input.MouseDown()) {
+			boolean setNew = cursorBlock == null && cursorSet;
+			boolean setOld = cursorBlock != null && !cursorVisited[cX][cY];
+			switch (cursorState) {
+			case BLOCK_ACTIVE:
+				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setActive(true);
+				break;
+			case BLOCK_MOVE:
+				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setMove(true);
+				break;
+			case BLOCK_STATIC:
+				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setMove(false);
+				break;
+			case BOMB:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setBomb(true);
+				else if (setOld) cursorBlock.setBomb(cursorSet);
+				break;
+			case FALL:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setFall(true);
+				else if (setOld) cursorBlock.setFall(cursorSet);
+				break;
+			case GEM_CENTER:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemC(true);
+				else if (setOld) cursorBlock.setGemC(cursorSet);
+				break;
+			case GEM_DOWN:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemD(true);
+				else if (setOld) cursorBlock.setGemD(cursorSet);
+				break;
+			case GEM_LEFT:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemL(true);
+				else if (setOld) cursorBlock.setGemL(cursorSet);
+				break;
+			case GEM_RIGHT:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemR(true);
+				else if (setOld) cursorBlock.setGemR(cursorSet);
+				break;
+			case GEM_UP:
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemU(true);
+				else if (setOld) cursorBlock.setGemU(cursorSet);
+				break;
+			default:
+				break;
+			}
+			if (setNew || setOld) {
+				cursorVisited[cX][cY] = true;
+				modified = true;
+			}
+		}
+	}
+
+	private void handleSpecials() {
+		if (Input.MousePressed()) {
+			switch (cursorState) {
+			case GATE:
+				break;
+			case PATH:
+				break;
+			case WATER:
+				break;
+			default:
+				break;
+			}
+		}
+		if (Input.MousePressed()) {
+
 		}
 	}
 
 	public void update() {
-		cursorBlock = gridBlock[cursorX][cursorY];
-		cursorSpecial = gridSpecial[cursorX][cursorY];
-		// EDITING BLOCKS
-		if (Input.MouseDown() && cursorBlock == null) {
-			addBlock(new EditorBlock(), cursorX, cursorY);
-			modified = true;
-		}
-		if (Input.KeyDown(Input.BACKSPACE) && cursorBlock != null) {
-			gridBlock[cursorX][cursorY] = null;
-			modified = true;
-		}
-		if (cursorBlock != null) {
-			if (Input.KeyPressed(Input.ARROW_UP)) {
-				gridBlock[cursorX][cursorY].toggleGemU();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.ARROW_DOWN)) {
-				gridBlock[cursorX][cursorY].toggleGemD();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.ARROW_RIGHT)) {
-				gridBlock[cursorX][cursorY].toggleGemR();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.ARROW_LEFT)) {
-				gridBlock[cursorX][cursorY].toggleGemL();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.SPACEBAR)) {
-				gridBlock[cursorX][cursorY].toggleGemC();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.A)) {
-				gridBlock[cursorX][cursorY].toggleActive();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.B)) {
-				gridBlock[cursorX][cursorY].toggleBomb();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.F)) {
-				gridBlock[cursorX][cursorY].toggleFall();
-				modified = true;
-			}
-			if (Input.KeyPressed(Input.M)) {
-				gridBlock[cursorX][cursorY].toggleMove();
-				modified = true;
+		cursorBlock = gridBlocks[cX][cY];
+		cursorSpecial = gridSpecials[cX][cY];
+		handleBlocks();
+		handleSpecials();
+		if (Input.MouseReleased()) {
+			for (int i = 0; i < width; i++) {
+				for (int j = 0; j < height; j++) {
+					cursorVisited[i][j] = false;
+				}
 			}
 		}
-		// EDITING SPECIALS
-		if (Input.KeyDown(Input.BACKSPACE) && cursorSpecial != null) {
-			clearSpecial(cursorX, cursorY);
-			gridSpecial[cursorX][cursorY] = null;
-			modified = true;
+		if (Input.KeyPressed(Input.SPACEBAR)) {
+			cursorState = Enums.Cursors.GEM_CENTER;
+		} else if (Input.KeyPressed(Input.ARROW_UP)) {
+			cursorState = Enums.Cursors.GEM_UP;
+		} else if (Input.KeyPressed(Input.ARROW_DOWN)) {
+			cursorState = Enums.Cursors.GEM_DOWN;
+		} else if (Input.KeyPressed(Input.ARROW_RIGHT)) {
+			cursorState = Enums.Cursors.GEM_RIGHT;
+		} else if (Input.KeyPressed(Input.ARROW_LEFT)) {
+			cursorState = Enums.Cursors.GEM_LEFT;
+		} else if (Input.KeyPressed(Input.A)) {
+			cursorState = Enums.Cursors.BLOCK_ACTIVE;
+		} else if (Input.KeyPressed(Input.B)) {
+			cursorState = Enums.Cursors.BOMB;
+		} else if (Input.KeyPressed(Input.F)) {
+			cursorState = Enums.Cursors.FALL;
+		} else if (Input.KeyPressed(Input.M)) {
+			cursorState = Enums.Cursors.BLOCK_MOVE;
 		}
-		if (Input.KeyDown(Input.H)) {
-			clearSpecial(cursorX, cursorY);
-			gridSpecial[cursorX][cursorY] = new Special().setHazard();
-			gridBlock[cursorX][cursorY] = null;
-			modified = true;
-		}
-		if (Input.KeyPressed(Input.G)) {
-			Special special = gridSpecial[cursorX][cursorY];
-			if (special != null && special.gate) {
-				special.gateOriginal ^= true;
-				modified = true;
-			} else {
-				placingGate = true;
-				placingPath = false;
-				placeX = cursorX;
-				placeY = cursorY;
-			}
-		}
-		if (Input.KeyReleased(Input.G) && placingGate) {
-			placingGate = false;
-			placingPath = false;
-			if (placeX != cursorX || placeY != cursorY) {
-				addGate(placeX, placeY, cursorX, cursorY, true);
-				modified = true;
-			}
-		}
-		if (Input.KeyPressed(Input.P)) {
-			placingPath = true;
-			placingGate = false;
-			placeX = cursorX;
-			placeY = cursorY;
-		}
-		if (Input.KeyReleased(Input.P) && placingPath) {
-			placingPath = false;
-			placingGate = false;
-			if (placeX != cursorX || placeY != cursorY) {
-				addPath(placeX, placeY, cursorX, cursorY);
-				modified = true;
-			}
-		}
-
 		// UNDO
 		if (Input.MouseReleased() && modified) pushState();
-		for (int i = 0; i < Input.keys.length; i++) {
-			if (Input.KeyReleased(i) && modified) {
-				pushState();
-				break;
-			}
-		}
 		if (Input.KeyDown(Input.CTRL)) {
 			if (Input.KeyPressed(Input.Z)) undoState();
 			if (Input.KeyPressed(Input.Y)) redoState();
@@ -272,26 +387,18 @@ public class EditorBoard {
 		if (Input.KeyPressed(Input.TAB)) getID();
 	}
 
-	public final boolean gridHas(int x, int y) {
-		return gridValid(x, y) && gridBlock[x][y] != null;
-	}
-
-	public final boolean gridEmpty(int x, int y) {
-		return gridValid(x, y) && gridBlock[x][y] == null;
-	}
-
 	public final boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 
-	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have public access and are intended for use by the viewer which retrieves grid information to draw */
+	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have private access and are intended for use by the viewer which retrieves grid information to draw */
 
 	public final EditorBlock[][] getGrid() {
-		return gridBlock;
+		return gridBlocks;
 	}
 
 	public final Special[][] getSpecial() {
-		return gridSpecial;
+		return gridSpecials;
 	}
 
 	public final int getWidth() {
@@ -306,18 +413,16 @@ public class EditorBoard {
 		return cursorBlock != null;
 	}
 
+	public void setCursor(int x, int y) {
+		cX = MathUtils.clamp(x, 0, width - 1);
+		cY = MathUtils.clamp(y, 0, height - 1);
+	}
+
 	public final int getCursorX() {
-		return cursorX;
+		return cX;
 	}
 
 	public final int getCursorY() {
-		return cursorY;
-	}
-
-	/* PUBLIC CONTROLLER FUNCTIONS The following functions have public access and are intended for use by the controller which allows the board to be manipulated */
-
-	public void setCursor(int x, int y) {
-		cursorX = MathUtils.clamp(x, 0, width - 1);
-		cursorY = MathUtils.clamp(y, 0, height - 1);
+		return cY;
 	}
 }

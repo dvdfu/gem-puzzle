@@ -25,8 +25,8 @@ public class EditorBlock {
 		return id + ";";
 	}
 
-	public void toggleActive() {
-		active ^= true;
+	public EditorBlock setActive(boolean set) {
+		active = set;
 		if (!active) {
 			move = false;
 			fall = false;
@@ -36,21 +36,24 @@ public class EditorBlock {
 			gemR = false;
 			gemL = false;
 		}
+		return this;
 	}
 
-	public void toggleMove() {
-		move ^= true;
+	public EditorBlock setMove(boolean set) {
+		move = set;
 		if (move) active = true;
 		else bomb = false;
+		return this;
 	}
 
-	public void toggleFall() {
-		fall ^= true;
+	public EditorBlock setFall(boolean set) {
+		fall = set;
 		if (fall) active = true;
+		return this;
 	}
 
-	public void toggleBomb() {
-		bomb ^= true;
+	public EditorBlock setBomb(boolean set) {
+		bomb = set;
 		if (bomb) {
 			active = true;
 			move = true;
@@ -60,46 +63,51 @@ public class EditorBlock {
 			gemR = false;
 			gemL = false;
 		}
+		return this;
 	}
 
-	public void toggleGemU() {
-		gemU ^= true;
+	public EditorBlock setGemU(boolean set) {
+		gemU = set;
 		if (gemU) {
 			active = true;
 			gemC = false;
 			bomb = false;
 		}
+		return this;
 	}
 
-	public void toggleGemD() {
-		gemD ^= true;
+	public EditorBlock setGemD(boolean set) {
+		gemD = set;
 		if (gemD) {
 			active = true;
 			gemC = false;
 			bomb = false;
 		}
+		return this;
 	}
 
-	public void toggleGemR() {
-		gemR ^= true;
+	public EditorBlock setGemR(boolean set) {
+		gemR = set;
 		if (gemR) {
 			active = true;
 			gemC = false;
 			bomb = false;
 		}
+		return this;
 	}
 
-	public void toggleGemL() {
-		gemL ^= true;
+	public EditorBlock setGemL(boolean set) {
+		gemL = set;
 		if (gemL) {
 			active = true;
 			gemC = false;
 			bomb = false;
 		}
+		return this;
 	}
 
-	public void toggleGemC() {
-		gemC ^= true;
+	public EditorBlock setGemC(boolean set) {
+		gemC = set;
 		if (gemC) {
 			active = true;
 			gemU = false;
@@ -108,5 +116,6 @@ public class EditorBlock {
 			gemL = false;
 			bomb = false;
 		}
+		return this;
 	}
 }
