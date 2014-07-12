@@ -5,8 +5,6 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -61,10 +59,13 @@ public class EditorView implements Screen {
 	}
 
 	public void resize(int width, int height) {
-		int zoomW = height / Res.fullSize / board.getHeight();
-		int zoomH = width / Res.fullSize / board.getWidth();
+		float zoomW = 1f * height / Res.fullSize / (board.getHeight() + 1);
+		float zoomH = 1f * width / Res.fullSize / (board.getWidth() + 1);
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
-		Gdx.gl20.glLineWidth(2 / camera.zoom);
+		camera.position.set(boardOffsetX + board.getWidth() * Res.fullSize / 2, boardOffsetY + board.getHeight() * Res.fullSize
+			/ 2, 0);
 		viewport.update(width, height);
 	}
 
@@ -109,8 +110,8 @@ public class EditorView implements Screen {
 					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 					else if (special.water) {
 						drawBlock("water_body", drawX, drawY);
-						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water_head", drawX, drawY
-							+ Res.fullSize);
+						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water_head", drawX,
+							drawY + Res.fullSize);
 					}
 					setAlpha(1);
 				}
@@ -119,7 +120,7 @@ public class EditorView implements Screen {
 	}
 
 	private void drawBlock(String file, int x, int y) {
-		sprites.draw(Res.atlas.createSprite(file), x, y);
+		sprites.draw(Res.atlas.createSprite(file), x, y, Res.fullSize, Res.fullSize);
 	}
 
 	private void drawCursor() {
@@ -149,7 +150,8 @@ public class EditorView implements Screen {
 	private void drawLine(int x1, int y1, int x2, int y2) {
 		int xo = boardOffsetX + x1 * Res.fullSize + Res.halfSize;
 		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Res.fullSize + Res.halfSize;
-		drawBlock("cursor_unselect", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Res.fullSize);
+		drawBlock("cursor_unselect", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2)
+			* Res.fullSize);
 		int dx = (x2 - x1) * Res.fullSize;
 		int dy = (y1 - y2) * Res.fullSize;
 		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -159,26 +161,6 @@ public class EditorView implements Screen {
 			float x = xo + ((i + timer / 16f) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
 			float y = yo + ((i + timer / 16f) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
 			drawBlock("dot", (int) x, (int) y);
-		}
-	}
-
-	private void drawGUI() {
-		switch (board.getCursorState()) {
-		case BLOCK_ACTIVE: break;
-		case BLOCK_MOVE: break;
-		case BLOCK_STATIC: break;
-		case BOMB: break;
-		case ERASER: break;
-		case FALL: break;
-		case GATE: break;
-		case GEM_CENTER: break;
-		case GEM_DOWN: break;
-		case GEM_LEFT: break;
-		case GEM_RIGHT: break;
-		case GEM_UP: break;
-		case PATH: break;
-		case WATER: break;
-		default: break;
 		}
 	}
 

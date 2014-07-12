@@ -19,11 +19,12 @@ public class MainGame extends Game implements ApplicationListener {
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
-		board = new Board("", 0, 0);
+		board = new Board("", 1, 1);
 		view = new View(board);
-		editorBoard = new EditorBoard("", 0, 0);
+		editorBoard = new EditorBoard("", 1, 1);
 		editorView = new EditorView(editorBoard);
 		loadLevel();
+		editorBoard.pushState();
 		setScreen(editorView);
 	}
 

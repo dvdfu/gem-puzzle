@@ -54,28 +54,14 @@ public class EditorBoard {
 		modified = false;
 		undoStack = new Stack<String>();
 		redoStack = new Stack<String>();
-		pushState();
 	}
 
 	// GRIDSTATES
 
-	private void getID() {
+	private void saveState() {
 		String id = getState();
 		Preferences prefs = Gdx.app.getPreferences("prefs");
 		prefs.putString("level", id);
-	}
-
-	private String getState() {
-		String id = "";
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				EditorBlock block = gridBlocks[i][j];
-				if (block != null) id += i + "" + j + block.getID();
-				Special special = gridSpecials[i][j];
-				if (special != null) id += i + "" + j + special.getID();
-			}
-		}
-		return name + ";" + width + ";" + height + ";" + id;
 	}
 
 	public void setState(String data) {
@@ -92,7 +78,47 @@ public class EditorBoard {
 			addCell(cell);
 		}
 	}
-	
+
+	private String getState() {
+		String id = "";
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				EditorBlock block = gridBlocks[i][j];
+				if (block != null) {
+					id += i + "" + j + block.getID();
+				}
+				Special special = gridSpecials[i][j];
+				if (special != null) {
+					id += i + "" + j + special.getID();
+				}
+			}
+		}
+		return name + ";" + width + ";" + height + ";" + id;
+	}
+
+	public void pushState() {
+		undoStack.push(getState());
+		redoStack.clear();
+		modified = false;
+	}
+
+	private void undoState() {
+		if (undoStack.empty()) { return; }
+		String temp = undoStack.pop();
+		if (undoStack.empty()) {
+			undoStack.push(temp);
+			return;
+		}
+		setState(undoStack.peek());
+		redoStack.push(temp);
+	}
+
+	private void redoState() {
+		if (redoStack.empty()) { return; }
+		setState(redoStack.pop());
+		undoStack.push(getState());
+	}
+
 	public void resetBoard(String name, int width, int height) {
 		this.name = name;
 		if (this.width != width || this.height != height) {
@@ -175,29 +201,6 @@ public class EditorBoard {
 		}
 	}
 
-	private void pushState() {
-		undoStack.push(getState());
-		redoStack.clear();
-		modified = false;
-	}
-
-	private void undoState() {
-		if (undoStack.empty()) return;
-		String temp = undoStack.pop();
-		if (undoStack.empty()) {
-			undoStack.push(temp);
-			return;
-		}
-		setState(undoStack.peek());
-		redoStack.push(temp);
-	}
-
-	private void redoState() {
-		if (redoStack.empty()) return;
-		setState(redoStack.pop());
-		undoStack.push(getState());
-	}
-
 	// CURSOR PLACEMENT
 
 	public void setCursorState(Res.Cursors state) {
@@ -207,6 +210,21 @@ public class EditorBoard {
 	public Res.Cursors getCursorState() {
 		return cursorState;
 	}
+
+	public void setCursor(int x, int y) {
+		cX = MathUtils.clamp(x, 0, width - 1);
+		cY = MathUtils.clamp(y, 0, height - 1);
+	}
+
+	public final int getCursorX() {
+		return cX;
+	}
+
+	public final int getCursorY() {
+		return cY;
+	}
+
+	// ADDING BLOCKS
 
 	private void addBlock(EditorBlock block, int x, int y) {
 		gridBlocks[x][y] = block;
@@ -231,7 +249,7 @@ public class EditorBoard {
 
 	private void clearSpecial(int x, int y) {
 		Special special = gridSpecials[x][y];
-		if (special == null) return;
+		if (special == null) { return; }
 		if (special.path) {
 			gridSpecials[special.destX][special.destY] = null;
 			gridSpecials[x][y] = null;
@@ -239,7 +257,9 @@ public class EditorBoard {
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
 					Special gate = gridSpecials[i][j];
-					if (gate != null && gate.gate && gate.destX == x && gate.destY == y) gridSpecials[i][j] = null;
+					if (gate != null && gate.gate && gate.destX == x && gate.destY == y) {
+						gridSpecials[i][j] = null;
+					}
 				}
 			}
 			gridSpecials[x][y] = null;
@@ -249,9 +269,15 @@ public class EditorBoard {
 	private void handleBlocks() {
 		if (Input.MousePressed()) {
 			// tells the cursor if the property of the first clicked cell is true or not. Determines what behaviour the cursor will have later
-			if (cursorBlock == null) cursorSet = true;
-			else {
+			if (cursorBlock == null) {
+				cursorSet = true;
+			} else {
 				switch (cursorState) {
+				case BLOCK_ACTIVE:
+				case BLOCK_MOVE:
+				case BLOCK_STATIC:
+					cursorSet = true;
+					break;
 				case BOMB:
 					cursorSet = !cursorBlock.bomb;
 					break;
@@ -283,17 +309,22 @@ public class EditorBoard {
 			boolean setOld = cursorBlock != null && !cursorVisited[cX][cY];
 			switch (cursorState) {
 			case BLOCK_ACTIVE:
-				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setActive(true);
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setActive(true);
+				else if (setOld) cursorBlock.setActive(true);
 				break;
 			case BLOCK_MOVE:
-				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setMove(true);
+				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setMove(true);
+				else if (setOld) cursorBlock.setMove(true);
 				break;
 			case BLOCK_STATIC:
-				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setMove(false);
+				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setActive(false);
 				break;
 			case BOMB:
 				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setBomb(true);
 				else if (setOld) cursorBlock.setBomb(cursorSet);
+				break;
+			case ERASER:
+				gridBlocks[cX][cY] = null;
 				break;
 			case FALL:
 				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setFall(true);
@@ -377,6 +408,8 @@ public class EditorBoard {
 			cursorState = Res.Cursors.FALL;
 		} else if (Input.KeyPressed(Input.M)) {
 			cursorState = Res.Cursors.BLOCK_MOVE;
+		} else if (Input.KeyPressed(Input.BACKSPACE)) {
+			cursorState = Res.Cursors.ERASER;
 		}
 		// UNDO
 		if (Input.MouseReleased() && modified) pushState();
@@ -384,11 +417,7 @@ public class EditorBoard {
 			if (Input.KeyPressed(Input.Z)) undoState();
 			if (Input.KeyPressed(Input.Y)) redoState();
 		}
-		if (Input.KeyPressed(Input.TAB)) getID();
-	}
-
-	public final boolean gridValid(int x, int y) {
-		return x >= 0 && x < width && y >= 0 && y < height;
+		if (Input.KeyPressed(Input.TAB)) saveState();
 	}
 
 	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have private access and are intended for use by the viewer which retrieves grid information to draw */
@@ -413,16 +442,7 @@ public class EditorBoard {
 		return cursorBlock != null;
 	}
 
-	public void setCursor(int x, int y) {
-		cX = MathUtils.clamp(x, 0, width - 1);
-		cY = MathUtils.clamp(y, 0, height - 1);
-	}
-
-	public final int getCursorX() {
-		return cX;
-	}
-
-	public final int getCursorY() {
-		return cY;
+	public final boolean gridValid(int x, int y) {
+		return x >= 0 && x < width && y >= 0 && y < height;
 	}
 }

@@ -87,8 +87,8 @@ public class View implements Screen {
 		drop = new Animation(Res.atlas.createSprite("particle_droplet"), 8, 8);
 		gem = new Animation(Res.atlas.createSprite("particle_gem"), 16, 16);
 		cracks = new Animation(Res.atlas.createSprite("block_cracks"), 32, 32);
-		fire = new Animation(Res.atlas.createSprite("particle_fire"), 4, 4);
-		fire2 = new Animation(Res.atlas.createSprite("particle_fire"), 8, 8);
+		fire = new Animation(Res.atlas.createSprite("particle_fire_small"), 4, 4);
+		fire2 = new Animation(Res.atlas.createSprite("particle_fire_big"), 8, 8);
 	}
 
 	public void update(float x, float y) {
@@ -107,10 +107,13 @@ public class View implements Screen {
 	}
 
 	public void resize(int width, int height) {
-		int zoomW = height / Res.fullSize / board.getHeight();
-		int zoomH = width / Res.fullSize / board.getWidth();
+		float zoomW = 1f * height / Res.fullSize / (board.getHeight() + 1);
+		float zoomH = 1f * width / Res.fullSize / (board.getWidth() + 1);
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
 		camera.zoom = 1f / Math.min(zoomW, zoomH);
-		Gdx.gl20.glLineWidth(2 / camera.zoom);
+		camera.position.set(boardOffsetX + board.getWidth() * Res.fullSize / 2, boardOffsetY + board.getHeight() * Res.fullSize
+			/ 2, 0);
 		viewport.update(width, height);
 	}
 
@@ -154,12 +157,21 @@ public class View implements Screen {
 						}
 						break;
 					case EXPLODE:
-						createParticle(Particle.Type.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
 						createParticle(Particle.Type.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
 						createParticle(Particle.Type.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
+						if (block.isGem()) {
+							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+						}
+						break;
 					case BREAK:
 						createParticle(Particle.Type.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						if (block.isGem()) {
+							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+						}
 						assets.get("aud/break.mp3", Sound.class).play();
+						break;
 					case DROWN:
 						if (block.isGem()) {
 							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
@@ -203,8 +215,8 @@ public class View implements Screen {
 				break;
 			case DUST:
 				sprite = dust1;
-				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
-				newParticle.setDuration(MathUtils.random(4), 6);
+				newParticle.setVector(MathUtils.random(3f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setDuration(MathUtils.random(12), 6);
 				break;
 			case DUST_L:
 				sprite = dust1;
@@ -231,7 +243,7 @@ public class View implements Screen {
 			case FIRE:
 				if (MathUtils.randomBoolean()) sprite = fire;
 				else sprite = fire2;
-				newParticle.setVector(MathUtils.random(3f), MathUtils.random(2 * MathUtils.PI));
+				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 8);
 				break;
 			}
@@ -320,7 +332,7 @@ public class View implements Screen {
 						if (block.gemR) drawBlock("block_gem_r", drawX, drawY);
 					}
 					if (block.fall) drawBlock("block_falling", drawX, drawY);
-					
+
 					if (block.command == Res.Command.BREAK) {
 						sprites.draw(cracks.getFrame((Res.timeGem - timer[i][j]) * 7 / Res.timeGem), drawX, drawY);
 					}
@@ -331,7 +343,7 @@ public class View implements Screen {
 	}
 
 	private void drawBlock(String file, int x, int y) {
-		sprites.draw(Res.atlas.createSprite(file), x, y);
+		sprites.draw(Res.atlas.createSprite(file), x, y, Res.fullSize, Res.fullSize);
 	}
 
 	private void drawGridOver() {

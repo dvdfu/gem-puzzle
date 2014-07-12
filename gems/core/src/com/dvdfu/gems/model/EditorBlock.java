@@ -27,10 +27,10 @@ public class EditorBlock {
 
 	public EditorBlock setActive(boolean set) {
 		active = set;
+		move = false;
+		bomb = false;
 		if (!active) {
-			move = false;
 			fall = false;
-			bomb = false;
 			gemU = false;
 			gemD = false;
 			gemR = false;
@@ -41,8 +41,8 @@ public class EditorBlock {
 
 	public EditorBlock setMove(boolean set) {
 		move = set;
+		bomb = false;
 		if (move) active = true;
-		else bomb = false;
 		return this;
 	}
 
