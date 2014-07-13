@@ -23,10 +23,11 @@ public class EditorBoard {
 	private int height;
 	private int cX;
 	private int cY;
-	private boolean cursorSet;
+	private boolean cursorSetBlock;
+	private boolean cursorSetSpecial;
 	private boolean cursorPlacing;
-	private int placeX;
-	private int placeY;
+	public int placeX;
+	public int placeY;
 	private boolean modified;
 
 	public EditorBoard(String name, int width, int height) {
@@ -40,7 +41,8 @@ public class EditorBoard {
 		gridBlocks = new EditorBlock[width][height];
 		gridSpecials = new Special[width][height];
 		cursorVisited = new boolean[width][height];
-		cursorSet = true; // this boolean tells the cursor whether a click will add or remove cell properties depending on the property of the first cell clicked
+		cursorSetBlock = true; // this boolean tells the cursor whether a click will add or remove cell properties depending on the property of the first cell clicked
+		cursorSetSpecial = true;
 		cursorPlacing = false;
 		placeX = 0;
 		placeY = 0;
@@ -185,7 +187,7 @@ public class EditorBoard {
 				special = new Special().setPath(destX, destY);
 				break;
 			case 'h':
-				special = new Special().setHazard();
+				special = new Special().setWater();
 				break;
 			case 'b':
 				special = new Special().setButton();
@@ -226,10 +228,6 @@ public class EditorBoard {
 
 	// ADDING BLOCKS
 
-	private void addBlock(EditorBlock block, int x, int y) {
-		gridBlocks[x][y] = block;
-	}
-
 	private void addPath(int x1, int y1, int x2, int y2) {
 		if (gridValid(x1, y1) && gridValid(x2, y2) && !(x1 == x2 && y1 == y2)) {
 			clearSpecial(x1, y1);
@@ -252,7 +250,6 @@ public class EditorBoard {
 		if (special == null) { return; }
 		if (special.path) {
 			gridSpecials[special.destX][special.destY] = null;
-			gridSpecials[x][y] = null;
 		} else if (special.button) {
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
@@ -262,134 +259,150 @@ public class EditorBoard {
 					}
 				}
 			}
-			gridSpecials[x][y] = null;
 		}
+		gridSpecials[x][y] = null;
 	}
 
-	private void handleBlocks() {
+	private void handleAdd() {
 		if (Input.MousePressed()) {
 			// tells the cursor if the property of the first clicked cell is true or not. Determines what behaviour the cursor will have later
-			if (cursorBlock == null) {
-				cursorSet = true;
-			} else {
-				switch (cursorState) {
-				case BLOCK_ACTIVE:
-				case BLOCK_MOVE:
-				case BLOCK_STATIC:
-					cursorSet = true;
-					break;
-				case BOMB:
-					cursorSet = !cursorBlock.bomb;
-					break;
-				case FALL:
-					cursorSet = !cursorBlock.fall;
-					break;
-				case GEM_CENTER:
-					cursorSet = !cursorBlock.gemC;
-					break;
-				case GEM_DOWN:
-					cursorSet = !cursorBlock.gemD;
-					break;
-				case GEM_LEFT:
-					cursorSet = !cursorBlock.gemL;
-					break;
-				case GEM_RIGHT:
-					cursorSet = !cursorBlock.gemR;
-					break;
-				case GEM_UP:
-					cursorSet = !cursorBlock.gemU;
-					break;
-				default:
-					break;
-				}
-			}
-		}
-		if (Input.MouseDown()) {
-			boolean setNew = cursorBlock == null && cursorSet;
-			boolean setOld = cursorBlock != null && !cursorVisited[cX][cY];
+
 			switch (cursorState) {
 			case BLOCK_ACTIVE:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setActive(true);
-				else if (setOld) cursorBlock.setActive(true);
-				break;
 			case BLOCK_MOVE:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setMove(true);
-				else if (setOld) cursorBlock.setMove(true);
-				break;
 			case BLOCK_STATIC:
-				if (setNew || setOld) gridBlocks[cX][cY] = new EditorBlock().setActive(false);
+				cursorSetBlock = true;
 				break;
 			case BOMB:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setBomb(true);
-				else if (setOld) cursorBlock.setBomb(cursorSet);
-				break;
-			case ERASER:
-				gridBlocks[cX][cY] = null;
+				cursorSetBlock = cursorBlock == null || !cursorBlock.bomb;
 				break;
 			case FALL:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setFall(true);
-				else if (setOld) cursorBlock.setFall(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.fall;
 				break;
 			case GEM_CENTER:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemC(true);
-				else if (setOld) cursorBlock.setGemC(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.gemC;
 				break;
 			case GEM_DOWN:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemD(true);
-				else if (setOld) cursorBlock.setGemD(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.gemD;
 				break;
 			case GEM_LEFT:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemL(true);
-				else if (setOld) cursorBlock.setGemL(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.gemL;
 				break;
 			case GEM_RIGHT:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemR(true);
-				else if (setOld) cursorBlock.setGemR(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.gemR;
 				break;
 			case GEM_UP:
-				if (setNew) gridBlocks[cX][cY] = new EditorBlock().setGemU(true);
-				else if (setOld) cursorBlock.setGemU(cursorSet);
+				cursorSetBlock = cursorBlock == null || !cursorBlock.gemU;
+				break;
+			case GATE:
+				placeX = cX;
+				placeY = cY;
+				cursorSetSpecial = cursorSpecial == null || !cursorSpecial.gate;
+				break;
+			case PATH:
+				placeX = cX;
+				placeY = cY;
+				cursorSetSpecial = cursorSpecial == null || !cursorSpecial.path;
+				break;
+			case WATER:
+				cursorSetSpecial = cursorSpecial == null || !cursorSpecial.water;
 				break;
 			default:
 				break;
 			}
-			if (setNew || setOld) {
+		}
+		if (Input.MouseDown()) {
+			boolean setNewBlock = cursorBlock == null && cursorSetBlock;
+			boolean setOldBlock = cursorBlock != null && !cursorVisited[cX][cY];
+			boolean setNewSpecial = cursorSetSpecial;
+			boolean setOldSpecial = cursorSpecial != null && !cursorVisited[cX][cY];
+			switch (cursorState) {
+			case BLOCK_ACTIVE:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setActive(true);
+				else if (setOldBlock) cursorBlock.setActive(true);
+				break;
+			case BLOCK_MOVE:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setMove(true);
+				else if (setOldBlock) cursorBlock.setMove(true);
+				break;
+			case BLOCK_STATIC:
+				if (setNewBlock || setOldBlock) gridBlocks[cX][cY] = new EditorBlock().setActive(false);
+				break;
+			case BOMB:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setBomb(true);
+				else if (setOldBlock) cursorBlock.setBomb(cursorSetBlock);
+				break;
+			case ERASER:
+				clearSpecial(cX, cY);
+				gridBlocks[cX][cY] = null;
+				break;
+			case FALL:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setFall(true);
+				else if (setOldBlock) cursorBlock.setFall(cursorSetBlock);
+				break;
+			case GEM_CENTER:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setGemC(true);
+				else if (setOldBlock) cursorBlock.setGemC(cursorSetBlock);
+				break;
+			case GEM_DOWN:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setGemD(true);
+				else if (setOldBlock) cursorBlock.setGemD(cursorSetBlock);
+				break;
+			case GEM_LEFT:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setGemL(true);
+				else if (setOldBlock) cursorBlock.setGemL(cursorSetBlock);
+				break;
+			case GEM_RIGHT:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setGemR(true);
+				else if (setOldBlock) cursorBlock.setGemR(cursorSetBlock);
+				break;
+			case GEM_UP:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setGemU(true);
+				else if (setOldBlock) cursorBlock.setGemU(cursorSetBlock);
+				break;
+			case GATE:
+				if (setNewSpecial) cursorPlacing = true;
+				else if (setOldSpecial) cursorSpecial.gateOriginal ^= true;
+				break;
+			case PATH:
+				cursorPlacing = true;
+				break;
+			case WATER:
+				if (setNewSpecial) {
+					clearSpecial(cX, cY);
+					gridSpecials[cX][cY] = new Special().setWater();
+				}
+				else if (setOldSpecial && cursorSpecial.water) gridSpecials[cX][cY] = null;
+				break;
+			default:
+				break;
+			}
+			if (setNewBlock || setOldBlock || setNewSpecial || setOldSpecial) {
 				cursorVisited[cX][cY] = true;
 				modified = true;
 			}
 		}
-	}
-
-	private void handleSpecials() {
-		if (Input.MousePressed()) {
-			switch (cursorState) {
-			case GATE:
-				break;
-			case PATH:
-				break;
-			case WATER:
-				break;
-			default:
-				break;
-			}
-		}
-		if (Input.MousePressed()) {
-
-		}
-	}
-
-	public void update() {
-		cursorBlock = gridBlocks[cX][cY];
-		cursorSpecial = gridSpecials[cX][cY];
-		handleBlocks();
-		handleSpecials();
 		if (Input.MouseReleased()) {
+			if (cursorPlacing) {
+				if (cursorState == Res.Cursors.GATE) {
+					addGate(placeX, placeY, cX, cY, true);
+				} else if (cursorState == Res.Cursors.PATH) {
+					addPath(placeX, placeY, cX, cY);
+				}
+				cursorPlacing = false;
+			}
 			for (int i = 0; i < width; i++) {
 				for (int j = 0; j < height; j++) {
 					cursorVisited[i][j] = false;
 				}
 			}
 		}
+	}
+
+	public void update() {
+		cursorBlock = gridBlocks[cX][cY];
+		cursorSpecial = gridSpecials[cX][cY];
+		handleAdd();
 		if (Input.KeyPressed(Input.SPACEBAR)) {
 			cursorState = Res.Cursors.GEM_CENTER;
 		} else if (Input.KeyPressed(Input.ARROW_UP)) {
@@ -406,8 +419,14 @@ public class EditorBoard {
 			cursorState = Res.Cursors.BOMB;
 		} else if (Input.KeyPressed(Input.F)) {
 			cursorState = Res.Cursors.FALL;
+		} else if (Input.KeyPressed(Input.G)) {
+			cursorState = Res.Cursors.GATE;
+		} else if (Input.KeyPressed(Input.H)) {
+			cursorState = Res.Cursors.WATER;
 		} else if (Input.KeyPressed(Input.M)) {
 			cursorState = Res.Cursors.BLOCK_MOVE;
+		} else if (Input.KeyPressed(Input.P)) {
+			cursorState = Res.Cursors.PATH;
 		} else if (Input.KeyPressed(Input.BACKSPACE)) {
 			cursorState = Res.Cursors.ERASER;
 		}
@@ -444,5 +463,13 @@ public class EditorBoard {
 
 	public final boolean gridValid(int x, int y) {
 		return x >= 0 && x < width && y >= 0 && y < height;
+	}
+
+	public final boolean placingGate() {
+		return cursorPlacing && cursorState == Res.Cursors.GATE;
+	}
+	
+	public final boolean placingPath() {
+		return cursorPlacing && cursorState == Res.Cursors.PATH;
 	}
 }

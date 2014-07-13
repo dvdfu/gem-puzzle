@@ -27,7 +27,7 @@ public class Special {
 		return id + ";";
 	}
 
-	public Special setHazard() {
+	public Special setWater() {
 		path = false;
 		water = true;
 		return this;

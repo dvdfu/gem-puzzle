@@ -108,7 +108,7 @@ public class Board {
 				special = new Special().setPath(destX, destY);
 				break;
 			case 'h':
-				special = new Special().setHazard();
+				special = new Special().setWater();
 				break;
 			case 'b':
 				special = new Special().setButton();

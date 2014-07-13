@@ -352,14 +352,10 @@ public class View implements Screen {
 				int drawX = boardOffsetX + i * Res.fullSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Special special = board.getSpecial()[i][j];
-				if (special != null) {
-					if (special.water) {
-						// setAlpha(0.6f);
-						drawBlock("waterF", drawX, drawY);
-						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water", drawX, drawY
-							+ Res.fullSize);
-						// setAlpha(1);
-					}
+				if (special != null && special.water) {
+					drawBlock("water_body", drawX, drawY);
+					if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water_head", drawX, drawY
+						+ Res.fullSize);
 				}
 			}
 		}
@@ -389,7 +385,7 @@ public class View implements Screen {
 	private void drawLine(int x1, int y1, int x2, int y2) {
 		int xo = boardOffsetX + x1 * Res.fullSize + Res.halfSize;
 		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Res.fullSize + Res.halfSize;
-		drawBlock("cursor", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Res.fullSize);
+		drawBlock("cursor_unselect", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Res.fullSize);
 		int dx = (x2 - x1) * Res.fullSize;
 		int dy = (y1 - y2) * Res.fullSize;
 		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
@@ -398,7 +394,7 @@ public class View implements Screen {
 		for (int i = 0; i <= numDots; i++) {
 			float x = xo + ((i + timer / 16f) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
 			float y = yo + ((i + timer / 16f) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
-			sprites.draw(assets.get("img/dot.png", Texture.class), x, y);
+			sprites.draw(Res.atlas.createSprite("dot"), x, y);
 		}
 	}
 

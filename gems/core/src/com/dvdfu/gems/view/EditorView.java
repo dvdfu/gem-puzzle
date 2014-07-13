@@ -142,9 +142,17 @@ public class EditorView implements Screen {
 				}
 			} else if (special.gate) drawLine(cx, cy, special.destX, special.destY);
 		}
-		/* if (board.placingGate) { drawBlock("button", cursorX, cursorY); drawBlock("gate", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY) * Vars.fullSize); drawLine(cx, cy, board.placeX, board.placeY);
-		 * } else if (board.placingPath) { drawBlock("path", cursorX, cursorY); drawBlock("path", boardOffsetX + board.placeX * Vars.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY) * Vars.fullSize); drawLine(cx, cy, board.placeX,
-		 * board.placeY); } */
+		if (board.placingGate()) {
+			drawBlock("button", cursorX, cursorY);
+			drawBlock("gate", boardOffsetX + board.placeX * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY)
+				* Res.fullSize);
+			drawLine(cx, cy, board.placeX, board.placeY);
+		} else if (board.placingPath()) {
+			drawBlock("path", cursorX, cursorY);
+			drawBlock("path", boardOffsetX + board.placeX * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY)
+				* Res.fullSize);
+			drawLine(cx, cy, board.placeX, board.placeY);
+		}
 	}
 
 	private void drawLine(int x1, int y1, int x2, int y2) {
@@ -160,7 +168,7 @@ public class EditorView implements Screen {
 		for (int i = 0; i <= numDots; i++) {
 			float x = xo + ((i + timer / 16f) % numDots) * length * MathUtils.cos(angle) / numDots - 1;
 			float y = yo + ((i + timer / 16f) % numDots) * length * MathUtils.sin(angle) / numDots - 1;
-			drawBlock("dot", (int) x, (int) y);
+			sprites.draw(Res.atlas.createSprite("dot"), x, y);
 		}
 	}
 
