@@ -143,6 +143,21 @@ public class Board {
 		}
 	}
 
+	private void updatePaths() {
+		// handle button and gate toggling
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Special special = gridSpecials[i][j];
+				Block block = gridBlocks[i][j];
+				if (special != null && special.path && block != null && block.throughPath
+					&& gridEmpty(special.destX, special.destY)) {
+					block.command = Res.Command.PATH;
+					block.throughPath = false;
+				}
+			}
+		}
+	}
+
 	private void updateFalling() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -266,6 +281,7 @@ public class Board {
 	}
 
 	public final boolean checkWind(int x, int y, final int direction) {
+		if (gridBlocks[x][y] != null && !gridBlocks[x][y].move) return false;
 		if (direction == 0) x--;
 		else if (direction == 1) y++;
 		else if (direction == 2) x++;
@@ -290,8 +306,9 @@ public class Board {
 		updateButtons();
 		updateFalling();
 		updateWind();
-		updateBreak();
 		if (!isBuffered()) updateCursor();
+		updatePaths();
+		updateBreak();
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				gridOccupied[i][j] = false;
@@ -445,7 +462,6 @@ public class Board {
 				Block block = gridBlocks[i][j];
 				if (block != null && !block.visited) {
 					block.visited = true;
-					boolean hold = true;
 					switch (block.command) {
 					case DROWN:
 					case EXPLODE:
@@ -456,51 +472,23 @@ public class Board {
 					case MOVE_UP:
 						gridBlocks[i][j] = null;
 						gridBlocks[i][j - 1] = block;
-						Special pathU = gridSpecials[i][j - 1];
-						if (pathU != null && pathU.path && gridEmpty(pathU.destX, pathU.destY)) {
-							gridBlocks[i][j - 1].command = Res.Command.PATH;
-							hold = false;
-						}
+						block.throughPath = true;
 						break;
 					case FALL:
-						gridBlocks[i][j] = null;
-						gridBlocks[i][j + 1] = block;
-						Special pathFall = gridSpecials[i][j + 1];
-						if (pathFall != null && pathFall.path && gridEmpty(pathFall.destX, pathFall.destY)) {
-							gridBlocks[i][j + 1].command = Res.Command.PATH;
-							hold = false;
-						}
-						if (gridEmpty(i, j + 2)) {
-							block.command = Res.Command.FALL;
-							hold = false;
-						}
-						break;
 					case MOVE_DOWN:
 						gridBlocks[i][j] = null;
 						gridBlocks[i][j + 1] = block;
-						Special pathDown = gridSpecials[i][j + 1];
-						if (pathDown != null && pathDown.path && gridEmpty(pathDown.destX, pathDown.destY)) {
-							gridBlocks[i][j + 1].command = Res.Command.PATH;
-							hold = false;
-						}
+						block.throughPath = true;
 						break;
 					case MOVE_RIGHT:
 						gridBlocks[i][j] = null;
 						gridBlocks[i + 1][j] = block;
-						Special pathRight = gridSpecials[i + 1][j];
-						if (pathRight != null && pathRight.path && gridEmpty(pathRight.destX, pathRight.destY)) {
-							gridBlocks[i + 1][j].command = Res.Command.PATH;
-							hold = false;
-						}
+						block.throughPath = true;
 						break;
 					case MOVE_LEFT:
 						gridBlocks[i][j] = null;
 						gridBlocks[i - 1][j] = block;
-						Special pathLeft = gridSpecials[i - 1][j];
-						if (pathLeft != null && pathLeft.path && gridEmpty(pathLeft.destX, pathLeft.destY)) {
-							gridBlocks[i - 1][j].command = Res.Command.PATH;
-							hold = false;
-						}
+						block.throughPath = true;
 						break;
 					case PATH:
 						unselect();
@@ -510,7 +498,7 @@ public class Board {
 					default:
 						break;
 					}
-					if (hold) block.command = Res.Command.HOLD;
+					block.command = Res.Command.HOLD;
 				}
 			}
 		}

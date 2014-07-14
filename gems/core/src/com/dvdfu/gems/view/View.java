@@ -7,7 +7,6 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
@@ -31,14 +30,16 @@ public class View implements Screen {
 	private Vector3 mouse;
 	private int boardOffsetX;
 	private int boardOffsetY;
-	private Animation sparkle1;
-	private Animation dirt1;
-	private Animation dust1;
-	private Animation drop;
-	private Animation gem;
-	private Animation cracks;
-	private Animation fire;
-	private Animation fire2;
+	private Animation sparkle;
+	private Animation dirt;
+	private Animation dust;
+	private Animation droplet;
+	private Animation blockGem;
+	private Animation blockCrack;
+	private Animation fireSmall;
+	private Animation fireBig;
+	private Animation windH;
+	private Animation windV;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
 	private int timer;
@@ -74,21 +75,22 @@ public class View implements Screen {
 	}
 
 	private void loadAssets() {
-		assets.load("img/path.png", Texture.class);
 		assets.load("aud/select.wav", Sound.class);
 		assets.load("aud/deselect.wav", Sound.class);
 		assets.load("aud/remove.wav", Sound.class);
 		assets.load("aud/splash.mp3", Sound.class);
 		assets.load("aud/break.mp3", Sound.class);
 		assets.finishLoading();
-		sparkle1 = new Animation(Res.atlas.createSprite("particle_sparkle"), 16, 16);
-		dirt1 = new Animation(Res.atlas.createSprite("particle_dirt"), 8, 8);
-		dust1 = new Animation(Res.atlas.createSprite("particle_dust"), 8, 8);
-		drop = new Animation(Res.atlas.createSprite("particle_droplet"), 8, 8);
-		gem = new Animation(Res.atlas.createSprite("particle_gem"), 16, 16);
-		cracks = new Animation(Res.atlas.createSprite("block_cracks"), 32, 32);
-		fire = new Animation(Res.atlas.createSprite("particle_fire_small"), 4, 4);
-		fire2 = new Animation(Res.atlas.createSprite("particle_fire_big"), 8, 8);
+		sparkle = new Animation(Res.atlas.createSprite("particle_sparkle"), 16, 16);
+		dirt = new Animation(Res.atlas.createSprite("particle_dirt"), 8, 8);
+		dust = new Animation(Res.atlas.createSprite("particle_dust"), 8, 8);
+		droplet = new Animation(Res.atlas.createSprite("particle_droplet"), 8, 8);
+		blockGem = new Animation(Res.atlas.createSprite("particle_gem"), 16, 16);
+		blockCrack = new Animation(Res.atlas.createSprite("block_cracks"), 32, 32);
+		fireSmall = new Animation(Res.atlas.createSprite("particle_fire_small"), 4, 4);
+		fireBig = new Animation(Res.atlas.createSprite("particle_fire_big"), 8, 8);
+		windH = new Animation(Res.atlas.createSprite("dot"), 2, 1);
+		windV = new Animation(Res.atlas.createSprite("dot"), 1, 2);
 	}
 
 	public void update(float x, float y) {
@@ -207,48 +209,68 @@ public class View implements Screen {
 			int yr = y + MathUtils.random(-randY, randY);
 			switch (type) {
 			case SPARKLE:
-				sprite = sparkle1;
+				sprite = sparkle;
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(20), 12);
 				break;
 			case DIRT:
-				sprite = dirt1;
+				sprite = dirt;
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 3f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
 				break;
 			case DUST:
-				sprite = dust1;
+				sprite = dust;
 				newParticle.setVector(MathUtils.random(3f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 6);
 				break;
 			case DUST_L:
-				sprite = dust1;
+				sprite = dust;
 				newParticle.setVelocity(MathUtils.random(-2f, 0), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(12), 6);
 				break;
 			case DUST_R:
-				sprite = dust1;
+				sprite = dust;
 				newParticle.setVelocity(MathUtils.random(0, 2f), MathUtils.random(0.2f, 0.5f));
 				newParticle.setDuration(MathUtils.random(12), 6);
 				break;
 			case DROP:
-				sprite = drop;
+				sprite = droplet;
 				newParticle.setVelocity(MathUtils.random(-1.5f, 1.5f), MathUtils.random(1f, 4f));
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(MathUtils.random(20), 12);
 				break;
 			case GEM:
-				sprite = gem;
+				sprite = blockGem;
 				newParticle.setVelocity(0, 3.2f);
 				newParticle.setAcceleration(0, -0.1f);
 				newParticle.setDuration(0, 8);
 				break;
 			case FIRE:
-				if (MathUtils.randomBoolean()) sprite = fire;
-				else sprite = fire2;
+				if (MathUtils.randomBoolean()) sprite = fireSmall;
+				else sprite = fireBig;
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 8);
+				break;
+			case WIND_U:
+				sprite = windV;
+				newParticle.setVelocity(0, 3);
+				newParticle.setDuration(0, 2);
+				break;
+			case WIND_D:
+				sprite = windV;
+				newParticle.setVelocity(0, -3);
+				newParticle.setDuration(0, 2);
+				break;
+			case WIND_R:
+				sprite = windH;
+				newParticle.setVelocity(3, 0);
+				newParticle.setDuration(0, 2);
+				break;
+			case WIND_L:
+				sprite = windH;
+				newParticle.setVelocity(-3, 0);
+				newParticle.setDuration(0, 2);
 				break;
 			default:
 				break;
@@ -288,8 +310,17 @@ public class View implements Screen {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Res.fullSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
-				if (board.checkWind(i, j, 0) && MathUtils.randomBoolean(1 / 4f)) {
-					createParticle(Res.Part.DUST_R, drawX, drawY + Res.halfSize, Res.fullSize, Res.halfSize);
+				if (board.checkWind(i, j, 0)) {
+					createParticle(Res.Part.WIND_R, drawX, drawY + Res.halfSize, Res.fullSize, Res.halfSize);
+				}
+				if (board.checkWind(i, j, 1)) {
+					createParticle(Res.Part.WIND_U, drawX + Res.halfSize, drawY, Res.halfSize, Res.fullSize);
+				}
+				if (board.checkWind(i, j, 2)) {
+					createParticle(Res.Part.WIND_L, drawX + Res.fullSize, drawY + Res.halfSize, Res.fullSize, Res.halfSize);
+				}
+				if (board.checkWind(i, j, 3)) {
+					createParticle(Res.Part.WIND_D, drawX + Res.halfSize, drawY + Res.fullSize, Res.halfSize, Res.fullSize);
 				}
 				Block block = board.getGrid()[i][j];
 				Special special = board.getSpecial()[i][j];
@@ -347,7 +378,7 @@ public class View implements Screen {
 					if (block.fall) drawBlock("block_falling", drawX, drawY);
 
 					if (block.command == Res.Command.BREAK) {
-						sprites.draw(cracks.getFrame((Res.timeGem - timer[i][j]) * 7 / Res.timeGem), drawX, drawY);
+						sprites.draw(blockCrack.getFrame((Res.timeGem - timer[i][j]) * 7 / Res.timeGem), drawX, drawY);
 					}
 					setAlpha(1);
 				}

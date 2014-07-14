@@ -36,6 +36,6 @@ public class Res {
 	};
 	
 	public static enum Part {
-		SPARKLE, DIRT, DUST, DUST_L, DUST_R, DROP, GEM, FIRE, WIND_R
+		SPARKLE, DIRT, DUST, DUST_L, DUST_R, DROP, GEM, FIRE, WIND_U, WIND_D, WIND_R, WIND_L
 	};
 }

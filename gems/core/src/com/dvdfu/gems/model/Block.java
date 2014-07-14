@@ -18,6 +18,7 @@ public class Block {
 	public boolean gemL;
 	public boolean gemC;
 	public boolean visited;
+	public boolean throughPath;
 	public int timer;
 
 	public Block() {
