@@ -25,7 +25,7 @@ public class MainGame extends Game implements ApplicationListener {
 		editorView = new EditorView(editorBoard);
 		loadLevel();
 		editorBoard.pushState();
-		setScreen(editorView);
+		setScreen(view);
 	}
 
 	private void loadLevel() {

@@ -3,13 +3,10 @@ package com.dvdfu.gems.view;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Pool.Poolable;
 import com.dvdfu.gems.handlers.Res;
+import com.dvdfu.gems.handlers.Res.Part;
 
 public class Particle implements Poolable {
-	public enum Type {
-		SPARKLE, DIRT, DUST, DUST_L, DUST_R, DROP, GEM, FIRE
-	}
-
-	public Type type;
+	public Part type;
 	private Animation sprite;
 	private float x;
 	private float y;

@@ -72,6 +72,9 @@ public class InputController extends InputAdapter {
 		case Keys.P:
 			Input.setKey(Input.P, true);
 			break;
+		case Keys.W:
+			Input.setKey(Input.W, true);
+			break;
 		case Keys.Y:
 			Input.setKey(Input.Y, true);
 			break;
@@ -128,6 +131,9 @@ public class InputController extends InputAdapter {
 			break;
 		case Keys.P:
 			Input.setKey(Input.P, false);
+			break;
+		case Keys.W:
+			Input.setKey(Input.W, false);
 			break;
 		case Keys.Y:
 			Input.setKey(Input.Y, false);

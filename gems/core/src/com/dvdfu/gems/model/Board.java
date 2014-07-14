@@ -8,6 +8,7 @@ public class Board {
 	private String name;
 	private Block gridBlocks[][];
 	private Block cursorBlock;
+	private boolean gridOccupied[][];
 	private Special gridSpecials[][];
 	private int width;
 	private int height;
@@ -22,42 +23,41 @@ public class Board {
 		cursorY = 0;
 		gridBlocks = new Block[width][height];
 		gridSpecials = new Special[width][height];
+		gridOccupied = new boolean[width][height];
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				gridBlocks[i][j] = null;
 				gridSpecials[i][j] = null;
+				gridOccupied[i][j] = false;
 			}
 		}
 	}
-	
+
 	public void setState(String data) {
 		Array<char[]> dataArray = new Array<char[]>();
 		while (data.length() > 1) {
 			dataArray.add(data.substring(0, data.indexOf(';')).toCharArray());
 			data = data.substring(data.indexOf(';') + 1);
 		}
-		String newName = new String(dataArray.removeIndex(0));
-		int width = Integer.parseInt(new String(dataArray.removeIndex(0)));
-		int height = Integer.parseInt(new String(dataArray.removeIndex(0)));
-		resetBoard(newName, width, height);
-		for (char[] cell : dataArray)
-			addByID(cell);
-	}
-	
-	public void resetBoard(String name, int width, int height) {
-		this.name = name;
-		if (this.width != width || this.height != height) {
-			this.width = width;
-			this.height = height;
+		this.name = new String(dataArray.removeIndex(0));
+		int newWidth = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		int newHeight = Integer.parseInt(new String(dataArray.removeIndex(0)));
+		if (width != newWidth || height != newHeight) {
+			width = newWidth;
+			height = newHeight;
 			gridBlocks = new Block[width][height];
 			gridSpecials = new Special[width][height];
+			gridOccupied = new boolean[width][height];
 		}
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				gridBlocks[i][j] = null;
 				gridSpecials[i][j] = null;
+				gridOccupied[i][j] = false;
 			}
 		}
+		for (char[] cell : dataArray)
+			addByID(cell);
 	}
 
 	public void addByID(char[] id) {
@@ -68,7 +68,7 @@ public class Board {
 			for (int i = 3; i < id.length; i++) {
 				switch (id[i]) {
 				case 'a':
-					block.active = true;
+					block.destructable = true;
 					break;
 				case 'm':
 					block.move = true;
@@ -93,6 +93,10 @@ public class Board {
 					break;
 				case 'l':
 					block.gemL = true;
+					break;
+				case 'w':
+					block.wind = true;
+					block.direction = id[i + 1] - 48;
 					break;
 				}
 			}
@@ -124,7 +128,7 @@ public class Board {
 		}
 	}
 
-	public void update() {
+	private void updateButtons() {
 		// handle button and gate toggling
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
@@ -132,37 +136,40 @@ public class Board {
 				if (special != null) {
 					if (special.button) special.toggled = gridHas(i, j);
 					else if (special.gate) {
-						special.toggled = gridHas(special.destX, special.destY) ? !special.gateOriginal : special.gateOriginal;
+						special.toggled = gridHas(special.destX, special.destY) ^ special.original;
 					}
 				}
 			}
 		}
-		// check every block and special. Simply changes state, no modifications to the board
+	}
+
+	private void updateFalling() {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = gridBlocks[i][j];
-				Special special = gridSpecials[i][j];
-				if (block != null) {
-					if (block.active) {
-						// drops block if it falls
-						if (block.fall && gridEmpty(i, j + 1) && block.command != Res.Command.BREAK) block.command = Res.Command.FALL;
-						// destroy block if it is active and surrounded
-						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD
-							&& gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
-							if (block.isGem()) block.command = Res.Command.BREAK;
-							else block.command = Res.Command.BREAK;
-							gridBlocks[i][j + 1].command = Res.Command.BREAK;
-							gridBlocks[i][j - 1].command = Res.Command.BREAK;
-							gridBlocks[i + 1][j].command = Res.Command.BREAK;
-							gridBlocks[i - 1][j].command = Res.Command.BREAK;
-						}
+				// fall condition: block falls, space below empty, no wind up/left/right
+				if (block != null && block.fall && gridEmpty(i, j + 1) && !checkWind(i, j, 0) && !checkWind(i, j, 1)
+					&& !checkWind(i, j, 2)) {
+					block.command = Res.Command.FALL;
+					gridOccupied[i][j + 1] = true;
+				}
+			}
+		}
+	}
+
+	private void updateBreak() {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = gridBlocks[i][j];
+				if (block != null && block.destructable) {
+					if (gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD
+						&& gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
+						block.command = Res.Command.BREAK;
+						gridBlocks[i][j + 1].command = Res.Command.BREAK;
+						gridBlocks[i][j - 1].command = Res.Command.BREAK;
+						gridBlocks[i + 1][j].command = Res.Command.BREAK;
+						gridBlocks[i - 1][j].command = Res.Command.BREAK;
 					}
-					// destroy block if in toggled gate or water
-					if (special != null) {
-						if (special.water) block.command = Res.Command.DROWN;
-						else if (special.gate && special.toggled) block.command = Res.Command.BREAK;
-					}
-					// destroy block if it is a gem and matched
 					if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD) {
 							block.command = Res.Command.BREAK;
@@ -181,42 +188,113 @@ public class Board {
 							gridBlocks[i - 1][j].command = Res.Command.BREAK;
 						}
 					}
-					// destroy block if it is a bomb and matched
-					else if (block.bomb) {
-						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].active) {
+					if (block.bomb) {
+						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].destructable) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i][j - 1].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].active) {
+						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].destructable) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i][j + 1].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].active) {
+						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].destructable) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i - 1][j].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].active) {
+						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].destructable) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i + 1][j].command = Res.Command.EXPLODE;
 						}
 					}
+					Special special = gridSpecials[i][j];
+					if (special != null) {
+						if (special.water) block.command = Res.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Res.Command.BREAK;
+					}
 				}
 			}
 		}
-		if (!isBuffered()) {
-			for (int i = 0; i < width; i++) {
-				for (int j = 0; j < height; j++) {
-					Block block = gridBlocks[i][j];
-					// moves selected block closer to cursor, lowest priority
-					if (block != null && block == cursorBlock && cursorBlock.move) {
-						if (cursorX < i && gridEmpty(i - 1, j)) block.command = Res.Command.MOVE_LEFT;
-						else if (cursorX > i && gridEmpty(i + 1, j)) block.command = Res.Command.MOVE_RIGHT;
-						else if (cursorBlock.active && !cursorBlock.fall) {
-							if (cursorY < j && gridEmpty(i, j - 1)) block.command = Res.Command.MOVE_UP;
-							else if (cursorY > j && gridEmpty(i, j + 1)) block.command = Res.Command.MOVE_DOWN;
-						}
+	}
+
+	private void updateCursor() {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = gridBlocks[i][j];
+				if (block != null && block == cursorBlock && cursorBlock.move) {
+					if (cursorX < i && gridEmpty(i - 1, j) && !checkWind(i, j, 0)) {
+						block.command = Res.Command.MOVE_LEFT;
+						gridOccupied[i - 1][j] = true;
+					} else if (cursorX > i && gridEmpty(i + 1, j) && !checkWind(i, j, 2)) {
+						block.command = Res.Command.MOVE_RIGHT;
+						gridOccupied[i + 1][j] = true;
+					} else if (!block.fall && cursorY < j && gridEmpty(i, j - 1) && !checkWind(i, j, 3)) {
+						block.command = Res.Command.MOVE_UP;
+						gridOccupied[i][j - 1] = true;
+					} else if (cursorY > j && gridEmpty(i, j + 1) && !checkWind(i, j, 1)) {
+						block.command = Res.Command.MOVE_DOWN;
+						gridOccupied[i][j + 1] = true;
 					}
 				}
+			}
+		}
+	}
+
+	private void updateWind() {
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				Block block = gridBlocks[i][j];
+				if (block != null && block.move) {
+					if (checkWind(i, j, 0) && gridEmpty(i + 1, j)) {
+						block.command = Res.Command.MOVE_RIGHT;
+						gridOccupied[i + 1][j] = true;
+					}
+					if (checkWind(i, j, 1) && gridEmpty(i, j - 1)) {
+						block.command = Res.Command.MOVE_UP;
+						gridOccupied[i][j - 1] = true;
+					}
+					if (checkWind(i, j, 2) && gridEmpty(i - 1, j)) {
+						block.command = Res.Command.MOVE_LEFT;
+						gridOccupied[i - 1][j] = true;
+					}
+					if (checkWind(i, j, 3) && gridEmpty(i, j + 1)) {
+						block.command = Res.Command.MOVE_DOWN;
+						gridOccupied[i][j + 1] = true;
+					}
+				}
+			}
+		}
+	}
+
+	private boolean checkWind(int x, int y, final int direction) {
+		if (direction == 0) x--;
+		else if (direction == 1) y++;
+		else if (direction == 2) x++;
+		else if (direction == 3) y--;
+		while (x >= 0 && x < width && y >= 0 && y < height) {
+			Block block = gridBlocks[x][y];
+			Special special = gridSpecials[x][y];
+			if (block != null) {
+				if (block.wind && block.direction == direction) return true;
+				if (!block.move) return false;
+			}
+			if (special != null && special != null && special.gate && special.toggled) return false;
+			if (direction == 0) x--;
+			else if (direction == 1) y++;
+			else if (direction == 2) x++;
+			else if (direction == 3) y--;
+		}
+		return false;
+	}
+
+	public void update() {
+		updateButtons();
+		updateFalling();
+		updateBreak();
+		updateWind();
+		if (!isBuffered()) updateCursor();
+		for (int i = 0; i < width; i++) {
+			for (int j = 0; j < height; j++) {
+				gridOccupied[i][j] = false;
 			}
 		}
 	}
@@ -226,9 +304,7 @@ public class Board {
 	}
 
 	public final boolean gridEmpty(int x, int y) {
-		return gridValid(x, y)
-			&& (gridBlocks[x][y] == null && !gridHasGate(x, y) || gridBlocks[x][y] != null
-				&& gridBlocks[x][y].command == Res.Command.FALL);
+		return gridValid(x, y) && gridBlocks[x][y] == null && !gridOccupied[x][y] && !gridHasGate(x, y);
 	}
 
 	public final boolean gridValid(int x, int y) {

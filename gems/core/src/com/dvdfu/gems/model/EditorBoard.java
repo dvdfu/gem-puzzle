@@ -173,6 +173,10 @@ public class EditorBoard {
 				case 'l':
 					block.gemL = true;
 					break;
+				case 'w':
+					block.wind = true;
+					block.direction = id[i + 1] - 48;
+					break;
 				}
 			}
 			gridBlocks[x][y] = block;
@@ -307,6 +311,9 @@ public class EditorBoard {
 			case WATER:
 				cursorSetSpecial = cursorSpecial == null || !cursorSpecial.water;
 				break;
+			case WIND:
+				cursorSetBlock = cursorBlock == null || !cursorBlock.wind;
+				break;
 			default:
 				break;
 			}
@@ -326,7 +333,10 @@ public class EditorBoard {
 				else if (setOldBlock) cursorBlock.setMove(true);
 				break;
 			case BLOCK_STATIC:
-				if (setNewBlock || setOldBlock) gridBlocks[cX][cY] = new EditorBlock().setActive(false);
+				if (setNewBlock || setOldBlock) {
+					gridBlocks[cX][cY] = new EditorBlock().setActive(false);
+					clearSpecial(cX, cY);
+				}
 				break;
 			case BOMB:
 				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setBomb(true);
@@ -362,7 +372,7 @@ public class EditorBoard {
 				break;
 			case GATE:
 				if (setNewSpecial) cursorPlacing = true;
-				else if (setOldSpecial) cursorSpecial.gateOriginal ^= true;
+				else if (setOldSpecial) cursorSpecial.original ^= true;
 				break;
 			case PATH:
 				cursorPlacing = true;
@@ -370,9 +380,13 @@ public class EditorBoard {
 			case WATER:
 				if (setNewSpecial) {
 					clearSpecial(cX, cY);
+					gridBlocks[cX][cY] = null;
 					gridSpecials[cX][cY] = new Special().setWater();
-				}
-				else if (setOldSpecial && cursorSpecial.water) gridSpecials[cX][cY] = null;
+				} else if (setOldSpecial && cursorSpecial.water) gridSpecials[cX][cY] = null;
+				break;
+			case WIND:
+				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setWind(true, 0);
+				else if (setOldBlock) gridBlocks[cX][cY].direction = (gridBlocks[cX][cY].direction + 1) % 4;
 				break;
 			default:
 				break;
@@ -427,6 +441,8 @@ public class EditorBoard {
 			cursorState = Res.Cursors.BLOCK_MOVE;
 		} else if (Input.KeyPressed(Input.P)) {
 			cursorState = Res.Cursors.PATH;
+		} else if (Input.KeyPressed(Input.W)) {
+			cursorState = Res.Cursors.WIND;
 		} else if (Input.KeyPressed(Input.BACKSPACE)) {
 			cursorState = Res.Cursors.ERASER;
 		}
@@ -468,7 +484,7 @@ public class EditorBoard {
 	public final boolean placingGate() {
 		return cursorPlacing && cursorState == Res.Cursors.GATE;
 	}
-	
+
 	public final boolean placingPath() {
 		return cursorPlacing && cursorState == Res.Cursors.PATH;
 	}

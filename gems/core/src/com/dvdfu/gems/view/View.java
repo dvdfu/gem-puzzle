@@ -126,7 +126,7 @@ public class View implements Screen {
 				if (block != null) {
 					switch (block.command) {
 					case DROWN:
-						createParticle(Particle.Type.DROP, drawX + Res.halfSize, drawY + Res.fullSize, 16, 0, 16);
+						createParticle(Res.Part.DROP, drawX + Res.halfSize, drawY + Res.fullSize, 16, 0, 16);
 						assets.get("aud/splash.mp3", Sound.class).play(0.3f);
 						break;
 					default:
@@ -147,35 +147,35 @@ public class View implements Screen {
 				if (block != null) {
 					switch (block.command) {
 					case FALL:
-						if (!board.gridEmpty(i, j + 2)) {
+						if (j + 2 >= board.getHeight() || board.getGrid()[i][j + 2] != null && board.getGrid()[i][j + 2].command == Res.Command.HOLD) {
 							Special special = board.getSpecial()[i][j + 1];
 							if (board.gridValid(i, j + 1) && (special == null || !special.water)) {
-								createParticle(Particle.Type.DUST_L, drawX + Res.halfSize, drawY - Res.fullSize, 4);
-								createParticle(Particle.Type.DUST_R, drawX + Res.halfSize, drawY - Res.fullSize, 4);
+								createParticle(Res.Part.DUST_L, drawX + Res.halfSize, drawY - Res.fullSize, 4);
+								createParticle(Res.Part.DUST_R, drawX + Res.halfSize, drawY - Res.fullSize, 4);
 								assets.get("aud/remove.wav", Sound.class).play(0.1f);
 							}
 						}
 						break;
 					case EXPLODE:
-						createParticle(Particle.Type.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
-						createParticle(Particle.Type.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
+						createParticle(Res.Part.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Res.Part.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
 						}
 						break;
 					case BREAK:
-						createParticle(Particle.Type.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Res.Part.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
 						}
 						assets.get("aud/break.mp3", Sound.class).play();
 						break;
 					case DROWN:
 						if (block.isGem()) {
-							createParticle(Particle.Type.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Particle.Type.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
 						}
 						break;
 					default:
@@ -186,15 +186,15 @@ public class View implements Screen {
 		}
 	}
 
-	private void createParticle(Particle.Type type, int x, int y) {
+	private void createParticle(Res.Part type, int x, int y) {
 		createParticle(type, x, y, 0, 0, 1);
 	}
 
-	private void createParticle(Particle.Type type, int x, int y, int num) {
+	private void createParticle(Res.Part type, int x, int y, int num) {
 		createParticle(type, x, y, 0, 0, num);
 	}
 
-	private void createParticle(Particle.Type type, int x, int y, int randX, int randY, int num) {
+	private void createParticle(Res.Part type, int x, int y, int randX, int randY, int num) {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
 			newParticle.type = type;
@@ -298,11 +298,9 @@ public class View implements Screen {
 						break;
 					case MOVE_RIGHT:
 						bufferX = (Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
-						if (block.fall) createParticle(Particle.Type.DUST_L, drawX + bufferX, drawY);
 						break;
 					case MOVE_LEFT:
 						bufferX = -(Res.timeMove - timer[i][j]) * Res.fullSize / Res.timeMove;
-						if (block.fall) createParticle(Particle.Type.DUST_R, drawX + bufferX + Res.fullSize, drawY);
 						break;
 					case PATH:
 						setAlpha(Math.abs(1 - 2f * timer[i][j] / Res.timePath));
@@ -320,7 +318,13 @@ public class View implements Screen {
 						if (block.bomb) drawBlock("bomb", drawX, drawY);
 						else drawBlock("block_move", drawX, drawY);
 					} else {
-						if (block.active) drawBlock("block_active", drawX, drawY);
+						if (block.destructable) drawBlock("block_active", drawX, drawY);
+						else if (block.wind) {
+							if (block.direction == 0) drawBlock("wind_r", drawX, drawY);
+							else if (block.direction == 1) drawBlock("wind_u", drawX, drawY);
+							else if (block.direction == 2) drawBlock("wind_l", drawX, drawY);
+							else if (block.direction == 3) drawBlock("wind_d", drawX, drawY);
+						}
 						else drawBlock("block_static", drawX, drawY);
 					}
 
@@ -352,10 +356,13 @@ public class View implements Screen {
 				int drawX = boardOffsetX + i * Res.fullSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
 				Special special = board.getSpecial()[i][j];
-				if (special != null && special.water) {
-					drawBlock("water_body", drawX, drawY);
-					if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water_head", drawX, drawY
-						+ Res.fullSize);
+				if (special != null) {
+					if (special.water) {
+						drawBlock("water_body", drawX, drawY);
+						if (board.gridValid(i, j - 1) && (board.getSpecial()[i][j - 1] == null || !board.getSpecial()[i][j - 1].water)) {
+							drawBlock("water_head", drawX, drawY + Res.fullSize);
+						}
+					}
 				}
 			}
 		}
@@ -385,7 +392,8 @@ public class View implements Screen {
 	private void drawLine(int x1, int y1, int x2, int y2) {
 		int xo = boardOffsetX + x1 * Res.fullSize + Res.halfSize;
 		int yo = boardOffsetY + (board.getHeight() - 1 - y1) * Res.fullSize + Res.halfSize;
-		drawBlock("cursor_unselect", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2) * Res.fullSize);
+		drawBlock("cursor_unselect", boardOffsetX + x2 * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - y2)
+			* Res.fullSize);
 		int dx = (x2 - x1) * Res.fullSize;
 		int dy = (y1 - y2) * Res.fullSize;
 		int length = (int) Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));

@@ -5,6 +5,8 @@ public class EditorBlock {
 	public boolean move;
 	public boolean fall;
 	public boolean bomb;
+	public boolean wind;
+	public int direction;
 	public boolean gemU;
 	public boolean gemD;
 	public boolean gemR;
@@ -17,6 +19,7 @@ public class EditorBlock {
 		if (move) id += "m";
 		if (fall) id += "f";
 		if (bomb) id += "b";
+		if (wind) id += "w" + direction;
 		if (gemC) id += "c";
 		if (gemU) id += "u";
 		if (gemD) id += "d";
@@ -28,6 +31,7 @@ public class EditorBlock {
 	public EditorBlock setActive(boolean set) {
 		active = set;
 		move = false;
+		wind = false;
 		bomb = false;
 		if (!active) {
 			fall = false;
@@ -41,6 +45,7 @@ public class EditorBlock {
 
 	public EditorBlock setMove(boolean set) {
 		move = set;
+		wind = false;
 		bomb = false;
 		if (move) active = true;
 		return this;
@@ -48,12 +53,14 @@ public class EditorBlock {
 
 	public EditorBlock setFall(boolean set) {
 		fall = set;
+		wind = false;
 		if (fall) active = true;
 		return this;
 	}
 
 	public EditorBlock setBomb(boolean set) {
 		bomb = set;
+		wind = false;
 		if (bomb) {
 			active = true;
 			move = true;
@@ -68,6 +75,7 @@ public class EditorBlock {
 
 	public EditorBlock setGemU(boolean set) {
 		gemU = set;
+		wind = false;
 		if (gemU) {
 			active = true;
 			gemC = false;
@@ -78,6 +86,7 @@ public class EditorBlock {
 
 	public EditorBlock setGemD(boolean set) {
 		gemD = set;
+		wind = false;
 		if (gemD) {
 			active = true;
 			gemC = false;
@@ -88,6 +97,7 @@ public class EditorBlock {
 
 	public EditorBlock setGemR(boolean set) {
 		gemR = set;
+		wind = false;
 		if (gemR) {
 			active = true;
 			gemC = false;
@@ -98,6 +108,7 @@ public class EditorBlock {
 
 	public EditorBlock setGemL(boolean set) {
 		gemL = set;
+		wind = false;
 		if (gemL) {
 			active = true;
 			gemC = false;
@@ -108,6 +119,7 @@ public class EditorBlock {
 
 	public EditorBlock setGemC(boolean set) {
 		gemC = set;
+		wind = false;
 		if (gemC) {
 			active = true;
 			gemU = false;
@@ -115,6 +127,23 @@ public class EditorBlock {
 			gemR = false;
 			gemL = false;
 			bomb = false;
+		}
+		return this;
+	}
+	
+	public EditorBlock setWind(boolean set, int direction) {
+		wind = set;
+		this.direction = direction;
+		if (wind) {
+			active = false;
+			move = false;
+			fall = false;
+			bomb = false;
+			gemU = false;
+			gemD = false;
+			gemR = false;
+			gemL = false;
+			gemC = false;
 		}
 		return this;
 	}

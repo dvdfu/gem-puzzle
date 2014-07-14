@@ -89,6 +89,12 @@ public class EditorView implements Screen {
 						else drawBlock("block_move", drawX, drawY);
 					} else {
 						if (block.active) drawBlock("block_active", drawX, drawY);
+						else if (block.wind) {
+							if (block.direction == 0) drawBlock("wind_r", drawX, drawY);
+							else if (block.direction == 1) drawBlock("wind_u", drawX, drawY);
+							else if (block.direction == 2) drawBlock("wind_l", drawX, drawY);
+							else if (block.direction == 3) drawBlock("wind_d", drawX, drawY);
+						}
 						else drawBlock("block_static", drawX, drawY);
 					}
 
@@ -110,7 +116,7 @@ public class EditorView implements Screen {
 					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 					else if (special.water) {
 						drawBlock("water_body", drawX, drawY);
-						if (board.gridValid(i, j - 1) && board.getSpecial()[i][j - 1] == null) drawBlock("water_head", drawX,
+						if (board.gridValid(i, j - 1) && (board.getSpecial()[i][j - 1] == null || !board.getSpecial()[i][j - 1].water)) drawBlock("water_head", drawX,
 							drawY + Res.fullSize);
 					}
 					setAlpha(1);
