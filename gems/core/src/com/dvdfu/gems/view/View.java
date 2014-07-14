@@ -194,6 +194,10 @@ public class View implements Screen {
 		createParticle(type, x, y, 0, 0, num);
 	}
 
+	private void createParticle(Res.Part type, int x, int y, int randX, int randY) {
+		createParticle(type, x, y, randX, randY, 1);
+	}
+
 	private void createParticle(Res.Part type, int x, int y, int randX, int randY, int num) {
 		for (int i = 0; i < num; i++) {
 			Particle newParticle = particlePool.obtain();
@@ -282,6 +286,9 @@ public class View implements Screen {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Res.fullSize;
 				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
+				if (board.checkWind(i, j, 0) && MathUtils.randomBoolean(1 / 4f)) {
+					createParticle(Res.Part.DUST_R, drawX, drawY + Res.halfSize, Res.fullSize, Res.halfSize);
+				}
 				Block block = board.getGrid()[i][j];
 				Special special = board.getSpecial()[i][j];
 				if (block != null) {

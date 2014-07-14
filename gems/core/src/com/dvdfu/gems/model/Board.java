@@ -265,7 +265,7 @@ public class Board {
 		}
 	}
 
-	private boolean checkWind(int x, int y, final int direction) {
+	public final boolean checkWind(int x, int y, final int direction) {
 		if (direction == 0) x--;
 		else if (direction == 1) y++;
 		else if (direction == 2) x++;

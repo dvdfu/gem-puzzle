@@ -270,7 +270,6 @@ public class EditorBoard {
 	private void handleAdd() {
 		if (Input.MousePressed()) {
 			// tells the cursor if the property of the first clicked cell is true or not. Determines what behaviour the cursor will have later
-
 			switch (cursorState) {
 			case BLOCK_ACTIVE:
 			case BLOCK_MOVE:
@@ -385,7 +384,7 @@ public class EditorBoard {
 				} else if (setOldSpecial && cursorSpecial.water) gridSpecials[cX][cY] = null;
 				break;
 			case WIND:
-				if (setNewBlock) gridBlocks[cX][cY] = new EditorBlock().setWind(true, 0);
+				if (cursorSetBlock) gridBlocks[cX][cY] = new EditorBlock().setWind(true, 0);
 				else if (setOldBlock) gridBlocks[cX][cY].direction = (gridBlocks[cX][cY].direction + 1) % 4;
 				break;
 			default:
