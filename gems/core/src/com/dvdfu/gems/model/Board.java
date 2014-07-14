@@ -289,8 +289,8 @@ public class Board {
 	public void update() {
 		updateButtons();
 		updateFalling();
-		updateBreak();
 		updateWind();
+		updateBreak();
 		if (!isBuffered()) updateCursor();
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {

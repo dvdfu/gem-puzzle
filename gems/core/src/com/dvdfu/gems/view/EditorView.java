@@ -18,9 +18,11 @@ import com.dvdfu.gems.model.Special;
 public class EditorView implements Screen {
 	private EditorBoard board;
 	private SpriteBatch sprites;
+	private SpriteBatch gui;
 	private Viewport viewport;
 	private OrthographicCamera camera;
 	private Vector3 mouse;
+	private Button[] tools;
 	private int boardOffsetX;
 	private int boardOffsetY;
 	private int timer;
@@ -28,15 +30,39 @@ public class EditorView implements Screen {
 	public EditorView(EditorBoard board) {
 		setBoard(board);
 		sprites = new SpriteBatch();
+		gui = new SpriteBatch();
 		viewport = new ScreenViewport();
 		mouse = new Vector3();
 		camera = (OrthographicCamera) viewport.getCamera();
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		timer = 0;
+		tools = new Button[5];
+		for (int i = 0; i < tools.length; i++) {
+			tools[i] = new Button(i * 32, 0, 32, 32);
+		}
+	}
+	
+	private class Button {
+		Res.Part type;
+		public int x;
+		public int y;
+		public int width;
+		public int height;
+		public Button(int x, int y, int width, int height) {
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+		}
+		
+		public boolean hasMouse() {
+			return mouse.x > x && mouse.x < x + width && mouse.y > y && mouse.y < y + height;
+		}
 	}
 
 	public void dispose() {
 		sprites.dispose();
+		gui.dispose();
 	}
 
 	public void setBoard(EditorBoard board) {
@@ -177,6 +203,12 @@ public class EditorView implements Screen {
 			sprites.draw(Res.atlas.createSprite("dot"), x, y);
 		}
 	}
+	
+	private void drawGUI() {
+		for (Button button : tools) {
+			gui.draw(Res.atlas.createSprite("path"), button.x, button.y, 32, 32);
+		}
+	}
 
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
@@ -185,6 +217,9 @@ public class EditorView implements Screen {
 		drawBlocks();
 		drawCursor();
 		sprites.end();
+		gui.begin();
+		drawGUI();
+		gui.end();
 		if (timer < 16) timer++;
 		else timer = 0;
 	}

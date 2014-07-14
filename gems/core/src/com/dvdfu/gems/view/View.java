@@ -250,6 +250,8 @@ public class View implements Screen {
 				newParticle.setVector(MathUtils.random(2f), MathUtils.random(2 * MathUtils.PI));
 				newParticle.setDuration(MathUtils.random(12), 8);
 				break;
+			default:
+				break;
 			}
 			newParticle.setPosition(xr - sprite.getWidth() / 2, yr - sprite.getHeight() / 2);
 			newParticle.setSprite(sprite);
