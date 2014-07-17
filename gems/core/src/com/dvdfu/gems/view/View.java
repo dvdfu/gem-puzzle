@@ -89,8 +89,8 @@ public class View implements Screen {
 		blockCrack = new Animation(Res.atlas.createSprite("block_cracks"), 32, 32);
 		fireSmall = new Animation(Res.atlas.createSprite("particle_fire_small"), 4, 4);
 		fireBig = new Animation(Res.atlas.createSprite("particle_fire_big"), 8, 8);
-		windH = new Animation(Res.atlas.createSprite("dot"), 2, 1);
-		windV = new Animation(Res.atlas.createSprite("dot"), 1, 2);
+		windH = new Animation(Res.atlas.createSprite("dot"), 2, 2);
+		windV = new Animation(Res.atlas.createSprite("dot"), 2, 2);
 	}
 
 	public void update(float x, float y) {
@@ -105,15 +105,15 @@ public class View implements Screen {
 		board.setCursor(cursorX, cursorY);
 		if (Input.MouseDown() && board.select()) assets.get("aud/select.wav", Sound.class).play();
 		if (!Input.MouseDown() && board.unselect()) assets.get("aud/deselect.wav", Sound.class).play();
-
 	}
 
 	public void resize(int width, int height) {
-		float zoomW = 1f * height / Res.fullSize / (board.getHeight() + 1);
-		float zoomH = 1f * width / Res.fullSize / (board.getWidth() + 1);
+		int resolution = 1;
+		int zoomW = resolution * height / Res.fullSize / (board.getHeight() + 1);
+		int zoomH = resolution * width / Res.fullSize / (board.getWidth() + 1);
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
-		camera.zoom = 1f / Math.min(zoomW, zoomH);
+		camera.zoom = 1f * resolution / Math.min(zoomW, zoomH);
 		camera.position.set(boardOffsetX + board.getWidth() * Res.fullSize / 2, boardOffsetY + board.getHeight() * Res.fullSize
 			/ 2, 0);
 		viewport.update(width, height);

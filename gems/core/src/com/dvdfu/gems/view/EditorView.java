@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.Res;
 import com.dvdfu.gems.model.EditorBlock;
 import com.dvdfu.gems.model.EditorBoard;
@@ -18,7 +19,6 @@ import com.dvdfu.gems.model.Special;
 public class EditorView implements Screen {
 	private EditorBoard board;
 	private SpriteBatch sprites;
-	private SpriteBatch gui;
 	private Viewport viewport;
 	private OrthographicCamera camera;
 	private Vector3 mouse;
@@ -30,20 +30,34 @@ public class EditorView implements Screen {
 	public EditorView(EditorBoard board) {
 		setBoard(board);
 		sprites = new SpriteBatch();
-		gui = new SpriteBatch();
 		viewport = new ScreenViewport();
 		mouse = new Vector3();
 		camera = (OrthographicCamera) viewport.getCamera();
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		timer = 0;
-		tools = new Button[5];
+		tools = new Button[3];
 		for (int i = 0; i < tools.length; i++) {
-			tools[i] = new Button(i * 32, 0, 32, 32);
+			tools[i] = new Button(i * 34 + 64, 64, 32, 32);
+			switch (i) {
+			case 0:
+				tools[i].type = Res.Cursors.BLOCK_STATIC;
+				tools[i].filename = "block_static";
+				break;
+			case 1:
+				tools[i].type = Res.Cursors.BLOCK_ACTIVE;
+				tools[i].filename = "block_active";
+				break;
+			case 2:
+				tools[i].type = Res.Cursors.BLOCK_MOVE;
+				tools[i].filename = "block_move";
+				break;
+			}
 		}
 	}
 	
 	private class Button {
-		Res.Part type;
+		Res.Cursors type;
+		public String filename;
 		public int x;
 		public int y;
 		public int width;
@@ -62,7 +76,6 @@ public class EditorView implements Screen {
 
 	public void dispose() {
 		sprites.dispose();
-		gui.dispose();
 	}
 
 	public void setBoard(EditorBoard board) {
@@ -70,31 +83,7 @@ public class EditorView implements Screen {
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
 	}
-
-	public void update(float x, float y) {
-		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
-		mouse.set(x, y, 0);
-		sprites.setProjectionMatrix(camera.combined);
-		camera.unproject(mouse);
-
-		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
-		board.setCursor(cursorX, cursorY);
-
-	}
-
-	public void resize(int width, int height) {
-		float zoomW = 1f * height / Res.fullSize / (board.getHeight() + 1);
-		float zoomH = 1f * width / Res.fullSize / (board.getWidth() + 1);
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
-		camera.zoom = 1f / Math.min(zoomW, zoomH);
-		camera.position.set(boardOffsetX + board.getWidth() * Res.fullSize / 2, boardOffsetY + board.getHeight() * Res.fullSize
-			/ 2, 0);
-		viewport.update(width, height);
-	}
-
+	
 	private void setAlpha(float alpha) {
 		Color c = sprites.getColor();
 		sprites.setColor(c.r, c.g, c.b, alpha);
@@ -206,8 +195,34 @@ public class EditorView implements Screen {
 	
 	private void drawGUI() {
 		for (Button button : tools) {
-			gui.draw(Res.atlas.createSprite("path"), button.x, button.y, 32, 32);
+			sprites.draw(Res.atlas.createSprite(button.filename), button.x, button.y, 32, 32);
+			if (Input.MousePressed() && button.hasMouse()) {
+				board.setCursorState(button.type);
+			}
 		}
+	}
+
+	public void update(float x, float y) {
+		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
+		mouse.set(x, y, 0);
+		camera.unproject(mouse);
+
+		/* sends mouse information to the board and plays appropriate sound effects */
+		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
+		board.setCursor(cursorX, cursorY);
+	}
+
+	public void resize(int width, int height) {
+		int resolution = 1;
+		int zoomW = resolution * height / Res.fullSize / (board.getHeight() + 1);
+		int zoomH = resolution * width / Res.fullSize / (board.getWidth() + 1);
+		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
+		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 2;
+		camera.zoom = 1f * resolution / Math.min(zoomW, zoomH);
+		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
+		viewport.update(width, height);
+		sprites.setProjectionMatrix(camera.combined);
 	}
 
 	public void render(float delta) {
@@ -216,10 +231,8 @@ public class EditorView implements Screen {
 		sprites.begin();
 		drawBlocks();
 		drawCursor();
-		sprites.end();
-		gui.begin();
 		drawGUI();
-		gui.end();
+		sprites.end();
 		if (timer < 16) timer++;
 		else timer = 0;
 	}

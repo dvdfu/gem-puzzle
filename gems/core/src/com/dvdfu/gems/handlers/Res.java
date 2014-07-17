@@ -17,7 +17,7 @@ public class Res {
 
 	public static final int fullSize = 32;
 	public static final int halfSize = fullSize / 2;
-	public static final int timeMove = 4;
+	public static final int timeMove = 8;
 	public static final int timePath = 16;
 	public static final int timeGem = 16;
 	public static final int timeDrown = 2;
