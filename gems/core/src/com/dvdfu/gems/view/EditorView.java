@@ -35,9 +35,9 @@ public class EditorView implements Screen {
 		camera = (OrthographicCamera) viewport.getCamera();
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		timer = 0;
-		tools = new Button[3];
+		tools = new Button[12];
 		for (int i = 0; i < tools.length; i++) {
-			tools[i] = new Button(i * 34 + 64, 64, 32, 32);
+			tools[i] = new Button(64 + (i % 5) * 34, 96 - (i / 5) * 34, 32, 32);
 			switch (i) {
 			case 0:
 				tools[i].type = Res.Cursors.BLOCK_STATIC;
@@ -51,10 +51,46 @@ public class EditorView implements Screen {
 				tools[i].type = Res.Cursors.BLOCK_MOVE;
 				tools[i].filename = "block_move";
 				break;
+			case 3:
+				tools[i].type = Res.Cursors.BOMB;
+				tools[i].filename = "bomb";
+				break;
+			case 4:
+				tools[i].type = Res.Cursors.WIND;
+				tools[i].filename = "wind_u";
+				break;
+			case 5:
+				tools[i].type = Res.Cursors.GEM_UP;
+				tools[i].filename = "block_gem_u";
+				break;
+			case 6:
+				tools[i].type = Res.Cursors.GEM_DOWN;
+				tools[i].filename = "block_gem_d";
+				break;
+			case 7:
+				tools[i].type = Res.Cursors.GEM_RIGHT;
+				tools[i].filename = "block_gem_r";
+				break;
+			case 8:
+				tools[i].type = Res.Cursors.GEM_LEFT;
+				tools[i].filename = "block_gem_l";
+				break;
+			case 9:
+				tools[i].type = Res.Cursors.GEM_CENTER;
+				tools[i].filename = "block_gem_c";
+				break;
+			case 10:
+				tools[i].type = Res.Cursors.FALL;
+				tools[i].filename = "block_falling";
+				break;
+			case 11:
+				tools[i].type = Res.Cursors.ERASER;
+				tools[i].filename = "trans";
+				break;
 			}
 		}
 	}
-	
+
 	private class Button {
 		Res.Cursors type;
 		public String filename;
@@ -62,13 +98,14 @@ public class EditorView implements Screen {
 		public int y;
 		public int width;
 		public int height;
+
 		public Button(int x, int y, int width, int height) {
 			this.x = x;
 			this.y = y;
 			this.width = width;
 			this.height = height;
 		}
-		
+
 		public boolean hasMouse() {
 			return mouse.x > x && mouse.x < x + width && mouse.y > y && mouse.y < y + height;
 		}
@@ -83,7 +120,7 @@ public class EditorView implements Screen {
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
 	}
-	
+
 	private void setAlpha(float alpha) {
 		Color c = sprites.getColor();
 		sprites.setColor(c.r, c.g, c.b, alpha);
@@ -109,8 +146,7 @@ public class EditorView implements Screen {
 							else if (block.direction == 1) drawBlock("wind_u", drawX, drawY);
 							else if (block.direction == 2) drawBlock("wind_l", drawX, drawY);
 							else if (block.direction == 3) drawBlock("wind_d", drawX, drawY);
-						}
-						else drawBlock("block_static", drawX, drawY);
+						} else drawBlock("block_static", drawX, drawY);
 					}
 
 					if (block.gemC) drawBlock("block_gem_c", drawX, drawY);
@@ -131,8 +167,9 @@ public class EditorView implements Screen {
 					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
 					else if (special.water) {
 						drawBlock("water_body", drawX, drawY);
-						if (board.gridValid(i, j - 1) && (board.getSpecial()[i][j - 1] == null || !board.getSpecial()[i][j - 1].water)) drawBlock("water_head", drawX,
-							drawY + Res.fullSize);
+						if (board.gridValid(i, j - 1)
+							&& (board.getSpecial()[i][j - 1] == null || !board.getSpecial()[i][j - 1].water)) drawBlock(
+							"water_head", drawX, drawY + Res.fullSize);
 					}
 					setAlpha(1);
 				}
@@ -192,12 +229,60 @@ public class EditorView implements Screen {
 			sprites.draw(Res.atlas.createSprite("dot"), x, y);
 		}
 	}
-	
+
 	private void drawGUI() {
 		for (Button button : tools) {
 			sprites.draw(Res.atlas.createSprite(button.filename), button.x, button.y, 32, 32);
-			if (Input.MousePressed() && button.hasMouse()) {
-				board.setCursorState(button.type);
+
+			switch (button.type) {
+			case BLOCK_ACTIVE:
+			case BLOCK_MOVE:
+			case BLOCK_STATIC:
+			case BOMB:
+			case WIND:
+			case ERASER:
+				if (Input.MousePressed() && button.hasMouse()) board.setCursorState(button.type);
+				if (board.getCursorState() == button.type) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case GEM_UP:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorGemU ^= true;
+				if (board.cursorGemU) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case GEM_DOWN:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorGemD ^= true;
+				if (board.cursorGemD) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case GEM_RIGHT:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorGemR ^= true;
+				if (board.cursorGemR) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case GEM_LEFT:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorGemL ^= true;
+				if (board.cursorGemL) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case GEM_CENTER:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorGemC ^= true;
+				if (board.cursorGemC) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+				break;
+			case FALL:
+				if (Input.MousePressed() && button.hasMouse()) board.cursorFall ^= true;
+				if (board.cursorFall) {
+					sprites.draw(Res.atlas.createSprite("cursor_select"), button.x, button.y, 32, 32);
+				}
+			default:
+				break;
 			}
 		}
 	}
