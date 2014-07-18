@@ -13,7 +13,7 @@ public class Input {
 	public static final int ARROW_LEFT = 2;
 	public static final int ARROW_RIGHT = 3;
 	public static final int SPACEBAR = 4;
-	public static final int TAB = 5;
+	public static final int ENTER = 5;
 	public static final int BACKSPACE = 6;
 	public static final int A = 7;
 	public static final int B = 8;

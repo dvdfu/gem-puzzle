@@ -35,9 +35,9 @@ public class EditorView implements Screen {
 		camera = (OrthographicCamera) viewport.getCamera();
 		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		timer = 0;
-		tools = new Button[12];
+		tools = new Button[15];
 		for (int i = 0; i < tools.length; i++) {
-			tools[i] = new Button(64 + (i % 5) * 34, 96 - (i / 5) * 34, 32, 32);
+			tools[i] = new Button(64 + (i % 4) * 34, 150 - (i / 4) * 34, 32, 32);
 			switch (i) {
 			case 0:
 				tools[i].type = Res.Cursors.BLOCK_STATIC;
@@ -60,30 +60,42 @@ public class EditorView implements Screen {
 				tools[i].filename = "wind_u";
 				break;
 			case 5:
+				tools[i].type = Res.Cursors.WATER;
+				tools[i].filename = "water_body";
+				break;
+			case 6:
+				tools[i].type = Res.Cursors.GATE;
+				tools[i].filename = "gate";
+				break;
+			case 7:
+				tools[i].type = Res.Cursors.PATH;
+				tools[i].filename = "path";
+				break;
+			case 8:
 				tools[i].type = Res.Cursors.GEM_UP;
 				tools[i].filename = "block_gem_u";
 				break;
-			case 6:
+			case 9:
 				tools[i].type = Res.Cursors.GEM_DOWN;
 				tools[i].filename = "block_gem_d";
 				break;
-			case 7:
+			case 10:
 				tools[i].type = Res.Cursors.GEM_RIGHT;
 				tools[i].filename = "block_gem_r";
 				break;
-			case 8:
+			case 11:
 				tools[i].type = Res.Cursors.GEM_LEFT;
 				tools[i].filename = "block_gem_l";
 				break;
-			case 9:
+			case 12:
 				tools[i].type = Res.Cursors.GEM_CENTER;
 				tools[i].filename = "block_gem_c";
 				break;
-			case 10:
+			case 13:
 				tools[i].type = Res.Cursors.FALL;
 				tools[i].filename = "block_falling";
 				break;
-			case 11:
+			case 14:
 				tools[i].type = Res.Cursors.ERASER;
 				tools[i].filename = "trans";
 				break;
@@ -164,7 +176,11 @@ public class EditorView implements Screen {
 					else if (special.button) {
 						if (special.toggled) drawBlock("button", drawX, drawY);
 						else drawBlock("button", drawX, drawY);
-					} else if (special.gate && special.toggled) drawBlock("gate", drawX, drawY);
+					} else if (special.gate) {
+						if (!special.original) setAlpha(0.5f);
+						drawBlock("gate", drawX, drawY);
+						setAlpha(1f);
+					}
 					else if (special.water) {
 						drawBlock("water_body", drawX, drawY);
 						if (board.gridValid(i, j - 1)
@@ -202,14 +218,14 @@ public class EditorView implements Screen {
 		}
 		if (board.placingGate()) {
 			drawBlock("button", cursorX, cursorY);
-			drawBlock("gate", boardOffsetX + board.placeX * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY)
+			drawBlock("gate", boardOffsetX + board.placeX() * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY())
 				* Res.fullSize);
-			drawLine(cx, cy, board.placeX, board.placeY);
+			drawLine(cx, cy, board.placeX(), board.placeY());
 		} else if (board.placingPath()) {
 			drawBlock("path", cursorX, cursorY);
-			drawBlock("path", boardOffsetX + board.placeX * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY)
+			drawBlock("path", boardOffsetX + board.placeX() * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY())
 				* Res.fullSize);
-			drawLine(cx, cy, board.placeX, board.placeY);
+			drawLine(cx, cy, board.placeX(), board.placeY());
 		}
 	}
 
@@ -240,6 +256,9 @@ public class EditorView implements Screen {
 			case BLOCK_STATIC:
 			case BOMB:
 			case WIND:
+			case WATER:
+			case GATE:
+			case PATH:
 			case ERASER:
 				if (Input.MousePressed() && button.hasMouse()) board.setCursorState(button.type);
 				if (board.getCursorState() == button.type) {
@@ -293,9 +312,9 @@ public class EditorView implements Screen {
 		camera.unproject(mouse);
 
 		/* sends mouse information to the board and plays appropriate sound effects */
-		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
-		board.setCursor(cursorX, cursorY);
+		float cursorX = (mouse.x - boardOffsetX) / Res.fullSize;
+		float cursorY = board.getHeight() - 1 - (mouse.y - boardOffsetY) / Res.fullSize;
+		board.setCursor((int) cursorX, (int) (cursorY + 1));
 	}
 
 	public void resize(int width, int height) {

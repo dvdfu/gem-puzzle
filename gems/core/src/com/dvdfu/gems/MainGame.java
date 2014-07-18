@@ -38,8 +38,6 @@ public class MainGame extends Game implements ApplicationListener {
 	}
 
 	public void dispose() {
-		Preferences prefs = Gdx.app.getPreferences("prefs");
-		prefs.flush();
 		view.dispose();
 		editorView.dispose();
 	}
@@ -54,11 +52,11 @@ public class MainGame extends Game implements ApplicationListener {
 				board.update(); // timer is ready, board looks for buffers
 				if (board.checkTimer()) view.beginBuffer();
 			} else board.updateTimer();
-			if (Input.KeyPressed(Input.TAB)) setScreen(editorView);
+			if (Input.KeyPressed(Input.ENTER)) setScreen(editorView);
 		} else if (getScreen() == editorView) {
 			editorBoard.update();
 			editorView.update(Input.mouse.x, Input.mouse.y);
-			if (Input.KeyPressed(Input.TAB)) {
+			if (Input.KeyPressed(Input.ENTER)) {
 				loadLevel();
 				setScreen(view);
 			}

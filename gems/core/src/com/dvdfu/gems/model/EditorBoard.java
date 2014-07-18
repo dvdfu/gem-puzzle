@@ -3,7 +3,6 @@ package com.dvdfu.gems.model;
 import java.util.Stack;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.Res;
@@ -31,8 +30,8 @@ public class EditorBoard {
 	private int cY;
 	private boolean cIn;
 	private boolean cursorPlacing;
-	public int placeX;
-	public int placeY;
+	private int placeX;
+	private int placeY;
 	private boolean modified;
 
 	public EditorBoard(String name, int width, int height) {
@@ -67,6 +66,7 @@ public class EditorBoard {
 		String id = getState();
 		Preferences prefs = Gdx.app.getPreferences("prefs");
 		prefs.putString("level", id);
+		prefs.flush();
 	}
 
 	public void setState(String data) {
@@ -379,8 +379,10 @@ public class EditorBoard {
 			if (cursorPlacing) {
 				if (cursorState == Res.Cursors.GATE) {
 					addGate(placeX, placeY, cX, cY, true);
+					modified = true;
 				} else if (cursorState == Res.Cursors.PATH) {
 					addPath(placeX, placeY, cX, cY);
+					modified = true;
 				}
 				cursorPlacing = false;
 			}
@@ -396,42 +398,13 @@ public class EditorBoard {
 		cursorBlock = gridBlocks[cX][cY];
 		cursorSpecial = gridSpecials[cX][cY];
 		if (cIn) handleAdd();
-		if (Input.KeyPressed(Input.SPACEBAR)) {
-			cursorGemC ^= true;
-		} else if (Input.KeyPressed(Input.ARROW_UP)) {
-			cursorGemU ^= true;
-		} else if (Input.KeyPressed(Input.ARROW_DOWN)) {
-			cursorGemD ^= true;
-		} else if (Input.KeyPressed(Input.ARROW_RIGHT)) {
-			cursorGemR ^= true;
-		} else if (Input.KeyPressed(Input.ARROW_LEFT)) {
-			cursorGemL ^= true;
-		} else if (Input.KeyPressed(Input.A)) {
-			cursorState = Res.Cursors.BLOCK_ACTIVE;
-		} else if (Input.KeyPressed(Input.B)) {
-			cursorState = Res.Cursors.BOMB;
-		} else if (Input.KeyPressed(Input.F)) {
-			cursorState = Res.Cursors.FALL;
-		} else if (Input.KeyPressed(Input.G)) {
-			cursorState = Res.Cursors.GATE;
-		} else if (Input.KeyPressed(Input.H)) {
-			cursorState = Res.Cursors.WATER;
-		} else if (Input.KeyPressed(Input.M)) {
-			cursorState = Res.Cursors.BLOCK_MOVE;
-		} else if (Input.KeyPressed(Input.P)) {
-			cursorState = Res.Cursors.PATH;
-		} else if (Input.KeyPressed(Input.W)) {
-			cursorState = Res.Cursors.WIND;
-		} else if (Input.KeyPressed(Input.BACKSPACE)) {
-			cursorState = Res.Cursors.ERASER;
-		}
 		// UNDO
 		if (Input.MouseReleased() && modified) pushState();
 		if (Input.KeyDown(Input.CTRL)) {
 			if (Input.KeyPressed(Input.Z)) undoState();
 			if (Input.KeyPressed(Input.Y)) redoState();
 		}
-		if (Input.KeyPressed(Input.TAB)) saveState();
+		if (Input.KeyPressed(Input.ENTER)) saveState();
 	}
 
 	/* PUBLIC FINAL VIEW FUNCTIONS The following functions have private access and are intended for use by the viewer which retrieves grid information to draw */
@@ -466,5 +439,13 @@ public class EditorBoard {
 
 	public final boolean placingPath() {
 		return cursorPlacing && cursorState == Res.Cursors.PATH;
+	}
+
+	public final int placeX() {
+		return placeX;
+	}
+
+	public final int placeY() {
+		return placeY;
 	}
 }
