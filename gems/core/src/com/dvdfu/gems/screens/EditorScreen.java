@@ -1,22 +1,24 @@
-package com.dvdfu.gems.view;
+package com.dvdfu.gems.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.dvdfu.gems.MainGame;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.Res;
 import com.dvdfu.gems.model.EditorBlock;
 import com.dvdfu.gems.model.EditorBoard;
 import com.dvdfu.gems.model.Special;
 
-public class EditorView implements Screen {
+public class EditorScreen extends AbstractScreen {
 	private EditorBoard board;
 	private SpriteBatch sprites;
 	private Viewport viewport;
@@ -27,8 +29,13 @@ public class EditorView implements Screen {
 	private int boardOffsetY;
 	private int timer;
 
-	public EditorView(EditorBoard board) {
-		setBoard(board);
+	public EditorScreen(MainGame game) {
+		super(game);
+		board = new EditorBoard("", 1, 1);
+		Preferences prefs = Gdx.app.getPreferences("prefs");
+		String data = prefs.getString("level", "-;1;1;");
+		board.setState(data);
+		board.pushState();
 		sprites = new SpriteBatch();
 		viewport = new ScreenViewport();
 		mouse = new Vector3();
@@ -37,7 +44,7 @@ public class EditorView implements Screen {
 		timer = 0;
 		tools = new Button[15];
 		for (int i = 0; i < tools.length; i++) {
-			tools[i] = new Button(64 + (i % 4) * 34, 150 - (i / 4) * 34, 32, 32);
+			tools[i] = new Button(64 + (i % 4) * 34, 80 - (i / 4) * 34, 32, 32);
 			switch (i) {
 			case 0:
 				tools[i].type = Res.Cursors.BLOCK_STATIC;
@@ -105,20 +112,20 @@ public class EditorView implements Screen {
 
 	private class Button {
 		Res.Cursors type;
-		public String filename;
-		public int x;
-		public int y;
-		public int width;
-		public int height;
+		private String filename;
+		private int x;
+		private int y;
+		private int width;
+		private int height;
 
-		public Button(int x, int y, int width, int height) {
+		private Button(int x, int y, int width, int height) {
 			this.x = x;
 			this.y = y;
 			this.width = width;
 			this.height = height;
 		}
 
-		public boolean hasMouse() {
+		private boolean hasMouse() {
 			return mouse.x > x && mouse.x < x + width && mouse.y > y && mouse.y < y + height;
 		}
 	}
@@ -127,7 +134,7 @@ public class EditorView implements Screen {
 		sprites.dispose();
 	}
 
-	public void setBoard(EditorBoard board) {
+	private void setBoard(EditorBoard board) {
 		this.board = board;
 		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
 		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 6;
@@ -138,8 +145,7 @@ public class EditorView implements Screen {
 		sprites.setColor(c.r, c.g, c.b, alpha);
 	}
 
-	private void drawBlocks() {
-		/* draw blocks at their position and transparency based on their properties and buffer timers */
+	/*private void drawBlocks() {
 		for (int i = 0; i < board.getWidth(); i++) {
 			for (int j = 0; j < board.getHeight(); j++) {
 				int drawX = boardOffsetX + i * Res.fullSize;
@@ -180,8 +186,7 @@ public class EditorView implements Screen {
 						if (!special.original) setAlpha(0.5f);
 						drawBlock("gate", drawX, drawY);
 						setAlpha(1f);
-					}
-					else if (special.water) {
+					} else if (special.water) {
 						drawBlock("water_body", drawX, drawY);
 						if (board.gridValid(i, j - 1)
 							&& (board.getSpecial()[i][j - 1] == null || !board.getSpecial()[i][j - 1].water)) drawBlock(
@@ -193,8 +198,8 @@ public class EditorView implements Screen {
 		}
 	}
 
-	private void drawBlock(String file, int x, int y) {
-		sprites.draw(Res.atlas.createSprite(file), x, y, Res.fullSize, Res.fullSize);
+	private void drawBlock(Sprite sprite, int x, int y) {
+		sprites.draw(sprite, x, y, Res.fullSize, Res.fullSize);
 	}
 
 	private void drawCursor() {
@@ -218,13 +223,13 @@ public class EditorView implements Screen {
 		}
 		if (board.placingGate()) {
 			drawBlock("button", cursorX, cursorY);
-			drawBlock("gate", boardOffsetX + board.placeX() * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY())
-				* Res.fullSize);
+			drawBlock("gate", boardOffsetX + board.placeX() * Res.fullSize,
+				boardOffsetY + (board.getHeight() - 1 - board.placeY()) * Res.fullSize);
 			drawLine(cx, cy, board.placeX(), board.placeY());
 		} else if (board.placingPath()) {
 			drawBlock("path", cursorX, cursorY);
-			drawBlock("path", boardOffsetX + board.placeX() * Res.fullSize, boardOffsetY + (board.getHeight() - 1 - board.placeY())
-				* Res.fullSize);
+			drawBlock("path", boardOffsetX + board.placeX() * Res.fullSize,
+				boardOffsetY + (board.getHeight() - 1 - board.placeY()) * Res.fullSize);
 			drawLine(cx, cy, board.placeX(), board.placeY());
 		}
 	}
@@ -304,9 +309,9 @@ public class EditorView implements Screen {
 				break;
 			}
 		}
-	}
+	}*/
 
-	public void update(float x, float y) {
+	private void update(float x, float y) {
 		/* resets screen and projects sprite batch, shape renderer, mouse and camera based on the screen */
 		mouse.set(x, y, 0);
 		camera.unproject(mouse);
@@ -315,6 +320,15 @@ public class EditorView implements Screen {
 		float cursorX = (mouse.x - boardOffsetX) / Res.fullSize;
 		float cursorY = board.getHeight() - 1 - (mouse.y - boardOffsetY) / Res.fullSize;
 		board.setCursor((int) cursorX, (int) (cursorY + 1));
+		
+
+		if (Input.KeyPressed(Input.ENTER)) {
+			Preferences prefs = Gdx.app.getPreferences("prefs");
+			String data = prefs.getString("level", "name;8;10;");
+			board.setState(data);
+			setBoard(board);
+			game.exitScreen();
+		}
 	}
 
 	public void resize(int width, int height) {
@@ -332,10 +346,11 @@ public class EditorView implements Screen {
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		
+		board.update();
+		update(Input.mouse.x, Input.mouse.y);
+		
 		sprites.begin();
-		drawBlocks();
-		drawCursor();
-		drawGUI();
 		sprites.end();
 		if (timer < 16) timer++;
 		else timer = 0;

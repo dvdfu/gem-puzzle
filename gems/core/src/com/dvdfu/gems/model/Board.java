@@ -68,7 +68,7 @@ public class Board {
 			for (int i = 3; i < id.length; i++) {
 				switch (id[i]) {
 				case 'a':
-					block.destructable = true;
+					block.active = true;
 					break;
 				case 'm':
 					block.move = true;
@@ -176,7 +176,14 @@ public class Board {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = gridBlocks[i][j];
-				if (block != null && block.destructable) {
+				Special special = gridSpecials[i][j];
+				if (block != null && block.active) {
+					// break block with water or active gate
+					if (special != null) {
+						if (special.water) block.command = Res.Command.DROWN;
+						else if (special.gate && special.toggled) block.command = Res.Command.BREAK;
+					}
+					// break block with surroundings
 					if (gridHas(i, j + 1) && gridBlocks[i][j + 1].gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD
 						&& gridHas(i + 1, j) && gridBlocks[i + 1][j].gemL && gridHas(i - 1, j) && gridBlocks[i - 1][j].gemR) {
 						block.command = Res.Command.BREAK;
@@ -185,7 +192,8 @@ public class Board {
 						gridBlocks[i + 1][j].command = Res.Command.BREAK;
 						gridBlocks[i - 1][j].command = Res.Command.BREAK;
 					}
-					if (block.isGem()) {
+					// break block with connection
+					else if (block.isGem()) {
 						if (block.gemU && gridHas(i, j - 1) && gridBlocks[i][j - 1].gemD) {
 							block.command = Res.Command.BREAK;
 							gridBlocks[i][j - 1].command = Res.Command.BREAK;
@@ -203,28 +211,23 @@ public class Board {
 							gridBlocks[i - 1][j].command = Res.Command.BREAK;
 						}
 					}
-					if (block.bomb) {
-						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].destructable) {
+					else if (block.bomb) {
+						if (gridHas(i, j - 1) && gridBlocks[i][j - 1].active) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i][j - 1].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].destructable) {
+						if (gridHas(i, j + 1) && gridBlocks[i][j + 1].active) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i][j + 1].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].destructable) {
+						if (gridHas(i - 1, j) && gridBlocks[i - 1][j].active) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i - 1][j].command = Res.Command.EXPLODE;
 						}
-						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].destructable) {
+						if (gridHas(i + 1, j) && gridBlocks[i + 1][j].active) {
 							block.command = Res.Command.EXPLODE;
 							gridBlocks[i + 1][j].command = Res.Command.EXPLODE;
 						}
-					}
-					Special special = gridSpecials[i][j];
-					if (special != null) {
-						if (special.water) block.command = Res.Command.DROWN;
-						else if (special.gate && special.toggled) block.command = Res.Command.BREAK;
 					}
 				}
 			}
@@ -235,7 +238,9 @@ public class Board {
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				Block block = gridBlocks[i][j];
+				// block existed, is selected, and moves
 				if (block != null && block == cursorBlock && cursorBlock.move) {
+					// cursor is away from block, space is empty, no opposing wind
 					if (cursorX < i && gridEmpty(i - 1, j) && !checkWind(i, j, 0)) {
 						block.command = Res.Command.MOVE_LEFT;
 						gridOccupied[i - 1][j] = true;
@@ -306,9 +311,9 @@ public class Board {
 		updateButtons();
 		updateFalling();
 		updateWind();
-		if (!isBuffered()) updateCursor();
 		updatePaths();
 		updateBreak();
+		if (!isBuffered()) updateCursor();
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
 				gridOccupied[i][j] = false;
@@ -491,7 +496,6 @@ public class Board {
 						block.throughPath = true;
 						break;
 					case PATH:
-						unselect();
 						gridBlocks[i][j] = null;
 						gridBlocks[gridSpecials[i][j].destX][gridSpecials[i][j].destY] = block;
 						break;

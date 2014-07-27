@@ -1,74 +1,70 @@
 package com.dvdfu.gems;
 
-import com.badlogic.gdx.ApplicationListener;
+import java.util.Stack;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Preferences;
 import com.dvdfu.gems.handlers.Input;
 import com.dvdfu.gems.handlers.InputController;
-import com.dvdfu.gems.model.Board;
-import com.dvdfu.gems.model.EditorBoard;
-import com.dvdfu.gems.view.EditorView;
-import com.dvdfu.gems.view.View;
+import com.dvdfu.gems.screens.AbstractScreen;
+import com.dvdfu.gems.screens.LogoScreen;
 
-public class MainGame extends Game implements ApplicationListener {
-	private Board board;
-	private View view;
+public class MainGame extends Game {
+	private Stack<AbstractScreen> screens;
+	/*private Board board;
+	private GameScreen view;
 	private EditorBoard editorBoard;
-	private EditorView editorView;
+	private EditorScreen editorView;*/
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
+		screens = new Stack<AbstractScreen>();
+		screens.push(new LogoScreen(this));
+		setScreen(screens.peek());
+		/*
+		Gdx.input.setInputProcessor(new InputController());
+		ScreenManager.getInstance().initialize(this);
 		board = new Board("", 1, 1);
-		view = new View(board);
+		view = new GameScreen(board);
 		editorBoard = new EditorBoard("", 1, 1);
-		editorView = new EditorView(editorBoard);
+		editorView = new EditorScreen(editorBoard);
 		loadLevel();
 		editorBoard.pushState();
-		setScreen(view);
+		setScreen(view);*/
+	}
+	
+	public void enterScreen(AbstractScreen screen) {
+		screens.peek().pause();
+		screens.push(screen);
+		setScreen(screens.peek());
+	}
+	
+	public void exitScreen() {
+		screens.pop();
+		screens.peek().resume();
+		setScreen(screens.peek());
 	}
 
-	private void loadLevel() {
+	/*private void loadLevel() {
 		Preferences prefs = Gdx.app.getPreferences("prefs");
 		String data = prefs.getString("level", "name;8;10;");
 		board.setState(data);
 		view.setBoard(board);
 		editorBoard.setState(data);
 		editorView.setBoard(editorBoard);
-	}
+	}*/
 
 	public void dispose() {
-		view.dispose();
-		editorView.dispose();
+		/*view.dispose();
+		editorView.dispose();*/
 	}
 
 	public void render() {
-		if (getScreen() == view) {
-			view.update(Input.mouse.x, Input.mouse.y);
-			if (board.timerReady()) {
-				view.endBuffer(); // apply end-buffer view changes to all buffered blocks
-				board.useBuffer(); // apply end-buffer board changes to grid
-				// at this point all blocks should have timer = 0 and command = hold
-				board.update(); // timer is ready, board looks for buffers
-				if (board.checkTimer()) view.beginBuffer();
-			} else board.updateTimer();
-			if (Input.KeyPressed(Input.ENTER)) setScreen(editorView);
-		} else if (getScreen() == editorView) {
-			editorBoard.update();
-			editorView.update(Input.mouse.x, Input.mouse.y);
-			if (Input.KeyPressed(Input.ENTER)) {
-				loadLevel();
-				setScreen(view);
-			}
-		}
-
 		super.render();
 		Input.update();
 	}
 
 	public void resize(int width, int height) {
-		view.resize(width, height);
-		editorView.resize(width, height);
+		super.resize(width, height);
 	}
 
 	public void pause() {}

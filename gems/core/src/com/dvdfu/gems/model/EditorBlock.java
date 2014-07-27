@@ -78,6 +78,7 @@ public class EditorBlock {
 		wind = false;
 		if (gemU) {
 			active = true;
+			move = true;
 			gemC = false;
 			bomb = false;
 		}
@@ -89,6 +90,7 @@ public class EditorBlock {
 		wind = false;
 		if (gemD) {
 			active = true;
+			move = true;
 			gemC = false;
 			bomb = false;
 		}
@@ -100,6 +102,7 @@ public class EditorBlock {
 		wind = false;
 		if (gemR) {
 			active = true;
+			move = true;
 			gemC = false;
 			bomb = false;
 		}
@@ -111,6 +114,7 @@ public class EditorBlock {
 		wind = false;
 		if (gemL) {
 			active = true;
+			move = true;
 			gemC = false;
 			bomb = false;
 		}
@@ -122,6 +126,7 @@ public class EditorBlock {
 		wind = false;
 		if (gemC) {
 			active = true;
+			move = true;
 			gemU = false;
 			gemD = false;
 			gemR = false;

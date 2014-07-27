@@ -3,221 +3,256 @@ images.png
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
+block_active
+  rotate: false
+  xy: 0, 92
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+block_move
+  rotate: false
+  xy: 160, 92
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
+block_static
+  rotate: false
+  xy: 320, 92
+  size: 160, 160
+  orig: 160, 160
+  offset: 0, 0
+  index: -1
 block_cracks
   rotate: false
-  xy: 0, 220
+  xy: 0, 58
   size: 256, 32
   orig: 256, 32
   offset: 0, 0
   index: -1
+particle_sink
+  rotate: false
+  xy: 480, 236
+  size: 256, 16
+  orig: 256, 16
+  offset: 0, 0
+  index: -1
 trans
   rotate: false
-  xy: 0, 90
+  xy: 480, 106
   size: 128, 128
   orig: 128, 128
   offset: 0, 0
   index: -1
+block_static_b
+  rotate: false
+  xy: 608, 154
+  size: 160, 80
+  orig: 160, 80
+  offset: 0, 0
+  index: -1
 particle_sparkle
   rotate: false
-  xy: 0, 72
+  xy: 736, 236
   size: 96, 16
   orig: 96, 16
   offset: 0, 0
   index: -1
 particle_fire_big
   rotate: false
-  xy: 128, 210
+  xy: 0, 48
   size: 64, 8
   orig: 64, 8
   offset: 0, 0
   index: -1
-block_active
-  rotate: false
-  xy: 0, 38
-  size: 32, 32
-  orig: 32, 32
-  offset: 0, 0
-  index: -1
 wind_l
   rotate: false
-  xy: 128, 176
+  xy: 256, 58
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_gem_c
   rotate: false
-  xy: 0, 4
+  xy: 608, 120
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 wind_r
   rotate: false
-  xy: 32, 38
+  xy: 768, 202
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 wind_d
   rotate: false
-  xy: 128, 142
+  xy: 0, 14
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 cursor_select
   rotate: false
-  xy: 160, 176
+  xy: 288, 58
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 water_body
   rotate: false
-  xy: 192, 186
-  size: 32, 32
-  orig: 32, 32
-  offset: 0, 0
-  index: -1
-block_move
-  rotate: false
-  xy: 224, 186
+  xy: 640, 120
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 cursor_unselect
   rotate: false
-  xy: 32, 4
+  xy: 768, 168
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 path
   rotate: false
-  xy: 64, 38
+  xy: 800, 202
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_gem_r
   rotate: false
-  xy: 96, 56
+  xy: 832, 220
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_gem_u
   rotate: false
-  xy: 128, 108
+  xy: 32, 14
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 grid
   rotate: false
-  xy: 160, 142
+  xy: 64, 24
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 wind_u
   rotate: false
-  xy: 192, 152
+  xy: 320, 58
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_falling
   rotate: false
-  xy: 224, 152
-  size: 32, 32
-  orig: 32, 32
-  offset: 0, 0
-  index: -1
-water_head
-  rotate: false
-  xy: 64, 4
+  xy: 672, 120
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 bomb
   rotate: false
-  xy: 96, 22
+  xy: 800, 168
+  size: 32, 32
+  orig: 32, 32
+  offset: 0, 0
+  index: -1
+gate_closed
+  rotate: false
+  xy: 832, 186
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 gate
   rotate: false
-  xy: 128, 74
+  xy: 864, 220
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_gem_d
   rotate: false
-  xy: 160, 108
+  xy: 96, 24
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 block_gem_l
   rotate: false
-  xy: 192, 118
-  size: 32, 32
-  orig: 32, 32
-  offset: 0, 0
-  index: -1
-block_static
-  rotate: false
-  xy: 224, 118
+  xy: 352, 58
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 button
   rotate: false
-  xy: 128, 40
+  xy: 704, 120
   size: 32, 32
   orig: 32, 32
   offset: 0, 0
   index: -1
 particle_droplet
   rotate: false
-  xy: 192, 108
+  xy: 480, 96
   size: 48, 8
   orig: 48, 8
   offset: 0, 0
   index: -1
 particle_dirt
   rotate: false
-  xy: 160, 98
+  xy: 608, 110
   size: 48, 8
   orig: 48, 8
   offset: 0, 0
   index: -1
 particle_dust
   rotate: false
-  xy: 160, 88
+  xy: 0, 4
   size: 48, 8
   orig: 48, 8
   offset: 0, 0
   index: -1
-particle_gem
+gate_b
   rotate: false
-  xy: 240, 100
-  size: 16, 16
-  orig: 16, 16
+  xy: 832, 168
+  size: 32, 16
+  orig: 32, 16
+  offset: 0, 0
+  index: -1
+block_move_b
+  rotate: false
+  xy: 864, 202
+  size: 32, 16
+  orig: 32, 16
+  offset: 0, 0
+  index: -1
+water_head
+  rotate: false
+  xy: 896, 236
+  size: 32, 16
+  orig: 32, 16
   offset: 0, 0
   index: -1
 particle_fire_small
   rotate: false
-  xy: 208, 102
+  xy: 768, 162
   size: 32, 4
   orig: 32, 4
+  offset: 0, 0
+  index: -1
+particle_gem
+  rotate: false
+  xy: 128, 40
+  size: 16, 16
+  orig: 16, 16
   offset: 0, 0
   index: -1
 dot

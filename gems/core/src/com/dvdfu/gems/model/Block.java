@@ -4,9 +4,8 @@ import com.dvdfu.gems.handlers.Res;
 import com.dvdfu.gems.handlers.Res.Command;
 
 public class Block {
-
 	public Res.Command command;
-	public boolean destructable;
+	public boolean active;
 	public boolean move;
 	public boolean fall;
 	public boolean bomb;

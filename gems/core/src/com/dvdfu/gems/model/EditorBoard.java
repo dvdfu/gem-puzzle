@@ -265,6 +265,7 @@ public class EditorBoard {
 	private void addGate(int gateX, int gateY, int buttonX, int buttonY, boolean gateOriginal) {
 		if (gridValid(buttonX, buttonY) && gridValid(gateX, gateY) && !(buttonX == gateX && buttonY == gateY)) {
 			clearSpecial(gateX, gateY);
+			clearSpecial(buttonX, buttonY);
 			gridSpecials[buttonX][buttonY] = new Special().setButton();
 			gridSpecials[gateX][gateY] = new Special().setGate(buttonX, buttonY, gateOriginal);
 		}
@@ -373,6 +374,9 @@ public class EditorBoard {
 				modified = true;
 				cursorVisited[cX][cY] = true;
 				gridBlocks[cX][cY] = newBlock;
+				if (gridSpecials[cX][cY] != null && gridSpecials[cX][cY].water) {
+					clearSpecial(cX, cY);
+				}
 			}
 		}
 		if (Input.MouseReleased()) {
