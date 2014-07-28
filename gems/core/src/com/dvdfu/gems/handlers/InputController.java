@@ -33,6 +33,9 @@ public class InputController extends InputAdapter {
 		case Keys.ENTER:
 			Input.setKey(Input.ENTER, true);
 			break;
+		case Keys.SPACE:
+			Input.setKey(Input.SPACEBAR, true);
+			break;
 		case Keys.Y:
 			Input.setKey(Input.Y, true);
 			break;
@@ -50,6 +53,9 @@ public class InputController extends InputAdapter {
 		switch (k) {
 		case Keys.ENTER:
 			Input.setKey(Input.ENTER, false);
+			break;
+		case Keys.SPACE:
+			Input.setKey(Input.SPACEBAR, false);
 			break;
 		case Keys.Y:
 			Input.setKey(Input.Y, false);

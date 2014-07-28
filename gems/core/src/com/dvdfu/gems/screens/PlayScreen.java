@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
@@ -28,7 +27,6 @@ public class PlayScreen extends AbstractScreen {
 	private Board board;
 	private SpriteBatch sprites;
 	private Viewport viewport;
-	private OrthographicCamera camera;
 	private Array<Particle> particles;
 	private Pool<Particle> particlePool;
 	private int timer;
@@ -38,28 +36,9 @@ public class PlayScreen extends AbstractScreen {
 	public PlayScreen(MainGame game) {
 		super(game);
 		createBoard();
-		createView();
-		createAssets();
-	}
-
-	private void createBoard() {
-		board = new Board("", 1, 1);
-		Preferences prefs = Gdx.app.getPreferences("prefs");
-		String data = prefs.getString("level", "-;1;1;");
-		board.setState(data);
-	}
-
-	private void createView() {
 		sprites = new SpriteBatch();
 		viewport = new ScreenViewport();
-		camera = (OrthographicCamera) viewport.getCamera();
-		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
 		timer = 0;
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 2;
-	}
-
-	private void createAssets() {
 		particles = new Array<Particle>();
 		particlePool = new Pool<Particle>() {
 			protected Particle newObject() {
@@ -68,85 +47,11 @@ public class PlayScreen extends AbstractScreen {
 		};
 	}
 
-	public void updateCursor(float x, float y) {
-		Vector3 mouse = new Vector3(x, y, 0);
-		camera.unproject(mouse);
-
-		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
-		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
-		board.setCursor(cursorX, cursorY);
-		if (Input.MouseDown()) board.select();
-		if (!Input.MouseDown()) board.unselect();
-		if (Input.KeyPressed(Input.ENTER)) game.enterScreen(new EditorScreen(game));
-	}
-
-	public void beginBuffer() {
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Res.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
-				Block block = board.getGrid()[i][j];
-				if (block != null) {
-					switch (block.command) {
-					case DROWN:
-						createParticle(Res.Part.SINK, drawX + Res.halfSize, drawY + Res.fullSize + 8, 16);
-						createParticle(Res.Part.DROP, drawX + Res.halfSize, drawY + Res.fullSize, 16, 0, 16);
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	public void endBuffer() {
-		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
-		for (int i = 0; i < board.getWidth(); i++) {
-			for (int j = 0; j < board.getHeight(); j++) {
-				int drawX = boardOffsetX + i * Res.fullSize;
-				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
-				Block block = board.getGrid()[i][j];
-				if (block != null) {
-					switch (block.command) {
-					case FALL:
-						if (j + 2 >= board.getHeight() || board.getGrid()[i][j + 2] != null
-							&& board.getGrid()[i][j + 2].command == Res.Command.HOLD) {
-							Special special = board.getSpecial()[i][j + 1];
-							if (board.gridValid(i, j + 1) && (special == null || !special.water)) {
-								createParticle(Res.Part.DUST_L, drawX + Res.halfSize, drawY - Res.fullSize, 4);
-								createParticle(Res.Part.DUST_R, drawX + Res.halfSize, drawY - Res.fullSize, 4);
-							}
-						}
-						break;
-					case EXPLODE:
-						createParticle(Res.Part.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
-						createParticle(Res.Part.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
-						createParticle(Res.Part.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
-						if (block.isGem()) {
-							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
-						}
-						break;
-					case BREAK:
-						createParticle(Res.Part.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
-						if (block.isGem()) {
-							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
-						}
-						break;
-					case DROWN:
-						if (block.isGem()) {
-							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
-							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
-						}
-						break;
-					default:
-						break;
-					}
-				}
-			}
-		}
+	private void createBoard() {
+		board = new Board("", 1, 1);
+		Preferences prefs = Gdx.app.getPreferences("prefs");
+		String data = prefs.getString("level", "-;1;1;");
+		board.setState(data);
 	}
 
 	private void createParticle(Res.Part type, int x, int y) {
@@ -460,6 +365,88 @@ public class PlayScreen extends AbstractScreen {
 		}
 	}
 
+	public void updateCursor(float x, float y) {
+		Vector3 mouse = new Vector3(x, y, 0);
+		viewport.getCamera().unproject(mouse);
+
+		int cursorX = (int) (mouse.x - boardOffsetX) / Res.fullSize;
+		int cursorY = board.getHeight() - 1 - (int) (mouse.y - boardOffsetY) / Res.fullSize;
+		board.setCursor(cursorX, cursorY);
+		if (Input.MouseDown()) board.select();
+		if (!Input.MouseDown()) board.unselect();
+		if (Input.KeyPressed(Input.ENTER)) game.enterScreen(new EditorScreen(game));
+		if (Input.KeyPressed(Input.SPACEBAR)) game.enterScreen(new PauseScreen(game));
+	}
+
+	public void beginBuffer() {
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
+				Block block = board.getGrid()[i][j];
+				if (block != null) {
+					switch (block.command) {
+					case DROWN:
+						createParticle(Res.Part.SINK, drawX + Res.halfSize, drawY + Res.fullSize + 8, 16);
+						createParticle(Res.Part.DROP, drawX + Res.halfSize, drawY + Res.fullSize, 16, 0, 16);
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	public void endBuffer() {
+		/* if the board is buffered and the view is processing the events, this method is used to finalize animations and sounds and then update the board using the buffer */
+		for (int i = 0; i < board.getWidth(); i++) {
+			for (int j = 0; j < board.getHeight(); j++) {
+				int drawX = boardOffsetX + i * Res.fullSize;
+				int drawY = boardOffsetY + (board.getHeight() - 1 - j) * Res.fullSize;
+				Block block = board.getGrid()[i][j];
+				if (block != null) {
+					switch (block.command) {
+					case FALL:
+						if (j + 2 >= board.getHeight() || board.getGrid()[i][j + 2] != null
+							&& board.getGrid()[i][j + 2].command == Res.Command.HOLD) {
+							Special special = board.getSpecial()[i][j + 1];
+							if (board.gridValid(i, j + 1) && (special == null || !special.water)) {
+								createParticle(Res.Part.DUST_L, drawX + Res.halfSize, drawY - Res.fullSize, 4);
+								createParticle(Res.Part.DUST_R, drawX + Res.halfSize, drawY - Res.fullSize, 4);
+							}
+						}
+						break;
+					case EXPLODE:
+						createParticle(Res.Part.DUST, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Res.Part.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						createParticle(Res.Part.FIRE, drawX + Res.halfSize, drawY + Res.halfSize, 4, 4, 32);
+						if (block.isGem()) {
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+						}
+						break;
+					case BREAK:
+						createParticle(Res.Part.DIRT, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 16);
+						if (block.isGem()) {
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+						}
+						break;
+					case DROWN:
+						if (block.isGem()) {
+							createParticle(Res.Part.SPARKLE, drawX + Res.halfSize, drawY + Res.halfSize, 16, 16, 8);
+							createParticle(Res.Part.GEM, drawX + Res.halfSize, drawY + Res.halfSize);
+						}
+						break;
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
+
 	public void render(float delta) {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		Gdx.gl.glClearColor(0.3f, 0.25f, 0.2f, 1);
@@ -481,20 +468,20 @@ public class PlayScreen extends AbstractScreen {
 		drawGridOver();
 		drawCursor();
 		drawParticles();
+		drawFullFront(Assets.path, -Gdx.graphics.getWidth() / 2, -Gdx.graphics.getHeight() / 2);
+		drawFullFront(Assets.path, -Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2 - 32);
+		drawFullFront(Assets.path, Gdx.graphics.getWidth() / 2 - 32, -Gdx.graphics.getHeight() / 2);
+		drawFullFront(Assets.path, Gdx.graphics.getWidth() / 2 - 32, Gdx.graphics.getHeight() / 2 - 32);
 		sprites.end();
 		if (timer < 16) timer++;
 		else timer = 0;
 	}
 
 	public void resize(int width, int height) {
-		int resolution = 1;
-		int zoomW = resolution * height / Res.fullSize / (board.getHeight() + 1);
-		int zoomH = resolution * width / Res.fullSize / (board.getWidth() + 1);
-		camera.zoom = 1f * resolution / Math.min(zoomW, zoomH);
-		camera.position.set(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2, 0);
-		boardOffsetX = (Gdx.graphics.getWidth() - board.getWidth() * Res.fullSize) / 2;
-		boardOffsetY = (Gdx.graphics.getHeight() - board.getHeight() * Res.fullSize) / 2;
+		boardOffsetX = -board.getWidth() * Res.fullSize / 2;
+		boardOffsetY = (int) (-(board.getHeight() + 0.5f) * Res.fullSize / 2);
 		viewport.update(width, height);
+		sprites.setProjectionMatrix(viewport.getCamera().combined);
 	}
 
 	public void show() {}
@@ -504,7 +491,7 @@ public class PlayScreen extends AbstractScreen {
 	public void pause() {}
 
 	public void resume() {
-		createBoard();
+		// createBoard();
 	}
 
 	public void dispose() {

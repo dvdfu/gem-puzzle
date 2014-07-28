@@ -10,56 +10,37 @@ import com.dvdfu.gems.screens.LogoScreen;
 
 public class MainGame extends Game {
 	private Stack<AbstractScreen> screens;
-	/*private Board board;
-	private GameScreen view;
-	private EditorBoard editorBoard;
-	private EditorScreen editorView;*/
 
 	public void create() {
 		Gdx.input.setInputProcessor(new InputController());
 		screens = new Stack<AbstractScreen>();
-		screens.push(new LogoScreen(this));
-		setScreen(screens.peek());
-		/*
-		Gdx.input.setInputProcessor(new InputController());
-		ScreenManager.getInstance().initialize(this);
-		board = new Board("", 1, 1);
-		view = new GameScreen(board);
-		editorBoard = new EditorBoard("", 1, 1);
-		editorView = new EditorScreen(editorBoard);
-		loadLevel();
-		editorBoard.pushState();
-		setScreen(view);*/
+		enterScreen(new LogoScreen(this));
 	}
-	
+
 	public void enterScreen(AbstractScreen screen) {
-		screens.peek().pause();
+		if (!screens.isEmpty()) screens.peek().pause();
 		screens.push(screen);
 		setScreen(screens.peek());
 	}
 	
+	public void changeScreen(AbstractScreen screen) {
+		if (screens.isEmpty()) return;
+		screens.pop();
+		screens.push(screen);
+		setScreen(screens.peek());
+	}
+
 	public void exitScreen() {
+		if (screens.isEmpty()) return;
 		screens.pop();
 		screens.peek().resume();
 		setScreen(screens.peek());
 	}
 
-	/*private void loadLevel() {
-		Preferences prefs = Gdx.app.getPreferences("prefs");
-		String data = prefs.getString("level", "name;8;10;");
-		board.setState(data);
-		view.setBoard(board);
-		editorBoard.setState(data);
-		editorView.setBoard(editorBoard);
-	}*/
-
-	public void dispose() {
-		/*view.dispose();
-		editorView.dispose();*/
-	}
+	public void dispose() {}
 
 	public void render() {
-		super.render();
+		if (getScreen() != null) super.render();
 		Input.update();
 	}
 
