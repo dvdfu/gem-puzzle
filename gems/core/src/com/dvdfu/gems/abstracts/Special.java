@@ -1,4 +1,4 @@
-package com.dvdfu.gems.model;
+package com.dvdfu.gems.abstracts;
 
 public class Special {
 	public boolean path;

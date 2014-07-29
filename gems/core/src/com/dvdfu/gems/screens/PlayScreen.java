@@ -14,14 +14,14 @@ import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Assets;
-import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.handlers.Res;
-import com.dvdfu.gems.model.Block;
-import com.dvdfu.gems.model.Board;
-import com.dvdfu.gems.model.Special;
-import com.dvdfu.gems.view.Animation;
-import com.dvdfu.gems.view.Particle;
+import com.dvdfu.gems.abstracts.Block;
+import com.dvdfu.gems.abstracts.Board;
+import com.dvdfu.gems.abstracts.Special;
+import com.dvdfu.gems.references.Assets;
+import com.dvdfu.gems.references.Input;
+import com.dvdfu.gems.references.Res;
+import com.dvdfu.gems.visuals.Animation;
+import com.dvdfu.gems.visuals.Particle;
 
 public class PlayScreen extends AbstractScreen {
 	private Board board;

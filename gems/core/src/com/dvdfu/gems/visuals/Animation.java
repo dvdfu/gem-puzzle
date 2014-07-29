@@ -1,4 +1,4 @@
-package com.dvdfu.gems.view;
+package com.dvdfu.gems.visuals;
 
 import com.badlogic.gdx.graphics.g2d.Sprite;
 

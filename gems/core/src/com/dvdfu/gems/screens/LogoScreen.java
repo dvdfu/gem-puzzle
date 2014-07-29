@@ -5,9 +5,9 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Assets;
-import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.view.Label;
+import com.dvdfu.gems.references.Assets;
+import com.dvdfu.gems.references.Input;
+import com.dvdfu.gems.visuals.Label;
 
 public class LogoScreen extends AbstractScreen {
 	private SpriteBatch sprites;
@@ -18,7 +18,7 @@ public class LogoScreen extends AbstractScreen {
 	public LogoScreen(MainGame game) {
 		super(game);
 		sprites = new SpriteBatch();
-		title = new Label("GEM GAME THING");
+		title = new Label("dvdfu @ twitter, github, tumblr");
 		timer = 0;
 		length = 200;
 	}

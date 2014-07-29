@@ -5,18 +5,14 @@ import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.handlers.Res;
-import com.dvdfu.gems.model.EditorBlock;
-import com.dvdfu.gems.model.EditorBoard;
-import com.dvdfu.gems.model.Special;
+import com.dvdfu.gems.abstracts.EditorBoard;
+import com.dvdfu.gems.references.Input;
+import com.dvdfu.gems.references.Res;
 
 public class EditorScreen extends AbstractScreen {
 	private EditorBoard board;

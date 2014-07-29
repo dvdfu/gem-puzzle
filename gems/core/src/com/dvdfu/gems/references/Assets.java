@@ -1,9 +1,9 @@
-package com.dvdfu.gems.handlers;
+package com.dvdfu.gems.references;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.dvdfu.gems.view.Animation;
+import com.dvdfu.gems.visuals.Animation;
 
 public class Assets {
 	private static final TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("data/images.atlas"));

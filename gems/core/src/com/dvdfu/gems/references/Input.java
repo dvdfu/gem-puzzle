@@ -1,4 +1,4 @@
-package com.dvdfu.gems.handlers;
+package com.dvdfu.gems.references;
 
 import com.badlogic.gdx.math.Vector2;
 

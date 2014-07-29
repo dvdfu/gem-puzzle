@@ -1,8 +1,8 @@
-package com.dvdfu.gems.model;
+package com.dvdfu.gems.abstracts;
 
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
-import com.dvdfu.gems.handlers.Res;
+import com.dvdfu.gems.references.Res;
 
 public class Board {
 	private String name;

@@ -1,4 +1,4 @@
-package com.dvdfu.gems.handlers;
+package com.dvdfu.gems.references;
 
 public class Res {
 	public static final boolean editor = false;

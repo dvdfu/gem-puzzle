@@ -1,7 +1,7 @@
-package com.dvdfu.gems.model;
+package com.dvdfu.gems.abstracts;
 
-import com.dvdfu.gems.handlers.Res;
-import com.dvdfu.gems.handlers.Res.Command;
+import com.dvdfu.gems.references.Res;
+import com.dvdfu.gems.references.Res.Command;
 
 public class Block {
 	public Res.Command command;

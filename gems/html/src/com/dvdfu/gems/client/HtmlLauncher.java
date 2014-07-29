@@ -4,7 +4,7 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.backends.gwt.GwtApplication;
 import com.badlogic.gdx.backends.gwt.GwtApplicationConfiguration;
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Res;
+import com.dvdfu.gems.references.Res;
 
 public class HtmlLauncher extends GwtApplication {
 

@@ -1,4 +1,4 @@
-package com.dvdfu.gems.model;
+package com.dvdfu.gems.abstracts;
 
 public class EditorBlock {
 	public boolean active;

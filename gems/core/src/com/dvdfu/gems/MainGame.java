@@ -3,8 +3,8 @@ package com.dvdfu.gems;
 import java.util.Stack;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
-import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.handlers.InputController;
+import com.dvdfu.gems.references.Input;
+import com.dvdfu.gems.references.InputController;
 import com.dvdfu.gems.screens.AbstractScreen;
 import com.dvdfu.gems.screens.LogoScreen;
 

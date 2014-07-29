@@ -7,8 +7,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Res;
-import com.dvdfu.gems.model.EditorBoard;
+import com.dvdfu.gems.abstracts.EditorBoard;
+import com.dvdfu.gems.references.Res;
 
 public class EditScreen extends AbstractScreen {
 	private EditorBoard board;

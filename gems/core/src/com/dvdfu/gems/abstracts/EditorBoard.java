@@ -1,12 +1,12 @@
-package com.dvdfu.gems.model;
+package com.dvdfu.gems.abstracts;
 
 import java.util.Stack;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
-import com.dvdfu.gems.handlers.Input;
-import com.dvdfu.gems.handlers.Res;
-import com.dvdfu.gems.handlers.Res.Cursors;
+import com.dvdfu.gems.references.Input;
+import com.dvdfu.gems.references.Res;
+import com.dvdfu.gems.references.Res.Cursors;
 
 public class EditorBoard {
 	private EditorBlock cursorBlock;

@@ -1,7 +1,7 @@
 package com.dvdfu.gems.screens;
 
 import com.dvdfu.gems.MainGame;
-import com.dvdfu.gems.handlers.Input;
+import com.dvdfu.gems.references.Input;
 
 public class PauseScreen extends AbstractScreen {
 
